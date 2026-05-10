@@ -1,0 +1,70 @@
+name: test
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - '.github/workflows/test.yml'
+      - 'src/**'
+      - 'index.html'
+      - 'public/**'
+      - 'vitest.config.ts'
+      - 'vite.config.ts'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'python/**'
+      - 'pyproject.toml'
+      - 'tests/**'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - '.github/workflows/test.yml'
+      - 'src/**'
+      - 'index.html'
+      - 'public/**'
+      - 'vitest.config.ts'
+      - 'vite.config.ts'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'python/**'
+      - 'pyproject.toml'
+      - 'tests/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Run tests
+        run: pnpm test
+
+  python:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Pytest
+        run: pytest

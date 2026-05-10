@@ -1,0 +1,126 @@
+# 仅在 GitHub Release「正式发布」时构建 Tauri 多平台安装包，并上传到该 Release 资源。
+# 日常 push / PR 不会触发本工作流。
+
+name: release
+
+on:
+  release:
+    types: [published]
+
+concurrency:
+  group: release-${{ github.event.release.tag_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  tauri-build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            bundles: deb,appimage
+          - os: windows-latest
+            bundles: nsis,msi
+          - os: macos-latest
+            bundles: dmg
+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libssl-dev \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libfuse2 \
+            patchelf
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: pnpm
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Tauri build (${{ matrix.os }})
+        shell: bash
+        run: node ./node_modules/@tauri-apps/cli/tauri.js build --ci --bundles "${{ matrix.bundles }}"
+
+      - name: Stage bundle files
+        shell: bash
+        run: |
+          mkdir -p upload
+          if [ -d src-tauri/target/release/bundle ]; then
+            while IFS= read -r -d '' f; do
+              cp -f "$f" "upload/$(basename "$f")"
+            done < <(find src-tauri/target/release/bundle -type f \( \
+              -name '*.exe' -o -name '*.msi' -o -name '*.dmg' -o \
+              -name '*.AppImage' -o -name '*.deb' \
+            \) -print0)
+          fi
+          ls -la upload
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bundle-${{ matrix.os }}
+          path: upload/
+          if-no-files-found: error
+
+  attach-to-release:
+    needs: [tauri-build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download bundle artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: release-files
+          pattern: bundle-*
+          merge-multiple: true
+
+      - name: Upload assets to GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.release.tag_name }}"
+          count=0
+          while IFS= read -r -d '' f; do
+            echo "Uploading: $f"
+            gh release upload "$TAG" "$f" --clobber
+            count=$((count + 1))
+          done < <(find release-files -type f \( \
+            -name '*.exe' -o -name '*.msi' -o -name '*.dmg' -o \
+            -name '*.AppImage' -o -name '*.deb' \
+          \) -print0)
+          if [ "$count" -eq 0 ]; then
+            echo 'No bundle files found under release-files; failing.'
+            find release-files -type f -maxdepth 5 || true
+            exit 1
+          fi
+          echo "Uploaded $count file(s) to release $TAG."

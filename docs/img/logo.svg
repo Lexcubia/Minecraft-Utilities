@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Modpack Updater">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3c8cff"/>
+      <stop offset="100%" style="stop-color:#18a058"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="48" fill="#0f1419"/>
+  <rect x="48" y="56" width="160" height="120" rx="12" fill="url(#g)" opacity="0.9"/>
+  <path d="M88 176 L128 200 L168 176" stroke="#e8eaed" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M128 120 L128 168" stroke="#0f1419" stroke-width="10" stroke-linecap="round"/>
+  <path d="M104 144 L128 120 L152 144" stroke="#0f1419" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,6 @@
+.venv
+venv
+node_modules
+dist-web
+pnpm-lock.yaml
+**/__pycache__
