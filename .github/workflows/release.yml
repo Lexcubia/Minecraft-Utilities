@@ -1,127 +1,100 @@
-# 仅在 GitHub Release「正式发布」时构建 Tauri 多平台安装包，并上传到该 Release 资源。
-# 日常 push / PR 不会触发本工作流。
+# 在 build 工作流成功后：从 CHANGELOG 读取说明，创建/更新 GitHub Release 并上传产物。
+# 注意：workflow_run 触发时，本文件以仓库默认分支上的版本为准（GitHub 行为）。
 
 name: release
 
 on:
-  release:
-    types: [published]
+  workflow_run:
+    workflows: [build.yml]
+    types:
+      - completed
 
 concurrency:
-  group: release-${{ github.event.release.tag_name }}
+  group: release-${{ github.event.workflow_run.head_sha }}
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
+  actions: read
 
 jobs:
-  tauri-build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            bundles: deb,appimage
-          - os: windows-latest
-            bundles: nsis,msi
-          - os: macos-latest
-            bundles: dmg
-
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 90
+  publish:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'release' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v6
-
-      - name: Install Linux dependencies
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            pkg-config \
-            libssl-dev \
-            libwebkit2gtk-4.1-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev \
-            libfuse2 \
-            patchelf
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: pnpm
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 1
 
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-
-      - uses: Swatinem/rust-cache@v2
+      - name: Download build artifacts
+        uses: dawidd6/action-download-artifact@v6
         with:
-          workspaces: src-tauri
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Tauri build (${{ matrix.os }})
-        shell: bash
-        run: node ./node_modules/@tauri-apps/cli/tauri.js build --ci --bundles "${{ matrix.bundles }}"
-
-      - name: Stage bundle files
-        shell: bash
-        run: |
-          mkdir -p upload
-          if [ -d src-tauri/target/release/bundle ]; then
-            while IFS= read -r -d '' f; do
-              cp -f "$f" "upload/$(basename "$f")"
-            done < <(find src-tauri/target/release/bundle -type f \( \
-              -name '*.exe' -o -name '*.msi' -o -name '*.dmg' -o \
-              -name '*.AppImage' -o -name '*.deb' \
-            \) -print0)
-          fi
-          ls -la upload
-
-      - uses: actions/upload-artifact@v7
-        with:
-          name: bundle-${{ matrix.os }}
-          path: upload/
-          if-no-files-found: error
-
-  attach-to-release:
-    needs: [tauri-build]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Download bundle artifacts
-        uses: actions/download-artifact@v8
-        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          run_id: ${{ github.event.workflow_run.id }}
           path: release-files
-          pattern: bundle-*
-          merge-multiple: true
 
-      - name: Upload assets to GitHub Release
+      - name: Extract release notes from CHANGELOG
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          import json
+          import pathlib
+          import re
+
+          ver = json.loads(pathlib.Path("package.json").read_text(encoding="utf-8"))["version"]
+          text = pathlib.Path("CHANGELOG.md").read_text(encoding="utf-8")
+          pat = re.compile(rf"^## \[{re.escape(ver)}\][^\n]*\n", re.MULTILINE)
+          m = pat.search(text)
+          if not m:
+              raise SystemExit(f"No ## [{ver}] section in CHANGELOG.md (must match package.json version)")
+          rest = text[m.end() :]
+          m2 = re.search(r"^## \[", rest, re.MULTILINE)
+          body = (rest[: m2.start()] if m2 else rest).strip()
+          if not body:
+              raise SystemExit(f"Empty changelog body under ## [{ver}]")
+          pathlib.Path("release_notes.md").write_text(body + "\n", encoding="utf-8")
+          print(f"version={ver}")
+          PY
+
+      - name: Create or update GitHub Release
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          TAG="${{ github.event.release.tag_name }}"
-          count=0
-          while IFS= read -r -d '' f; do
-            echo "Uploading: $f"
-            gh release upload "$TAG" "$f" --clobber
-            count=$((count + 1))
-          done < <(find release-files -type f \( \
+          VERSION="$(jq -r .version package.json)"
+          TAG="v${VERSION}"
+          SHA="${{ github.event.workflow_run.head_sha }}"
+          mapfile -t assets < <(find release-files -type f \( \
             -name '*.exe' -o -name '*.msi' -o -name '*.dmg' -o \
             -name '*.AppImage' -o -name '*.deb' \
-          \) -print0)
-          if [ "$count" -eq 0 ]; then
-            echo 'No bundle files found under release-files; failing.'
-            find release-files -type f -maxdepth 5 || true
+          \) | sort -u)
+          if [ "${#assets[@]}" -eq 0 ]; then
+            echo 'No bundle files under release-files; failing.'
+            find release-files -type f -maxdepth 6 || true
             exit 1
           fi
-          echo "Uploaded $count file(s) to release $TAG."
+          TITLE="minecraft-modpack-updater ${TAG}"
+          if gh release view "${TAG}" --repo "${GH_REPO}" >/dev/null 2>&1; then
+            echo "Release ${TAG} exists; uploading assets and refreshing notes."
+            for f in "${assets[@]}"; do
+              gh release upload "${TAG}" "$f" --clobber --repo "${GH_REPO}"
+            done
+            gh release edit "${TAG}" --notes-file release_notes.md --title "${TITLE}" --repo "${GH_REPO}"
+          else
+            echo "Creating release ${TAG} at ${SHA}"
+            gh release create "${TAG}" "${assets[@]}" \
+              --repo "${GH_REPO}" \
+              --target "${SHA}" \
+              --title "${TITLE}" \
+              --notes-file release_notes.md
+          fi
+          echo "Done: ${TAG}"
