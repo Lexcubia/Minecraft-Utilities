@@ -19,6 +19,7 @@
 - **Markdown**：根目录 `pnpm lint:md`（**markdownlint-cli2**，规则见 [.markdownlint.json](.markdownlint.json)；根 README 含 HTML 居中块，已关闭 **MD041**）。
 - **一键（仅 JS 侧）**：`pnpm verify:js`（format + lint + test + build）。
 - **Windows 免安装包**：`pnpm tauri:build:portable`（前端 + `tauri build --no-bundle` + zip）或完整 `tauri build` 后执行 `pnpm desktop:pack:portable`；产出见 `artifacts/portable/*.zip`，逻辑在 `scripts/pack-windows-portable.mjs`；CI 见 `desktop-release.yml`。
+- **版本号**：唯一维护根目录 **`package.json` 的 `version`**；发版迭代用 **`pnpm version patch|minor|major`**（会跑 **`scripts/sync-version.mjs`** 同步 Tauri/Python/Cargo 与 **`Cargo.lock`**，无 Rust 时设 **`SKIP_CARGO_SYNC=1`**）；仅手改版本后执行 **`pnpm sync:version`**。**`CHANGELOG.md`** 仍手写。详见 [docs/zh-cn/REPO_SETUP.md](docs/zh-cn/REPO_SETUP.md)。
 - **配置文件命名**：仓库根为 **ESM**（`package.json` 中 `"type": "module"`），工具链配置使用 **`.js`**（如 `prettier.config.js`、`lint-staged.config.js`、`commitlint.config.js`）；前端与构建相关为 **`.ts`**（如 `eslint.config.ts`、`vite.config.ts`），**不使用 `.mjs`**。
 - **格式化**：仓库根 `pnpm format`（Prettier：仓库根 md/json/yaml + 根目录 `*.js` 配置 + **`src/**/_.ts`** / **`src/\*\*/_.css`** / `eslint.config.ts`/`vitest.config.ts`/`vite.config.ts`）；`.vue` 单文件暂由 **Volar / IDE** 排版（`prettier-plugin-vue`与当前 Vue 3.5 SFC 组合存在解析问题，待插件升级后再纳入 Prettier）；**ESLint** 覆盖`.vue` 与 TS。
 

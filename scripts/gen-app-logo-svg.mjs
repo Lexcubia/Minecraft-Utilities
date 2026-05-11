@@ -13,7 +13,9 @@ const cfgPath = path.join(root, 'config', 'app-icons.json');
 const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
 const logoOutputs = cfg.brandLogoSvg.outputsRelativeToRepoRoot;
 if (!Array.isArray(logoOutputs) || logoOutputs.length === 0) {
-  throw new Error('config/app-icons.json: brandLogoSvg.outputsRelativeToRepoRoot must be a non-empty array');
+  throw new Error(
+    'config/app-icons.json: brandLogoSvg.outputsRelativeToRepoRoot must be a non-empty array',
+  );
 }
 
 const PAL = {
