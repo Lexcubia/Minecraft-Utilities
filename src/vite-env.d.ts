@@ -13,8 +13,29 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
+declare module '*.md?raw' {
+  const src: string;
+  export default src;
+}
+
 declare module '*.vue' {
   import type { DefineComponent } from 'vue';
   const component: DefineComponent<object, object, unknown>;
   export default component;
+}
+
+declare module '@config/app-icons.json' {
+  const value: {
+    brandLogoSvg: {
+      webPath: string;
+      viteIndexPlaceholder: string;
+      outputsRelativeToRepoRoot: string[];
+      readmeHeroSrc: string;
+    };
+    tauriBundleIcons: {
+      pathsRelativeToSrcTauriDir: string[];
+      trayPngRelativeToSrcTauriDir: string;
+    };
+  };
+  export default value;
 }

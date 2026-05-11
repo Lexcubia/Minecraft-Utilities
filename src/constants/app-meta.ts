@@ -7,8 +7,7 @@ export const APP_DESCRIPTION = pkg.description;
 /** 全名：窗口标题、首页标题、面包屑首页等 */
 export const APP_TITLE = 'Minecraft Utilities';
 
-/** 侧栏顶部等品牌位使用的 MDI 图标名 */
-export const APP_DRAWER_BRAND_ICON = 'mdi-toolbox-outline';
+export { APP_LOGO_URL, APP_README_HERO_LOGO_SRC } from './app-icons';
 
 /** 仓库主页（Issue、源码入口） */
 export const REPO_URL = 'https://github.com/Lexcubia/Minecraft-Utilities';

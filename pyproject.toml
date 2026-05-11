@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "minecraft-utilities"
-version = "0.1.0"
+version = "0.2.0"
 description = "Minecraft Utilities: Python engine CLI (Tauri desktop companion)"
 authors = [{ name = "Lexcubia" }]
 readme = "README.md"

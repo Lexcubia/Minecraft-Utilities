@@ -57,12 +57,6 @@ Powered by [Tauri 2](https://tauri.app/) · [Vue 3](https://vuejs.org/) · [Pyth
 
 ### 维护者
 
-| 贡献者                                  | 说明               |
-| --------------------------------------- | ------------------ |
-| [Lexcubia](https://github.com/Lexcubia) | 项目发起与当前维护 |
-
-以下头像墙由 GitHub 提交记录自动生成（与上方列表互补，不重复罗列亦可）。
-
 <p align="center">
   <a href="https://github.com/Lexcubia/Minecraft-Utilities/graphs/contributors">
     <img src="https://contrib.rocks/image?repo=Lexcubia/Minecraft-Utilities&max=1000" alt="Contributors" />

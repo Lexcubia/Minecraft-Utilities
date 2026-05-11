@@ -17,6 +17,7 @@ const MENU_ID_SETTINGS: &str = "mc_tray_settings";
 const MENU_ID_CLOSE: &str = "mc_tray_close";
 
 fn tray_icon() -> tauri::Result<Image<'static>> {
+    // 须与仓库根 `config/app-icons.json` 中 `tauriBundleIcons.trayPngRelativeToSrcTauriDir` 一致
     const PNG: &[u8] = include_bytes!("../icons/32x32.png");
     Image::from_bytes(PNG)
 }

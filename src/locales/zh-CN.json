@@ -163,7 +163,11 @@
       "fieldDescription": "说明",
       "repo": "源代码",
       "issues": "问题反馈",
-      "docsZh": "中文文档"
+      "docsZh": "中文文档",
+      "changelogTitle": "版本更迭",
+      "changelogHint": "以下为应用内置的 CHANGELOG 摘要；完整历史以仓库文件为准。",
+      "changelogFull": "在 GitHub 查看完整 CHANGELOG",
+      "changelogEmpty": "（本节无正文）"
     }
   }
 }

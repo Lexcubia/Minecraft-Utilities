@@ -2,6 +2,7 @@
 import {
   DOCS_ZH_CN_README_URL,
   REPO_URL,
+  APP_LOGO_URL,
   APP_TITLE,
   APP_VERSION,
 } from '@/constants/app-meta';
@@ -65,8 +66,15 @@ async function pingRust() {
 <template>
   <div class="welcome-page mx-auto max-w-3xl px-4 py-6">
     <v-sheet class="pa-6 mb-6" color="surface" elevation="1" rounded="lg" variant="flat">
-      <div class="text-h4 font-weight-bold">{{ APP_TITLE }}</div>
-      <p class="text-body-2 text-medium-emphasis mt-2 mb-0">{{ t('welcome.heroTagline') }}</p>
+      <div class="d-flex flex-wrap align-center gap-4 mb-2">
+        <v-avatar size="80" rounded="lg" variant="flat" class="app-welcome-logo flex-shrink-0">
+          <img :src="APP_LOGO_URL" alt="" width="80" height="80" />
+        </v-avatar>
+        <div class="min-w-0">
+          <div class="text-h4 font-weight-bold">{{ APP_TITLE }}</div>
+          <p class="text-body-2 text-medium-emphasis mt-2 mb-0">{{ t('welcome.heroTagline') }}</p>
+        </div>
+      </div>
       <p class="text-body-1 mt-4 mb-0">{{ t('welcome.introBody') }}</p>
       <v-chip class="mt-4" color="primary" size="small" variant="tonal">
         {{ t('welcome.versionLabel', { version: APP_VERSION }) }}
@@ -130,6 +138,14 @@ async function pingRust() {
 </template>
 
 <style scoped>
+.app-welcome-logo img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
 .quick-card {
   cursor: pointer;
   transition: box-shadow 0.15s ease, transform 0.15s ease;

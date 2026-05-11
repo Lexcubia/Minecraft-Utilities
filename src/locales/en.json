@@ -163,7 +163,11 @@
       "fieldDescription": "Description",
       "repo": "Source code",
       "issues": "Report issue",
-      "docsZh": "Chinese docs"
+      "docsZh": "Chinese docs",
+      "changelogTitle": "Changelog",
+      "changelogHint": "Built-in CHANGELOG excerpt; see the repository file for the full history.",
+      "changelogFull": "View full CHANGELOG on GitHub",
+      "changelogEmpty": "(No notes in this section)"
     }
   }
 }

@@ -124,6 +124,11 @@ jobs:
       - name: Tauri build (${{ matrix.os }})
         run: pnpm exec tauri build --ci --bundles ${{ matrix.bundles }}
 
+      - name: Pack Windows portable (zip)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: node scripts/pack-windows-portable.mjs
+
       - name: Stage bundle files
         shell: bash
         run: |
@@ -135,6 +140,11 @@ jobs:
               -name '*.exe' -o -name '*.msi' -o -name '*.dmg' -o \
               -name '*.AppImage' -o -name '*.deb' \
             \) -print0)
+          fi
+          if [ -d artifacts/portable ]; then
+            while IFS= read -r -d '' f; do
+              cp -f "$f" "upload/$(basename "$f")"
+            done < <(find artifacts/portable -maxdepth 1 -type f -name '*.zip' -print0)
           fi
           ls -la upload
 
@@ -202,7 +212,7 @@ jobs:
           SHA="${{ github.sha }}"
           mapfile -t assets < <(find release-files -type f \( \
             -name '*.exe' -o -name '*.msi' -o -name '*.dmg' -o \
-            -name '*.AppImage' -o -name '*.deb' \
+            -name '*.AppImage' -o -name '*.deb' -o -name '*.zip' \
           \) | sort -u)
           if [ "${#assets[@]}" -eq 0 ]; then
             echo 'No bundle files under release-files; failing.'
