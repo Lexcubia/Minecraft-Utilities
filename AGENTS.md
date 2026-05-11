@@ -4,11 +4,12 @@
 
 ## 项目组成
 
-| 部分                       | 路径                      | 说明                                                                                                                      |
-| -------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Python 引擎                | `python/modpack_updater/` | 清单/整合包解析、Curse/Modrinth、差异、下载、写回等引擎能力；CLI 入口 `minecraft-utilities`（兼容别名 `modpack-updater`） |
-| 桌面端（仓库根）           | `src/`、`src-tauri/`      | Tauri 2 + Vite + Vue + TS + Tailwind + Vuetify + Pinia + Vue Router                                                       |
-| 文档（使用 / 开发 / 法律） | `docs/`                   | 入口 [docs/zh-cn/README.md](docs/zh-cn/README.md)；根 [README](README.md) 为架构与功能一览                                |
+| 部分                       | 路径                      | 说明                                                                                                                                                                                                                                                                                            |
+| -------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Python 引擎                | `python/modpack_updater/` | 清单/整合包解析、Curse/Modrinth、差异、下载、写回等引擎能力；CLI 入口 `minecraft-utilities`（兼容别名 `modpack-updater`）                                                                                                                                                                       |
+| 桌面端（仓库根）           | `src/`、`src-tauri/`      | Tauri 2 + Vite + Vue + TS + Tailwind + Vuetify + Pinia + Vue Router                                                                                                                                                                                                                             |
+| 文档（使用 / 开发 / 法律） | `docs/`                   | 入口 [docs/zh-cn/README.md](docs/zh-cn/README.md)；根 [README](README.md) 为架构与功能一览                                                                                                                                                                                                      |
+| 品牌 / 图标                | `config/app-icons.json`   | 唯一配置：Web favicon 路径、SVG 输出列表、`tauri.conf.json` 的 `bundle.icon`、README 居中图路径；`pnpm gen:logo` 写 SVG 并同步 Tauri；前端用 `src/constants/app-icons.ts`（`app-meta` 再导出 `APP_LOGO_URL`）；托盘 PNG 与 `tray_desktop.rs` 注释须与配置中 `trayPngRelativeToSrcTauriDir` 一致 |
 
 ## 编码约定
 
@@ -17,6 +18,7 @@
 - **前端**：`pnpm lint:app`（**ESLint 9** flat + `typescript-eslint` + `eslint-plugin-vue`，与 Prettier 由 `eslint-config-prettier` 对齐）、`pnpm test`（**Vitest**）、`pnpm build`（`vue-tsc` + Vite）；完整 `tauri build` 需本机 Rust。
 - **Markdown**：根目录 `pnpm lint:md`（**markdownlint-cli2**，规则见 [.markdownlint.json](.markdownlint.json)；根 README 含 HTML 居中块，已关闭 **MD041**）。
 - **一键（仅 JS 侧）**：`pnpm verify:js`（format + lint + test + build）。
+- **Windows 免安装包**：`pnpm tauri:build:portable`（前端 + `tauri build --no-bundle` + zip）或完整 `tauri build` 后执行 `pnpm desktop:pack:portable`；产出见 `artifacts/portable/*.zip`，逻辑在 `scripts/pack-windows-portable.mjs`；CI 见 `desktop-release.yml`。
 - **配置文件命名**：仓库根为 **ESM**（`package.json` 中 `"type": "module"`），工具链配置使用 **`.js`**（如 `prettier.config.js`、`lint-staged.config.js`、`commitlint.config.js`）；前端与构建相关为 **`.ts`**（如 `eslint.config.ts`、`vite.config.ts`），**不使用 `.mjs`**。
 - **格式化**：仓库根 `pnpm format`（Prettier：仓库根 md/json/yaml + 根目录 `*.js` 配置 + **`src/**/_.ts`** / **`src/\*\*/_.css`** / `eslint.config.ts`/`vitest.config.ts`/`vite.config.ts`）；`.vue` 单文件暂由 **Volar / IDE** 排版（`prettier-plugin-vue`与当前 Vue 3.5 SFC 组合存在解析问题，待插件升级后再纳入 Prettier）；**ESLint** 覆盖`.vue` 与 TS。
 

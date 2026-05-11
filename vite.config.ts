@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -8,6 +9,13 @@ import vuetify from 'vite-plugin-vuetify';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+function readAppIcons() {
+  const raw = readFileSync(path.join(__dirname, 'config', 'app-icons.json'), 'utf8');
+  return JSON.parse(raw) as {
+    brandLogoSvg: { webPath: string; viteIndexPlaceholder: string };
+  };
+}
+
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vite.dev/config/
@@ -15,9 +23,21 @@ export default defineConfig(async () => ({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
+      '@config': path.resolve(__dirname, 'config'),
     },
   },
-  plugins: [vue(), vuetify({ autoImport: true }), tailwindcss()],
+  plugins: [
+    {
+      name: 'inject-app-icons-index-html',
+      transformIndexHtml(html) {
+        const icons = readAppIcons();
+        return html.replaceAll(icons.brandLogoSvg.viteIndexPlaceholder, icons.brandLogoSvg.webPath);
+      },
+    },
+    vue(),
+    vuetify({ autoImport: true }),
+    tailwindcss(),
+  ],
   // 与仓库根 Python/hatch 的 dist/ 区分，避免产物目录冲突
   build: {
     outDir: 'dist-web',

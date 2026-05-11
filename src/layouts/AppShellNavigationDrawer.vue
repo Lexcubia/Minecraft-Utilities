@@ -2,7 +2,7 @@
 import AppShellTrayActions from '@/layouts/AppShellTrayActions.vue';
 import type { DrawerLocation } from '@/constants/drawer-location';
 import type { UiLanguage } from '@/constants/ui-languages';
-import { APP_DRAWER_BRAND_ICON } from '@/constants/app-meta';
+import { APP_LOGO_URL } from '@/constants/app-meta';
 import {
   SETTINGS_SECTION_ICONS,
   SETTINGS_SECTIONS,
@@ -60,9 +60,9 @@ const drawerBrandLine = computed(() => `${t('app.navBrandShort')} · ${t('app.dr
           v-if="!drawerUsesRail"
           class="drawer-brand pa-3 d-flex align-center gap-3"
         >
-          <v-avatar color="primary" variant="tonal" size="44" rounded="lg" class="flex-shrink-0">
-            <v-icon :icon="APP_DRAWER_BRAND_ICON" size="26" color="primary" aria-hidden="true" />
-          </v-avatar>
+          <div class="app-drawer-brand-mark flex-shrink-0" aria-hidden="true">
+            <img :src="APP_LOGO_URL" alt="" width="36" height="36" />
+          </div>
           <div
             class="text-body-2 font-weight-medium text-medium-emphasis min-w-0 flex-grow-1 text-truncate"
             :title="drawerBrandLine"
@@ -72,9 +72,9 @@ const drawerBrandLine = computed(() => `${t('app.navBrandShort')} · ${t('app.dr
         </div>
 
         <div v-else class="drawer-brand-rail d-flex justify-center py-3">
-          <v-avatar color="primary" variant="tonal" size="40" rounded="lg">
-            <v-icon :icon="APP_DRAWER_BRAND_ICON" size="22" color="primary" aria-hidden="true" />
-          </v-avatar>
+          <div class="app-drawer-brand-mark app-drawer-brand-mark--rail" aria-hidden="true">
+            <img :src="APP_LOGO_URL" alt="" width="32" height="32" />
+          </div>
         </div>
 
         <div class="drawer-soft-rule" aria-hidden="true" />
@@ -176,6 +176,14 @@ const drawerBrandLine = computed(() => `${t('app.navBrandShort')} · ${t('app.dr
   padding-top: 8px;
 }
 
+/* 导航项前置图标：无底色块（仅保留整行 hover/active 由 Vuetify 处理） */
+.drawer-nav-list :deep(.v-list-item__prepend),
+.drawer-nav-list :deep(.v-list-item__prepend .v-icon),
+.drawer-nav-list :deep(.v-list-item__prepend .v-avatar) {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
 .drawer-footer-wrap {
   margin-top: auto;
   /* 与 navigation 底边留出空隙，避免灰底贴边 */
@@ -208,5 +216,25 @@ const drawerBrandLine = computed(() => `${t('app.navBrandShort')} · ${t('app.dr
 .drawer-footer-tray :deep(.v-btn:hover),
 .drawer-footer-tray :deep(.v-btn:focus-visible) {
   background: color-mix(in srgb, rgb(var(--v-theme-on-surface)) 8%, transparent) !important;
+}
+
+.app-drawer-brand-mark {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-drawer-brand-mark--rail {
+  width: 40px;
+  height: 40px;
+}
+
+.app-drawer-brand-mark img {
+  display: block;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 </style>

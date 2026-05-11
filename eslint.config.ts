@@ -32,7 +32,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['vite.config.ts', 'vitest.config.ts', 'eslint.config.ts'],
+    files: ['vite.config.ts', 'vitest.config.ts', 'eslint.config.ts', 'scripts/**/*.mjs'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
