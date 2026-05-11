@@ -2,25 +2,25 @@ from __future__ import annotations
 
 import typer
 
-app = typer.Typer(no_args_is_help=True, help="Minecraft 整合包升级 CLI（开发中）")
+app = typer.Typer(no_args_is_help=True, help="Minecraft Utilities — engine CLI (work in progress)")
 
 
 @app.command()
 def scan() -> None:
-    """扫描整合包目录（尚未实现）。"""
-    typer.echo("scan: 尚未实现")
+    """Scan a pack or instance directory (not implemented)."""
+    typer.echo("scan: not implemented")
 
 
 @app.command()
 def plan() -> None:
-    """生成升级计划（尚未实现）。"""
-    typer.echo("plan: 尚未实现")
+    """Build a change plan from manifests (not implemented)."""
+    typer.echo("plan: not implemented")
 
 
 @app.command()
 def apply() -> None:
-    """应用升级计划（尚未实现）。"""
-    typer.echo("apply: 尚未实现")
+    """Apply a generated plan (not implemented)."""
+    typer.echo("apply: not implemented")
 
 
 def main() -> None:

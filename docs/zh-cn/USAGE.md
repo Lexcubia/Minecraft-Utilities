@@ -6,7 +6,7 @@
 
 ## 基本操作思路（目标体验）
 
-1. 在所使用的启动器中确认整合包 **实例根目录**（及 `.minecraft/versions/` 等布局，见 [产品设计](../PRODUCT.md)）。
+1. 在所使用的启动器中确认 **Minecraft Utilities** 当前主线所针对的整合包 **实例根目录**（及 `.minecraft/versions/` 等布局，见 [产品设计](../PRODUCT.md)）。
 2. 准备 **目标版本** 的官方 **`.zip` 或 `.mrpack`**（第一期多需第二份包作为目标清单来源）。
 3. 使用图形向导或 CLI：**先预览（dry-run / plan）**，确认后再 **应用（apply）**。
 4. **CurseForge** 包需配置 API Key（应用内保存或环境变量，勿提交到仓库）。
@@ -27,7 +27,9 @@ python -m venv .venv
 # source .venv/bin/activate
 
 pip install -e ".[dev]"
-modpack-updater --help
+minecraft-utilities --help
+# 兼容旧入口名：
+# modpack-updater --help
 ```
 
 ### 桌面端（仓库根目录）

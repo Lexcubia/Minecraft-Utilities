@@ -1,5 +1,7 @@
 # 路线图与任务
 
+**Minecraft Utilities**：以本机实用工具为长期方向；下列任务以 **zip/mrpack、`.minecraft/versions/` 布局、plan/apply** 为主线的首期能力，后续可并行扩展其它工具模块。
+
 实现项完成后，请同步更新：
 
 - 本文件中的勾选框
@@ -42,7 +44,7 @@
 ## 图形界面与发行
 
 - [ ] **gui-engine-api**：本机 REST（或 CLI `--json`）、OpenAPI / 错误模型
-- [ ] **gui-tauri-vue-scaffold**：Tauri 2 + **Vite** + Vue 3 + TypeScript + **Tailwind CSS** + **Naive UI** + Vue Router + Pinia；与开发期 sidecar 联调（见 [ARCHITECTURE.md](ARCHITECTURE.md)）
+- [ ] **gui-tauri-vue-scaffold**：Tauri 2 + **Vite** + Vue 3 + TypeScript + **Tailwind CSS** + **Vuetify** + Vue Router + Pinia；与开发期 sidecar 联调（见 [ARCHITECTURE.md](ARCHITECTURE.md)）
 - [ ] **gui-vue-wizard**：选包、选整合包**实例根目录**、（仅 Curse）应用内 Key、plan 表、默认 dry-run、日志
 - [ ] **gui-packaging**：Windows 安装包/绿色包、捆绑引擎、Release 资产
 - [ ] **product-lazy-bundle**：懒人包验收（无 Python/Node、无 PATH 等）

@@ -1,0 +1,45 @@
+/* 毛玻璃：须用全局选择器（勿在纯 .css 里写 :deep，Vue 不会编译） */
+
+/* 侧栏：根节点去掉 Vuetify 实色底；用 ::before 做模糊层，避免 __content 的 overflow 影响采样 */
+.shell-glass-drawer.v-navigation-drawer {
+  background: transparent !important;
+}
+
+.shell-glass-drawer.v-navigation-drawer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+  backdrop-filter: blur(22px) saturate(1.3);
+  background: color-mix(in srgb, rgb(var(--v-theme-surface)) 50%, transparent);
+}
+
+.shell-glass-drawer.v-navigation-drawer > * {
+  position: relative;
+  z-index: 1;
+}
+
+.shell-glass-drawer.v-navigation-drawer .v-navigation-drawer__content {
+  background: transparent !important;
+}
+
+/* 顶栏：毛玻璃只铺在工具条主行（访问标签已移至 v-main 内） */
+.shell-glass-app-bar.v-toolbar.v-app-bar {
+  background: transparent !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.shell-glass-app-bar.v-toolbar.v-app-bar .v-toolbar__content {
+  background: color-mix(in srgb, rgb(var(--v-theme-surface)) 50%, transparent) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+  backdrop-filter: blur(22px) saturate(1.3);
+}
+
+.shell-glass-app-bar.v-toolbar.v-app-bar .v-toolbar__extension {
+  background: transparent !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}

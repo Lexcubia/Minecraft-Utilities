@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "modpack-updater"
+name = "minecraft-utilities"
 version = "0.1.0"
-description = "Minecraft 整合包升级：Python 引擎 CLI（与 Tauri 桌面端配合）"
+description = "Minecraft Utilities: Python engine CLI (Tauri desktop companion)"
 authors = [{ name = "Lexcubia" }]
 readme = "README.md"
 requires-python = ">=3.11"
@@ -23,6 +23,7 @@ dev = [
 ]
 
 [project.scripts]
+minecraft-utilities = "modpack_updater.cli:app"
 modpack-updater = "modpack_updater.cli:app"
 
 [tool.hatch.build.targets.wheel]

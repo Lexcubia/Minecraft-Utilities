@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
+import vuetify from 'vite-plugin-vuetify';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -16,7 +17,7 @@ export default defineConfig(async () => ({
       '@': path.resolve(__dirname, 'src'),
     },
   },
-  plugins: [vue(), tailwindcss()],
+  plugins: [vue(), vuetify({ autoImport: true }), tailwindcss()],
   // 与仓库根 Python/hatch 的 dist/ 区分，避免产物目录冲突
   build: {
     outDir: 'dist-web',

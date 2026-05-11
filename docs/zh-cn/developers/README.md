@@ -3,7 +3,7 @@
 阅读顺序建议：
 
 1. [产品设计](../../PRODUCT.md) — 用户场景、`versions` 隔离、两种升级路径
-2. [架构说明](../../ARCHITECTURE.md) — 分层、Python 引擎、Tauri + Vite + Vue + TS + Tailwind + Naive UI
+2. [架构说明](../../ARCHITECTURE.md) — 分层、Python 引擎、Tauri + Vite + Vue + TS + Tailwind + Vuetify
 3. [路线图](../../ROADMAP.md) — 任务与勾选状态
 4. 仓库根目录 [AGENTS.md](../../../AGENTS.md) — Agent 与贡献者约定
 

@@ -1,0 +1,89 @@
+# 当 PR 目标为 main 且 package.json 版本相对 base 提升时，要求 CHANGELOG 中对应 ## [新版本] 小节含 <!-- release:publish -->。
+
+name: changelog-publish-marker
+
+on:
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: changelog-marker-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  require-marker-when-version-bumps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify CHANGELOG when version bumps
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+          import re
+          import subprocess
+          import sys
+
+          base = os.environ["BASE"]
+          head = os.environ["HEAD"]
+          marker = "<!-- release:publish -->"
+
+
+          def file_at(ref: str, path: str) -> str:
+              return subprocess.check_output(
+                  ["git", "show", f"{ref}:{path}"],
+                  text=True,
+                  stderr=subprocess.STDOUT,
+              )
+
+
+          def version_at(ref: str) -> str:
+              return json.loads(file_at(ref, "package.json"))["version"]
+
+
+          try:
+              v_base = version_at(base)
+          except subprocess.CalledProcessError:
+              print("Could not read base package.json; skip.")
+              sys.exit(0)
+
+          v_head = version_at(head)
+          if v_head == v_base:
+              print("package.json version unchanged; skip marker check.")
+              sys.exit(0)
+
+          print(f"Version bump {v_base} -> {v_head}; requiring CHANGELOG marker.")
+
+          try:
+              changelog = file_at(head, "CHANGELOG.md")
+          except subprocess.CalledProcessError as e:
+              print(e.output)
+              raise SystemExit("CHANGELOG.md missing on PR head") from e
+
+          heading = re.compile(rf"^## \[{re.escape(v_head)}\][^\n]*\n", re.MULTILINE)
+          m = heading.search(changelog)
+          if not m:
+              raise SystemExit(
+                  f"CHANGELOG.md must contain a section '## [{v_head}]' when bumping version."
+              )
+
+          rest = changelog[m.end() :]
+          m2 = re.search(r"^## \[", rest, re.MULTILINE)
+          body = rest[: m2.start()] if m2 else rest
+          if marker not in body:
+              raise SystemExit(
+                  f"Section ## [{v_head}] must contain the line {marker!r} to allow desktop release after merge."
+              )
+
+          print("OK: release marker present for new version section.")
+          PY

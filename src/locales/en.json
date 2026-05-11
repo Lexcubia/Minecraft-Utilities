@@ -1,0 +1,169 @@
+{
+  "app": {
+    "navBrandShort": "MC Utils",
+    "drawerSubtitle": "Player utilities"
+  },
+  "meta": {
+    "description": "Minecraft Utilities: practical tools for Minecraft players (Tauri 2 + Python)"
+  },
+  "common": {
+    "on": "On",
+    "off": "Off",
+    "close": "Close",
+    "cancel": "Cancel"
+  },
+  "window": {
+    "exitConfirmTitle": "Exit Minecraft Utilities",
+    "exitConfirmMessage": "Are you sure you want to quit? Unsaved changes in memory may be lost.",
+    "exitConfirmOk": "Quit",
+    "exitConfirmCancel": "Cancel",
+    "exitConfirmDontRemind": "Don't ask again"
+  },
+  "tray": {
+    "menuOpenMain": "Open main window",
+    "menuSettings": "Settings",
+    "menuClose": "Quit",
+    "tooltip": "Minecraft Utilities"
+  },
+  "nav": {
+    "home": "Home",
+    "settings": "Settings",
+    "settingsHeader": "Settings",
+    "back": "Back",
+    "openMenu": "Open menu",
+    "collapseDrawer": "Collapse sidebar",
+    "expandDrawer": "Expand sidebar",
+    "expandDrawerText": "Show sidebar labels",
+    "railOnly": "Icons only",
+    "themeSwitchToLight": "Switch to light theme",
+    "themeSwitchToDark": "Switch to dark theme",
+    "languageMenu": "Change interface language",
+    "ariaBreadcrumb": "Breadcrumb",
+    "windowMinimize": "Minimize window",
+    "windowMaximize": "Maximize window",
+    "windowRestore": "Restore window",
+    "windowClose": "Close window",
+    "visitedTabMenu": {
+      "ariaLabel": "Visited page menu",
+      "closeThis": "Close",
+      "closeOthers": "Close others",
+      "closeAll": "Close all",
+      "closeLeft": "Close to the left",
+      "closeRight": "Close to the right"
+    }
+  },
+  "welcome": {
+    "heroTagline": "Small focused utilities for Minecraft players · desktop app in development",
+    "introBody": "Minecraft Utilities is a local-first toolkit for Minecraft players (Tauri 2 + Python). The first track targets instances under common launchers with .minecraft/versions/ isolation: build a change plan from official zip / mrpack, preview with dry-run by default, then apply. See docs and roadmap.",
+    "versionLabel": "Version {version}",
+    "quickTitle": "Quick access",
+    "openDocs": "Chinese documentation",
+    "openDocsHint": "Usage, development, and legal index",
+    "openRepo": "GitHub repository",
+    "openRepoHint": "Source, issues, and releases",
+    "devPing": "Test Tauri invoke"
+  },
+  "settings": {
+    "sections": {
+      "appearance": "Appearance",
+      "general": "General",
+      "updates": "Updates",
+      "about": "About"
+    },
+    "appearance": {
+      "themeTitle": "Theme",
+      "themeLight": "Light",
+      "themeDark": "Dark",
+      "themeSystem": "System",
+      "layoutTitle": "Layout",
+      "layoutDrawerTitle": "Sidebar",
+      "layoutVisitedTabsTitle": "Visited tabs",
+      "layoutVisitedTabsSwitch": "Show visited tab bar",
+      "drawerLocation": {
+        "start": "Left",
+        "end": "Right"
+      },
+      "colorTitle": "Color",
+      "customColorButton": "Custom",
+      "customColorMenuTitle": "Custom accent",
+      "customColorMenuSubtitle": "Primary and secondary drive accents and gradients",
+      "customColorMenuPreview": "Gradient preview",
+      "customColorLight": "Light theme",
+      "customColorDark": "Dark theme",
+      "customColorPrimary": "Primary",
+      "customColorSecondary": "Secondary",
+      "gradient": {
+        "gradient-sunrise": "Sunrise",
+        "gradient-ocean": "Ocean",
+        "gradient-aurora": "Aurora",
+        "gradient-slate": "Slate"
+      },
+      "backgroundTitle": "Background",
+      "customBackgroundPick": "Choose image…",
+      "customBackgroundClear": "Remove custom image",
+      "customBackgroundActive": "Custom image",
+      "customBackgroundSessionOnly": "Session preview (not persisted)",
+      "appBackground": {
+        "none": "Default",
+        "mist": "Mist",
+        "sunset": "Sunset",
+        "aurora": "Aurora",
+        "blocks": "Block grid"
+      },
+      "accent": {
+        "forest": "Forest",
+        "ocean": "Ocean",
+        "violet": "Violet",
+        "amber": "Amber",
+        "rose": "Rose",
+        "cyan": "Cyan"
+      }
+    },
+    "general": {
+      "cardTitle": "General",
+      "languageTitle": "Language",
+      "language": {
+        "opts": {
+          "system": "System",
+          "zh-CN": "简体中文",
+          "en": "English"
+        }
+      },
+      "dryRunTitle": "Default to dry-run",
+      "closeBehaviorTitle": "Close behavior",
+      "closeBehaviorTray": "Hide to system tray",
+      "closeBehaviorQuit": "Quit application",
+      "curseKeyLabel": "CurseForge API key",
+      "curseKeyPlaceholder": "Leave empty if unset; never commit keys to the repo"
+    },
+    "updates": {
+      "cardTitle": "Updates",
+      "checkTitle": "Check for updates on startup",
+      "channelLabel": "Update channel",
+      "channelStable": "Stable",
+      "channelBeta": "Beta",
+      "releasesTitle": "GitHub releases",
+      "refresh": "Refresh",
+      "empty": "No matching releases (try the Beta channel or try again later).",
+      "openRelease": "Open release",
+      "download": "Download",
+      "noAssets": "No installer",
+      "noAssetsHint": "No downloadable installer for this release.",
+      "openReleasesPage": "Open Releases in browser",
+      "badgeCurrent": "Current",
+      "badgeNewer": "Upgrade",
+      "badgeOlder": "Downgrade",
+      "badgeUnknown": "Unknown compare",
+      "prerelease": "Pre-release"
+    },
+    "about": {
+      "cardTitle": "About",
+      "fieldName": "Name",
+      "fieldVersion": "Version",
+      "fieldDescription": "Description",
+      "repo": "Source code",
+      "issues": "Report issue",
+      "docsZh": "Chinese docs"
+    }
+  }
+}

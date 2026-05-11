@@ -1,0 +1,169 @@
+{
+  "app": {
+    "navBrandShort": "MC Utils",
+    "drawerSubtitle": "Player utilities"
+  },
+  "meta": {
+    "description": "Minecraft Utilities: practical tools for Minecraft players (Tauri 2 + Python)"
+  },
+  "common": {
+    "on": "开启",
+    "off": "关闭",
+    "close": "关闭",
+    "cancel": "取消"
+  },
+  "window": {
+    "exitConfirmTitle": "退出 Minecraft Utilities",
+    "exitConfirmMessage": "确定要退出应用吗？内存中未持久化的内容将丢失。",
+    "exitConfirmOk": "退出",
+    "exitConfirmCancel": "取消",
+    "exitConfirmDontRemind": "不再提醒"
+  },
+  "tray": {
+    "menuOpenMain": "打开主面板",
+    "menuSettings": "设置",
+    "menuClose": "退出",
+    "tooltip": "Minecraft Utilities"
+  },
+  "nav": {
+    "home": "首页",
+    "settings": "设置",
+    "settingsHeader": "设置",
+    "back": "返回",
+    "openMenu": "打开菜单",
+    "collapseDrawer": "收起侧栏",
+    "expandDrawer": "展开侧栏",
+    "expandDrawerText": "展开侧栏文字",
+    "railOnly": "仅显示图标",
+    "themeSwitchToLight": "切换为浅色主题",
+    "themeSwitchToDark": "切换为深色主题",
+    "languageMenu": "切换界面语言",
+    "ariaBreadcrumb": "页面路径",
+    "windowMinimize": "最小化窗口",
+    "windowMaximize": "最大化窗口",
+    "windowRestore": "还原窗口",
+    "windowClose": "关闭窗口",
+    "visitedTabMenu": {
+      "ariaLabel": "访问页菜单",
+      "closeThis": "关闭",
+      "closeOthers": "关闭其他",
+      "closeAll": "关闭全部",
+      "closeLeft": "关闭左侧",
+      "closeRight": "关闭右侧"
+    }
+  },
+  "welcome": {
+    "heroTagline": "Minecraft Utilities · 桌面端开发中",
+    "introBody": "Minecraft Utilities 面向 Minecraft 玩家提供多款本机实用能力（桌面 Tauri 2 + Python）。当前主线围绕常见启动器下、采用 .minecraft/versions/ 版本隔离的整合包实例：通过官方 zip / mrpack 生成变更计划，默认先预览（dry-run）再应用。详见文档与路线图。",
+    "versionLabel": "当前版本 {version}",
+    "quickTitle": "快速入口",
+    "openDocs": "中文文档",
+    "openDocsHint": "使用说明、开发与法律信息索引",
+    "openRepo": "GitHub 仓库",
+    "openRepoHint": "源码、Issue 与发布",
+    "devPing": "测试 Tauri 调用"
+  },
+  "settings": {
+    "sections": {
+      "appearance": "外观",
+      "general": "通用",
+      "updates": "更新",
+      "about": "关于"
+    },
+    "appearance": {
+      "themeTitle": "主题",
+      "themeLight": "浅色",
+      "themeDark": "深色",
+      "themeSystem": "系统",
+      "layoutTitle": "布局",
+      "layoutDrawerTitle": "侧栏",
+      "layoutVisitedTabsTitle": "访问标签",
+      "layoutVisitedTabsSwitch": "显示访问标签栏",
+      "drawerLocation": {
+        "start": "左侧",
+        "end": "右侧"
+      },
+      "colorTitle": "颜色",
+      "customColorButton": "自定义",
+      "customColorMenuTitle": "自定义主题色",
+      "customColorMenuSubtitle": "主色与次色将用于界面强调与渐变",
+      "customColorMenuPreview": "渐变预览",
+      "customColorLight": "浅色模式",
+      "customColorDark": "深色模式",
+      "customColorPrimary": "主色",
+      "customColorSecondary": "次色",
+      "gradient": {
+        "gradient-sunrise": "朝霞",
+        "gradient-ocean": "深海",
+        "gradient-aurora": "极光",
+        "gradient-slate": "岩灰"
+      },
+      "backgroundTitle": "背景",
+      "customBackgroundPick": "选择系统图片…",
+      "customBackgroundClear": "清除自定义图片",
+      "customBackgroundActive": "当前自定义",
+      "customBackgroundSessionOnly": "本地预览图，未持久化",
+      "appBackground": {
+        "none": "默认",
+        "mist": "薄雾",
+        "sunset": "暮光",
+        "aurora": "极光",
+        "blocks": "方块网格"
+      },
+      "accent": {
+        "forest": "森林绿",
+        "ocean": "海洋蓝",
+        "violet": "紫罗兰",
+        "amber": "琥珀橙",
+        "rose": "玫红",
+        "cyan": "青绿"
+      }
+    },
+    "general": {
+      "cardTitle": "通用",
+      "languageTitle": "语言",
+      "language": {
+        "opts": {
+          "system": "系统",
+          "zh-CN": "简体中文",
+          "en": "English"
+        }
+      },
+      "dryRunTitle": "默认使用 dry-run",
+      "closeBehaviorTitle": "关闭行为",
+      "closeBehaviorTray": "最小化到系统托盘",
+      "closeBehaviorQuit": "退出应用",
+      "curseKeyLabel": "CurseForge API Key",
+      "curseKeyPlaceholder": "留空表示未配置；请勿将 Key 提交到版本库"
+    },
+    "updates": {
+      "cardTitle": "更新",
+      "checkTitle": "启动时检查更新",
+      "channelLabel": "更新渠道",
+      "channelStable": "稳定版",
+      "channelBeta": "测试版",
+      "releasesTitle": "GitHub 发布版本",
+      "refresh": "刷新列表",
+      "empty": "暂无符合条件的 Release（可尝试切换到「测试版」渠道或稍后重试）。",
+      "openRelease": "发布页",
+      "download": "下载",
+      "noAssets": "无安装包",
+      "noAssetsHint": "此版本无可用安装包。",
+      "openReleasesPage": "在浏览器中打开 Releases 页面",
+      "badgeCurrent": "当前",
+      "badgeNewer": "可升级",
+      "badgeOlder": "可降级",
+      "badgeUnknown": "版本对比未知",
+      "prerelease": "预发布"
+    },
+    "about": {
+      "cardTitle": "关于",
+      "fieldName": "名称",
+      "fieldVersion": "版本",
+      "fieldDescription": "说明",
+      "repo": "源代码",
+      "issues": "问题反馈",
+      "docsZh": "中文文档"
+    }
+  }
+}

@@ -1,0 +1,216 @@
+/**
+ * 将纵向滚动限制在主内容区（避免整页滚动条出现在窗口控件右侧）。
+ * 滚动放在 v-main 内层 div，避免 fixed 顶栏盖住滚动条轨道；
+ * 访问标签悬浮在滚动区之上（透明），top 对齐 --v-layout-top，避免落在顶栏预留区背后；
+ * 滚动条在 .app-shell-main-scroll 上，从主内容列顶缘起（与 app bar 下沿对齐）。
+ * 滚动条：变量在 html 上定义（继承 :root 的 Vuetify 主题），样式用 :where(*) 全局应用到所有滚动容器。
+ * 可覆盖 --app-shell-scrollbar-*；Firefox 仅 scrollbar-color；默认无轨、无箭头，仅细长滑块。
+ *
+ * 文本选择：壳层禁止选中（顶栏拖窗、侧栏等不误触选中）；仅 .app-shell-main-scroll 内可选中复制；
+ * 表单与 Vuetify 浮层单独放行。
+ */
+
+html {
+  height: 100%;
+  overflow: hidden;
+  --app-shell-scrollbar-thumb: color-mix(
+    in srgb,
+    rgb(var(--v-theme-primary)) 44%,
+    rgb(var(--v-theme-surface))
+  );
+  --app-shell-scrollbar-thumb-hover: color-mix(
+    in srgb,
+    rgb(var(--v-theme-primary)) 68%,
+    rgb(var(--v-theme-surface))
+  );
+  --app-shell-scrollbar-track: transparent;
+  --app-shell-scrollbar-gutter-bg: transparent;
+  --app-shell-scrollbar-width: 8px;
+  --app-shell-scrollbar-track-border: none;
+  --app-shell-scrollbar-track-radius: 999px;
+  --app-shell-scrollbar-track-margin-block: 0px;
+  --app-shell-scrollbar-thumb-border: none;
+  --app-shell-scrollbar-thumb-radius: 999px;
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+#app {
+  height: 100%;
+  overflow: hidden;
+}
+
+/*
+ * Vuetify 根：占满挂载点并截断整页溢出。
+ * user-select 不继承：除根节点外须对子树统一 none，避免顶栏拖窗时误选文字。
+ */
+.v-application {
+  height: 100% !important;
+  max-height: 100%;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  display: flex;
+  flex-direction: column;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.v-application :where(*) {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* 部分版本在 slot 外包一层，需参与 flex 收缩链 */
+.v-application__wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 主内容外壳：不自身滚动（否则滚动条会与 fixed 顶栏重叠被盖住） */
+.v-main.app-shell-main {
+  /* 悬浮访问标签行高度：与 .app-shell-main-scroll--with-floating-tabs 的 padding-top、标签 min-height 共用 */
+  --app-shell-visited-tabs-band-height: 48px;
+  position: relative;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: 100%;
+  overflow: hidden !important;
+}
+
+/*
+ * 访问标签：叠在滚动区上。
+ * top/inline 须与 v-main 的 layout padding 一致：绝对定位的 inset 相对 padding box 外沿，
+ * 不能单靠 padding 推开子节点，否则 left 会从视口最左侧起并被侧栏挡住。
+ */
+.app-shell-main-tabs-floating {
+  position: absolute;
+  inset-inline-start: var(--v-layout-left, 0px);
+  inset-inline-end: var(--v-layout-right, 0px);
+  top: var(--v-layout-top, 0px);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  pointer-events: none;
+  background: transparent;
+}
+
+.app-shell-main-tabs-floating > * {
+  pointer-events: auto;
+}
+
+/* 实际滚动区：占满 main；z-index 低于悬浮标签，避免盖住标签；仅此区域允许拖选复制 */
+.app-shell-main-scroll {
+  position: relative;
+  z-index: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.app-shell-main-scroll * {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* 浮层/原生表单：多数 teleport 在壳外或需显式可选 */
+.v-overlay__content,
+input,
+textarea,
+select,
+option {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* 与标签条高度（--app-shell-visited-tabs-band-height）一致，避免首屏正文被挡住或留缝 */
+.app-shell-main-scroll--with-floating-tabs {
+  padding-top: var(--app-shell-visited-tabs-band-height);
+}
+
+/* ---------- 全局滚动条（Firefox + WebKit / Edge / Chrome） ---------- */
+:where(*) {
+  scrollbar-width: thin;
+  scrollbar-color: var(--app-shell-scrollbar-thumb) var(--app-shell-scrollbar-track);
+}
+
+:where(*)::-webkit-scrollbar {
+  width: var(--app-shell-scrollbar-width);
+  height: var(--app-shell-scrollbar-width);
+  background: var(--app-shell-scrollbar-gutter-bg);
+}
+
+:where(*)::-webkit-scrollbar-button:vertical {
+  display: none !important;
+  height: 0 !important;
+  width: 0 !important;
+}
+
+:where(*)::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+:where(*)::-webkit-scrollbar-button:vertical:start:decrement,
+:where(*)::-webkit-scrollbar-button:vertical:start:increment,
+:where(*)::-webkit-scrollbar-button:vertical:end:decrement,
+:where(*)::-webkit-scrollbar-button:vertical:end:increment {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+:where(*)::-webkit-scrollbar-button:single-button:vertical:decrement,
+:where(*)::-webkit-scrollbar-button:single-button:vertical:increment {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+:where(*)::-webkit-scrollbar-button:horizontal:start:decrement,
+:where(*)::-webkit-scrollbar-button:horizontal:start:increment,
+:where(*)::-webkit-scrollbar-button:horizontal:end:decrement,
+:where(*)::-webkit-scrollbar-button:horizontal:end:increment {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+:where(*)::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+:where(*)::-webkit-scrollbar-track {
+  margin-block: var(--app-shell-scrollbar-track-margin-block);
+  border-radius: var(--app-shell-scrollbar-track-radius);
+  background: var(--app-shell-scrollbar-track);
+  border: var(--app-shell-scrollbar-track-border);
+}
+
+:where(*)::-webkit-scrollbar-thumb {
+  border-radius: var(--app-shell-scrollbar-thumb-radius);
+  border: var(--app-shell-scrollbar-thumb-border);
+  background-clip: padding-box;
+  background-color: var(--app-shell-scrollbar-thumb);
+}
+
+:where(*)::-webkit-scrollbar-thumb:hover {
+  background-color: var(--app-shell-scrollbar-thumb-hover);
+}

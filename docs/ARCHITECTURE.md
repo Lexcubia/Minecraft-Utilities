@@ -1,6 +1,6 @@
 # 架构说明
 
-本文描述**目标技术架构**，用于对齐开发与代码审查；与当前仓库是否已有代码无关。
+本文描述 **Minecraft Utilities** 的**目标技术架构**，用于对齐开发与代码审查；与当前仓库是否已有代码无关。
 
 - 用户向文档入口：[中文文档索引（zh-cn）](zh-cn/README.md)
 - 仓库首页（仅架构 + 功能）：[README](../README.md)
@@ -11,8 +11,8 @@
 
 ```mermaid
 flowchart TB
-  subgraph modpack_gui [桌面GUI]
-    VueUI[Vue3_TS_Tailwind_Naive]
+  subgraph desktop_app [桌面应用]
+    VueUI[Vue3_TS_Tailwind_Vuetify]
     TauriShell[Tauri2]
     VueUI --> TauriShell
   end
@@ -36,16 +36,16 @@ flowchart TB
 
 - **核心引擎**：解析 `manifest.json` / `modrinth.index.json`（含从 zip、`.mrpack` 读取）、调用平台 API、计算差异、下载并校验、写回 `mods/` 与清单；**业务规则集中在此**，不在 Vue 中复制。
 - **桌面壳**：Tauri 2 负责窗口、文件对话框、单实例、（可选）拉起引擎 sidecar。
-- **前端**：**Vite** + **Vue 3** + **TypeScript** + **Tailwind CSS** + **Naive UI**，通过**本机 HTTP（推荐）**或 **CLI `--json`** 与引擎交互；类型可与引擎 OpenAPI 对齐。
+- **前端**：**Vite** + **Vue 3** + **TypeScript** + **Tailwind CSS** + **Vuetify**（Material Design 组件），通过**本机 HTTP（推荐）**或 **CLI `--json`** 与引擎交互；类型可与引擎 OpenAPI 对齐。
 
 ---
 
 ## 前端技术栈（仓库根）
 
-**Tauri 2** 壳；**Vite** 构建；**Vue 3** + **TypeScript**；样式层 **Tailwind CSS**；界面 **Naive UI**；路由 **Vue Router**；全局状态 **Pinia**。与引擎通信以本机 HTTP（推荐）或 CLI `--json` 为主。
+**Tauri 2** 壳；**Vite** 构建；**Vue 3** + **TypeScript**；样式层 **Tailwind CSS**；界面 **Vuetify**（`vite-plugin-vuetify` 按需、`createVuetify` 主题与 locale）；路由 **Vue Router**；全局状态 **Pinia**。与引擎通信以本机 HTTP（推荐）或 CLI `--json` 为主。
 
-- **Naive UI**：表单、表格、向导步骤与主题（`NConfigProvider`、`themeOverrides` 等），统一圆角、字号、主色与组件密度。
-- **Tailwind CSS**：页面级布局（flex/grid）、间距与响应式；以组件库承载交互控件为主，避免用大量 utility 替代 Naive 组件。
+- **Vuetify**：表单、表格、向导步骤与 Material 风格组件；图标默认 **MDI**（`@mdi/font`）。
+- **Tailwind CSS**：页面级布局（flex/grid）、间距与响应式；以组件库承载交互控件为主，避免用大量 utility 替代 Vuetify 组件。
 - **数据请求**：`fetch`；需要时可用 OpenAPI 生成 TS 类型；长耗时接口（如 `plan`/`apply`）可在实现阶段再考虑进度展示或流式响应。
 
 ### 质量与工具链

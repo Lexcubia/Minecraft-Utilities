@@ -1,3 +1,3 @@
-"""Minecraft modpack updater — Python engine."""
+"""Minecraft Utilities — Python engine (modpack & manifest tooling)."""
 
 __version__ = "0.1.0"

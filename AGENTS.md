@@ -1,14 +1,14 @@
 # AI Agent / 贡献者指南
 
-本仓库以 **Tauri 2 + Vite + Vue** 为仓库根主体（`src/`、`src-tauri/`），**Python** 引擎为子目录包 `python/modpack_updater/`；根目录 **pnpm** 管理 Node 依赖，并配有 **Prettier、Markdownlint、Husky、AGENTS、docs 索引** 等工程化约定。
+本仓库产品名为 **Minecraft Utilities**（本机 Minecraft 实用工具合集）。技术栈以 **Tauri 2 + Vite + Vue** 为仓库根主体（`src/`、`src-tauri/`），**Python** 引擎为子目录包 `python/modpack_updater/`（包名历史原因保留目录名；CLI 入口见 `pyproject.toml`）；根目录 **pnpm** 管理 Node 依赖，并配有 **Prettier、Markdownlint、Husky、AGENTS、docs 索引** 等工程化约定。
 
 ## 项目组成
 
-| 部分                       | 路径                      | 说明                                                                                       |
-| -------------------------- | ------------------------- | ------------------------------------------------------------------------------------------ |
-| Python 引擎                | `python/modpack_updater/` | 解析 zip/mrpack、Curse/Modrinth、差异、下载、写回；入口 `modpack-updater`                  |
-| 桌面端（仓库根）           | `src/`、`src-tauri/`      | Tauri 2 + Vite + Vue 3 + TypeScript + Tailwind CSS + Naive UI + Pinia + Vue Router         |
-| 文档（使用 / 开发 / 法律） | `docs/`                   | 入口 [docs/zh-cn/README.md](docs/zh-cn/README.md)；根 [README](README.md) 为架构与功能一览 |
+| 部分                       | 路径                      | 说明                                                                                                                      |
+| -------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Python 引擎                | `python/modpack_updater/` | 清单/整合包解析、Curse/Modrinth、差异、下载、写回等引擎能力；CLI 入口 `minecraft-utilities`（兼容别名 `modpack-updater`） |
+| 桌面端（仓库根）           | `src/`、`src-tauri/`      | Tauri 2 + Vite + Vue + TS + Tailwind + Vuetify + Pinia + Vue Router                                                       |
+| 文档（使用 / 开发 / 法律） | `docs/`                   | 入口 [docs/zh-cn/README.md](docs/zh-cn/README.md)；根 [README](README.md) 为架构与功能一览                                |
 
 ## 编码约定
 
@@ -25,7 +25,7 @@
 - **Husky**：`package.json` 的 `prepare` 在安装依赖时执行 `husky`，将 `core.hooksPath` 指向 `.husky/_`（需本机为 **git 仓库**）。临时跳过钩子可设环境变量 **`HUSKY=0`**。
 - **pre-commit**：运行 **lint-staged**（见根目录 [`lint-staged.config.js`](lint-staged.config.js)）：对暂存区执行 **`src/`** 下 **ESLint --fix**、相关 **Prettier**，以及仓库根 **md/json/yaml/js/cjs** 的 Prettier。Python 仍请在提交前自行执行 `ruff`/`pytest` 或依赖 CI。
 - **commit-msg**：运行 **commitlint**（[`commitlint.config.js`](commitlint.config.js)），继承 **[@commitlint/config-conventional](https://github.com/conventional-changelog/commitlint/tree/master/%40commitlint/config-conventional)**。提交标题示例：`feat(gui): 描述`、`fix: 描述`、`docs: 描述`、`chore: 描述`。
-- **CI**：GitHub Actions 见 [`.github/workflows/`](.github/workflows/)，命名与职责参考 [MaaEnd v2 workflows](https://github.com/MaaEnd/MaaEnd/tree/v2/.github/workflows)：**`check`**（格式 + 全量 lint + Ruff）、**`test`**（Vitest + Pytest）、**`commitlint`**（仅 PR）。**桌面发布**：维护分支 **`release`**；合并到 `release` 后触发 **`build.yml`**（多平台 `pnpm exec tauri build` 并上传 artifact），成功后由 **`release.yml`**（`workflow_run`）根据 **`package.json` 的 `version`** 与根目录 **`CHANGELOG.md`** 中对应 **`## [x.y.z]`** 小节创建/更新 **GitHub Release** 并上传安装包。`release.yml` 的 YAML 以**默认分支**上的版本为准（GitHub 对 `workflow_run` 的限制）。`check` / `test` / **`build.yml`** 支持 **`workflow_dispatch`**。
+- **CI**：GitHub Actions 见 [`.github/workflows/`](.github/workflows/)，命名与职责参考 [MaaEnd v2 workflows](https://github.com/MaaEnd/MaaEnd/tree/v2/.github/workflows)：**`check`**（格式 + 全量 lint + Ruff）、**`test`**（Vitest + Pytest）、**`commitlint`**（仅 PR）、**`changelog-publish-marker`**（PR 指向 `main` 且 **`package.json` 版本提升** 时，要求 **`CHANGELOG.md`** 中对应 **`## [x.y.z]`** 含 **`<!-- release:publish -->`**）。**桌面发布**：合并到 **`main`** 后由 **`desktop-release.yml`** 检测：无 **`vx.y.z`** 标签且 CHANGELOG 该版本小节含发布标记则多平台 **`pnpm exec tauri build`** 并创建/更新 **GitHub Release**（详见 [docs/zh-cn/REPO_SETUP.md](docs/zh-cn/REPO_SETUP.md)）。请在仓库设置中禁止直推 **`main`**，仅经 PR 合并。`check` / `test` / **`desktop-release`** 支持 **`workflow_dispatch`**（其中发布 job 仍受检测条件约束）。
 
 ## 必读文档
 

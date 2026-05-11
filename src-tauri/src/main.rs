@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    minecraft_modpack_updater_lib::run()
+    minecraft_utilities_lib::run()
 }

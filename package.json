@@ -1,9 +1,9 @@
 {
-  "name": "minecraft-modpack-updater",
+  "name": "minecraft-utilities",
   "private": true,
   "type": "module",
   "version": "0.1.0",
-  "description": "Minecraft 整合包升级：Tauri 2 桌面端 + Python 引擎",
+  "description": "Minecraft Utilities: practical tools for Minecraft players (Tauri 2 + Python)",
   "author": "Lexcubia",
   "scripts": {
     "format": "prettier --write \"**/*.{json,yml,yaml,md,mjs,cjs}\" \"*.js\" && prettier --write \"src/**/*.{ts,css}\" \"vite.config.ts\" \"vitest.config.ts\" \"eslint.config.ts\"",
@@ -33,12 +33,15 @@
     "trailingComma": "all"
   },
   "dependencies": {
+    "@mdi/font": "^7.4.47",
     "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-dialog": "^2.7.1",
     "@tauri-apps/plugin-opener": "^2",
-    "naive-ui": "^2.44.1",
     "pinia": "^3.0.4",
     "vue": "^3.5.13",
-    "vue-router": "^5.0.6"
+    "vue-i18n": "^9.14.5",
+    "vue-router": "^5.0.6",
+    "vuetify": "^4.0.7"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.0.0",
@@ -62,6 +65,7 @@
     "typescript": "~5.8.0",
     "typescript-eslint": "^8.59.2",
     "vite": "^6.0.3",
+    "vite-plugin-vuetify": "^2.1.3",
     "vitest": "^4.1.5",
     "vue-tsc": "^2.1.10"
   },
