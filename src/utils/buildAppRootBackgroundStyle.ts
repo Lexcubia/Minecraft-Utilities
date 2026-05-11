@@ -5,8 +5,7 @@ import {
 import { isTauriRuntime } from '@/utils/isTauriRuntime';
 import { convertFileSrc } from '@tauri-apps/api/core';
 
-const IMAGE_SCRIM =
-  'linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.12))';
+const IMAGE_SCRIM = 'linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.12))';
 
 export function resolveCustomBackgroundDisplayUrl(params: {
   customAppBackgroundPath: string;

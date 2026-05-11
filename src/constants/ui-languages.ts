@@ -60,7 +60,10 @@ export function uiLanguageOptionLabelKey(id: UiLanguage): string {
   return `settings.general.language.opts.${id}`;
 }
 
-export function buildI18nMessages(): Record<UiAppLocaleId, (typeof UI_I18N_LOCALES)[number]['messages']> {
+export function buildI18nMessages(): Record<
+  UiAppLocaleId,
+  (typeof UI_I18N_LOCALES)[number]['messages']
+> {
   return Object.fromEntries(UI_I18N_LOCALES.map((l) => [l.id, l.messages])) as Record<
     UiAppLocaleId,
     (typeof UI_I18N_LOCALES)[number]['messages']

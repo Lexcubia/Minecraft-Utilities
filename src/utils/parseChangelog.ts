@@ -41,9 +41,7 @@ export function parseKeepAChangelog(markdown: string): ChangelogSection[] {
 }
 
 function finishSection(sec: ChangelogSection): ChangelogSection {
-  const body = sec.body
-    .replace(/^\s*<!--\s*release:publish\s*-->\s*$/gim, '')
-    .trim();
+  const body = sec.body.replace(/^\s*<!--\s*release:publish\s*-->\s*$/gim, '').trim();
   return { ...sec, body };
 }
 

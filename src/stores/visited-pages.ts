@@ -54,7 +54,10 @@ function tabShellCache(tab: VisitedPageTab): 'WelcomeView' | 'SettingsLayout' | 
   return null;
 }
 
-export function visitedTabTitle(routeName: string | null | undefined, t: ComposerTranslation): string {
+export function visitedTabTitle(
+  routeName: string | null | undefined,
+  t: ComposerTranslation,
+): string {
   if (routeName === 'welcome') return t('nav.home');
   if (!routeName) return APP_TITLE;
   const tab = routeNameToSettingsTab(routeName);
@@ -104,7 +107,8 @@ export const useVisitedPagesStore = defineStore('visited-pages', () => {
     const set = new Set(keepIds);
     let next = tabs.value.filter((x) => set.has(x.id));
     if (!next.some((x) => isPinnedHomeVisitedTab(x))) {
-      const homeEntry = tabs.value.find((x) => isPinnedHomeVisitedTab(x)) ?? defaultHomeVisitedTab();
+      const homeEntry =
+        tabs.value.find((x) => isPinnedHomeVisitedTab(x)) ?? defaultHomeVisitedTab();
       next = [homeEntry, ...next];
     }
     tabs.value = normalizePinnedHomeOrder(next);
