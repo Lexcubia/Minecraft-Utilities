@@ -1,1 +1,9 @@
+#!/usr/bin/env sh
+
+branch=$(git symbolic-ref -q --short HEAD 2>/dev/null) || true
+if [ "$branch" = "main" ] || [ "$branch" = "master" ]; then
+  printf '%s\n' "husky(pre-commit): 禁止在 ${branch} 上直接提交；请在其它分支开发并通过 PR 合并（临时跳过：HUSKY=0）。" >&2
+  exit 1
+fi
+
 pnpm exec lint-staged
