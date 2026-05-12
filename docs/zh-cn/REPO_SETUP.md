@@ -38,6 +38,8 @@
 
 **`pubkey` 格式**：`tauri.conf.json` 中的 **`plugins.updater.pubkey`** 必须与 **`tauri-updater.key.pub` 文件全文**（单行 base64）一致；**不要**只填解码后的内层 `RWQp…` 一行，否则构建 updater 签名时会报 `failed to decode pubkey` / UTF-8 解码错误。
 
+手动准备 **`latest.json`** 时，资源应挂在 GitHub Release 上（与 `endpoints` 的 `releases/latest/download/latest.json` 一致），详见 [应用内更新 `latest.json`](UPDATER_LATEST.md)。
+
 未配置私钥时，`tauri build` 在开启 **`bundle.createUpdaterArtifacts`** 的情况下会失败。若 **Fork** 仓库发版，请把 `tauri.conf.json` 中 **`plugins.updater.endpoints`** 的 GitHub URL 改成你的 **`用户名或组织/仓库名`**，与 `github.repository` 一致。
 
 本机执行 **`pnpm exec tauri build`**（或 `pnpm tauri:build`）做完整桌面包时，同样需要导出上述环境变量；仅日常 **`tauri dev`** 不受影响。
