@@ -152,7 +152,7 @@ jobs:
             found=1
           done < <(find src-tauri/target/release/bundle -name latest.json -type f -print0 2>/dev/null || true)
           if [ "$found" -eq 0 ]; then
-            echo '::error::构建完成后在 src-tauri/target/release/bundle 下未找到 latest.json（应用内更新元数据）。请确认 TAURI_SIGNING_PRIVATE_KEY 与 pubkey 成对且 tauri.conf.json 中 bundle.createUpdaterArtifacts 为 true。macOS 仅打 dmg 时通常不会生成 updater 元数据，发版工作流已对 macOS 使用「dmg,app」同时构建。'
+            echo '::error::构建完成后在 src-tauri/target/release/bundle 下未找到 latest.json（应用内更新元数据）。请确认 TAURI_SIGNING_PRIVATE_KEY 与 pubkey 成对；macOS 需同时构建 app；若 tauri.conf 为 createUpdaterArtifacts true，Tauri 2.11 在仅 Windows/Linux 包时可能不写 latest.json，可改用 "v1Compatible"（见本次仓库配置）。'
             echo 'Bundle tree (max depth 5):'
             find src-tauri/target/release/bundle -type f -maxdepth 5 -print 2>/dev/null || true
             exit 1
@@ -174,7 +174,8 @@ jobs:
               cp -f "$f" "upload/$(basename "$f")"
             done < <(find src-tauri/target/release/bundle -type f \( \
               -name '*.exe' -o -name '*.msi' -o -name '*.dmg' -o \
-              -name '*.AppImage' -o -name '*.deb' -o -name '*.app.tar.gz' \
+              -name '*.AppImage' -o -name '*.deb' -o -name '*.app.tar.gz' -o \
+              -name '*.zip' \
             \) -print0)
             while IFS= read -r -d '' f; do
               cp -f "$f" "upload/$(basename "$f")"
