@@ -93,9 +93,22 @@ for (const f of walkFiles(root)) {
 }
 
 if (fragments.length === 0) {
+  const all = [];
+  for (const f of walkFiles(root)) all.push(f);
+  const basenames = all.map((f) => path.basename(f));
+  console.error(`No latest.fragment.*.json found under --root (${path.resolve(root)}).`);
   console.error(
-    'No latest.fragment.*.json found under --root. Ensure Tauri build used TAURI_SIGNING_PRIVATE_KEY and createUpdaterArtifacts is true.',
+    'Each desktop-release matrix job should copy bundle `latest.json` to `latest.fragment.<runner-os>.json` in the upload artifact. ' +
+      'That requires Actions secret TAURI_SIGNING_PRIVATE_KEY and `bundle.createUpdaterArtifacts: true` in tauri.conf.json.',
   );
+  console.error(`Scanned ${all.length} file(s) under --root.`);
+  if (all.length === 0) {
+    console.error('Directory is empty or missing: check download-artifact path / merge-multiple.');
+  } else if (all.length <= 50) {
+    console.error('Paths:', all.join('\n'));
+  } else {
+    console.error('Sample basenames:', basenames.slice(0, 50).join(', '), '…');
+  }
   process.exit(1);
 }
 
