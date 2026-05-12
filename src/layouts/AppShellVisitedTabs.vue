@@ -49,7 +49,7 @@ const tabMenuCloseOthersDisabled = computed(() => {
 const tabMenuCloseLeftDisabled = computed(() => tabMenuTargetIndex.value <= 1);
 
 /** 与模板 class 一致，供 document 捕获阶段判断点击是否在菜单内 */
-const VISITED_TAB_MENU_SURFACE_SELECTOR = '.visited-tab-menu-surface';
+const APP_CONTEXT_MENU_SURFACE_SELECTOR = '.app-context-menu-surface';
 
 let dismissOutsidePointer: ((e: MouseEvent) => void) | null = null;
 
@@ -72,7 +72,7 @@ function scheduleTabMenuDismiss() {
       removeDismissOutsideListeners();
       dismissOutsidePointer = (e: MouseEvent) => {
         const t = e.target;
-        if (t instanceof Element && t.closest(VISITED_TAB_MENU_SURFACE_SELECTOR)) return;
+        if (t instanceof Element && t.closest(APP_CONTEXT_MENU_SURFACE_SELECTOR)) return;
         closeTabMenu();
       };
       window.addEventListener('click', dismissOutsidePointer, true);
@@ -249,7 +249,7 @@ async function menuCloseRight() {
     <Teleport to="body">
       <div
         v-if="tabMenu.open && tabMenu.target"
-        class="visited-tab-menu-surface rounded-lg"
+        class="app-context-menu-surface rounded-lg"
         role="menu"
         :aria-label="t('nav.visitedTabMenu.ariaLabel')"
         :style="{ top: `${tabMenu.y}px`, left: `${tabMenu.x}px` }"
@@ -298,82 +298,42 @@ async function menuCloseRight() {
 </template>
 
 <style scoped>
-/* 右键菜单：毛玻璃（::before 承载 backdrop-filter，避免与 v-list 背景叠乱） */
-.visited-tab-menu-surface {
-  --visited-tab-menu-glass: color-mix(in srgb, rgb(var(--v-theme-surface)) 48%, transparent);
-  position: fixed;
-  z-index: 4000;
-  min-width: 188px;
-  overflow: hidden;
-  font-size: 0.75rem;
-  line-height: 1.25;
-  color: rgb(var(--v-theme-on-surface));
-  border: 1px solid color-mix(in srgb, rgb(var(--v-theme-on-surface)) 14%, transparent);
-  box-shadow:
-    0 10px 40px color-mix(in srgb, rgb(var(--v-theme-on-surface)) 14%, transparent),
-    0 0 0 1px color-mix(in srgb, rgb(var(--v-theme-on-surface)) 6%, transparent) inset;
-  background: transparent;
-}
+/* 右键菜单外壳样式见 src/styles/app-context-menu-surface.css */
 
-.visited-tab-menu-surface::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  -webkit-backdrop-filter: blur(20px) saturate(1.35);
-  backdrop-filter: blur(20px) saturate(1.35);
-  background: var(--visited-tab-menu-glass);
-}
-
-.visited-tab-menu-surface > * {
-  position: relative;
-  z-index: 1;
-}
-
-.visited-tab-menu-surface :deep(.v-list) {
+.app-context-menu-surface :deep(.v-list) {
   background: transparent !important;
 }
 
-.visited-tab-menu-surface :deep(.v-list-item) {
+.app-context-menu-surface :deep(.v-list-item) {
   border-radius: 6px;
   margin-inline: 4px;
   min-height: 30px !important;
   padding-block: 2px !important;
 }
 
-.visited-tab-menu-surface :deep(.v-list-item--density-compact.v-list-item--one-line) {
+.app-context-menu-surface :deep(.v-list-item--density-compact.v-list-item--one-line) {
   min-height: 30px !important;
 }
 
-.visited-tab-menu-surface :deep(.v-list-item__content) {
+.app-context-menu-surface :deep(.v-list-item__content) {
   padding-block: 0;
 }
 
-.visited-tab-menu-surface :deep(.v-list-item-title) {
+.app-context-menu-surface :deep(.v-list-item-title) {
   font-size: inherit;
   font-weight: 500;
   line-height: inherit;
 }
 
-.visited-tab-menu-surface :deep(.v-list-item:not(.v-list-item--active):hover),
-.visited-tab-menu-surface :deep(.v-list-item:not(.v-list-item--active):focus-visible) {
-  background: color-mix(in srgb, rgb(var(--v-theme-on-surface)) 9%, transparent) !important;
+.app-context-menu-surface :deep(.v-list-item:not(.v-list-item--active):hover),
+.app-context-menu-surface :deep(.v-list-item:not(.v-list-item--active):focus-visible) {
+  background: var(--app-on-surface-09) !important;
 }
 
-.visited-tab-menu-surface :deep(.v-divider) {
+.app-context-menu-surface :deep(.v-divider) {
   margin-inline: 8px;
-  border-color: color-mix(in srgb, rgb(var(--v-theme-on-surface)) 12%, transparent);
+  border-color: var(--app-on-surface-12);
   opacity: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .visited-tab-menu-surface::before {
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    background: color-mix(in srgb, rgb(var(--v-theme-surface)) 94%, transparent);
-  }
 }
 
 .app-shell-visited-tabs {
@@ -399,7 +359,7 @@ async function menuCloseRight() {
 
 /* 标签：实色底 + 描边，无 backdrop-filter（避免与主区背景/毛玻璃顶栏叠出脏边） */
 .visited-tab-chip {
-  --visited-chip-border: color-mix(in srgb, rgb(var(--v-theme-on-surface)) 14%, transparent);
+  --visited-chip-border: var(--app-on-surface-14);
   border: 1px solid var(--visited-chip-border) !important;
   box-shadow: none !important;
   background: rgb(var(--v-theme-surface)) !important;

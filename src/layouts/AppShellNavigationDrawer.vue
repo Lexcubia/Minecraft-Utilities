@@ -3,6 +3,7 @@ import AppShellTrayActions from '@/layouts/AppShellTrayActions.vue';
 import type { DrawerLocation } from '@/constants/drawer-location';
 import type { UiLanguage } from '@/constants/ui-languages';
 import { APP_LOGO_URL } from '@/constants/app-meta';
+import { APP_DRAWER_WIDTH_PX } from '@/constants/ui-layout';
 import {
   SETTINGS_SECTION_ICONS,
   SETTINGS_SECTIONS,
@@ -10,8 +11,6 @@ import {
 } from '@/views/settings/settings-tabs';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-
-const DRAWER_WIDTH_PX = 260;
 
 const drawerOpen = defineModel<boolean>('drawerOpen', { required: true });
 const drawerRail = defineModel<boolean>('drawerRail', { required: true });
@@ -39,8 +38,8 @@ const drawerEdgeClass = computed(() =>
   props.drawerLocation === 'end' ? 'drawer-edge--end' : 'drawer-edge--start',
 );
 
-/** 侧栏顶部一行展示：简写品牌名 · 副标题 */
-const drawerBrandLine = computed(() => `${t('app.navBrandShort')} · ${t('app.drawerSubtitle')}`);
+/** 侧栏顶部一行展示：简写品牌名 */
+const drawerBrandLine = computed(() => t('app.navBrandShort'));
 
 </script>
 
@@ -50,7 +49,7 @@ const drawerBrandLine = computed(() => `${t('app.navBrandShort')} · ${t('app.dr
     :rail="drawerUsesRail"
     :temporary="!mdAndUp"
     :location="drawerLocation"
-    :width="DRAWER_WIDTH_PX"
+    :width="APP_DRAWER_WIDTH_PX"
     class="shell-navigation-drawer shell-glass-drawer"
     :class="drawerEdgeClass"
   >
@@ -61,7 +60,7 @@ const drawerBrandLine = computed(() => `${t('app.navBrandShort')} · ${t('app.dr
           class="drawer-brand pa-3 d-flex align-center gap-3"
         >
           <div class="app-drawer-brand-mark flex-shrink-0" aria-hidden="true">
-            <img :src="APP_LOGO_URL" alt="" width="36" height="36" />
+            <img :src="APP_LOGO_URL" alt="" width="36" height="36" class="app-pixel-logo" />
           </div>
           <div
             class="text-body-2 font-weight-medium text-medium-emphasis min-w-0 flex-grow-1 text-truncate"
@@ -73,15 +72,14 @@ const drawerBrandLine = computed(() => `${t('app.navBrandShort')} · ${t('app.dr
 
         <div v-else class="drawer-brand-rail d-flex justify-center py-3">
           <div class="app-drawer-brand-mark app-drawer-brand-mark--rail" aria-hidden="true">
-            <img :src="APP_LOGO_URL" alt="" width="32" height="32" />
+            <img :src="APP_LOGO_URL" alt="" width="32" height="32" class="app-pixel-logo" />
           </div>
         </div>
-
-        <div class="drawer-soft-rule" aria-hidden="true" />
 
         <v-list density="comfortable" nav class="drawer-nav-list">
           <v-list-item
             :to="{ name: 'welcome' }"
+            exact
             :title="t('nav.home')"
             prepend-icon="mdi-home-outline"
             rounded="lg"
@@ -167,18 +165,18 @@ const drawerBrandLine = computed(() => `${t('app.navBrandShort')} · ${t('app.dr
 
 /* 与主内容分界：内阴影线，避免粗边框 */
 .drawer-edge--start {
-  box-shadow: inset -1px 0 0 color-mix(in srgb, rgb(var(--v-theme-on-surface)) 8%, transparent);
+  box-shadow: inset -1px 0 0 var(--app-on-surface-08);
 }
 
 .drawer-edge--end {
-  box-shadow: inset 1px 0 0 color-mix(in srgb, rgb(var(--v-theme-on-surface)) 8%, transparent);
+  box-shadow: inset 1px 0 0 var(--app-on-surface-08);
 }
 
 .drawer-soft-rule {
   height: 1px;
   margin: 0 12px 2px;
   flex-shrink: 0;
-  background: color-mix(in srgb, rgb(var(--v-theme-on-surface)) 10%, transparent);
+  background: var(--app-on-surface-10);
 }
 
 .drawer-nav-list {
@@ -205,8 +203,8 @@ const drawerBrandLine = computed(() => `${t('app.navBrandShort')} · ${t('app.dr
 }
 
 .drawer-footer-tray {
-  border-radius: 10px;
-  background: color-mix(in srgb, rgb(var(--v-theme-on-surface)) 5%, transparent);
+  border-radius: var(--app-radius-md);
+  background: var(--app-on-surface-05);
 }
 
 .drawer-footer-tray--wide {
@@ -229,7 +227,7 @@ const drawerBrandLine = computed(() => `${t('app.navBrandShort')} · ${t('app.dr
 
 .drawer-footer-tray :deep(.v-btn:hover),
 .drawer-footer-tray :deep(.v-btn:focus-visible) {
-  background: color-mix(in srgb, rgb(var(--v-theme-on-surface)) 8%, transparent) !important;
+  background: var(--app-on-surface-08) !important;
 }
 
 .app-drawer-brand-mark {
@@ -238,6 +236,7 @@ const drawerBrandLine = computed(() => `${t('app.navBrandShort')} · ${t('app.dr
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .app-drawer-brand-mark--rail {
@@ -247,8 +246,13 @@ const drawerBrandLine = computed(() => `${t('app.navBrandShort')} · ${t('app.dr
 
 .app-drawer-brand-mark img {
   display: block;
+  width: 36px;
+  height: 36px;
   object-fit: contain;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
+}
+
+.app-drawer-brand-mark--rail img {
+  width: 32px;
+  height: 32px;
 }
 </style>

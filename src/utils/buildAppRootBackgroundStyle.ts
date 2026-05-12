@@ -38,19 +38,32 @@ export function buildAppRootBackgroundStyle(
   topFirst.push(`url('${safeUrl}')`);
 
   const sizes: string[] = [];
-  if (preset.backgroundImage) sizes.push(preset.backgroundSize || 'auto');
-  sizes.push('auto', 'cover');
-
   const positions: string[] = [];
-  if (preset.backgroundImage) positions.push(preset.backgroundPosition || 'center');
-  positions.push('center', 'center');
-
   const attachments: string[] = [];
-  if (preset.backgroundImage) attachments.push(preset.backgroundAttachment || 'fixed');
-  attachments.push('fixed', 'fixed');
-
   const repeats: string[] = [];
-  if (preset.backgroundImage) repeats.push(preset.backgroundRepeat || 'no-repeat');
+
+  if (preset.backgroundImage) {
+    if (presetId === 'blocks') {
+      const cell = preset.backgroundSize?.includes(',')
+        ? preset.backgroundSize.split(',')[0].trim()
+        : preset.backgroundSize || '22px 22px';
+      const attach = preset.backgroundAttachment?.includes(',')
+        ? preset.backgroundAttachment.split(',')[0].trim()
+        : preset.backgroundAttachment || 'scroll';
+      sizes.push(cell, cell);
+      positions.push('0 0', '0 0');
+      attachments.push(attach, attach);
+      repeats.push('repeat', 'repeat');
+    } else {
+      sizes.push(preset.backgroundSize || 'auto');
+      positions.push(preset.backgroundPosition || 'center');
+      attachments.push(preset.backgroundAttachment || 'fixed');
+      repeats.push(preset.backgroundRepeat || 'no-repeat');
+    }
+  }
+  sizes.push('auto', 'cover');
+  positions.push('center', 'center');
+  attachments.push('fixed', 'fixed');
   repeats.push('no-repeat', 'no-repeat');
 
   return {

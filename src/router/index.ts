@@ -27,6 +27,11 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/__tray-menu',
+      name: 'tray-menu',
+      component: () => import('@/views/TrayMenuView.vue'),
+    },
+    {
       path: '/',
       component: AppShellLayout,
       children: [

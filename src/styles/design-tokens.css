@@ -1,0 +1,54 @@
+/**
+ * 设计令牌：依赖 Vuetify 在文档树中注入的 `--v-theme-*`（须在 `vuetify/styles` 之后加载）。
+ * 新样式优先使用此处变量；圆角参考 GitHub Release 等偏「克制」的桌面产品。
+ */
+
+:root {
+  /* 圆角：偏小，接近 GitHub Release / 克制桌面卡片（略收紧） */
+  --app-radius-xs: 3px;
+  --app-radius-sm: 5px;
+  --app-radius-md: 6px;
+  --app-radius-lg: 7px;
+  --app-radius-xl: 9px;
+
+  /* 毛玻璃：壳层 */
+  --app-glass-blur: blur(22px) saturate(1.3);
+  --app-glass-surface: color-mix(in srgb, rgb(var(--v-theme-surface)) 52%, transparent);
+
+  /* 卡片 / 主区：略强毛玻璃 */
+  --app-glass-card-blur: blur(18px) saturate(1.25);
+  --app-glass-card-bg: color-mix(in srgb, rgb(var(--v-theme-surface)) 58%, transparent);
+  /* 主区遮罩偏淡，避免盖住 v-app 根上的背景渐变 / 自定义底图 */
+  --app-glass-main-tint: color-mix(in srgb, rgb(var(--v-theme-surface)) 22%, transparent);
+
+  /*
+   * 方块网格画在 v-app 根上，主区仍有 backdrop-filter；遮罩过厚时细网格会被「洗没」。
+   * 仅在该预设下略降不透明度，使网格仍可辨认。
+   */
+  --app-glass-main-tint-blocks: color-mix(in srgb, rgb(var(--v-theme-surface)) 12%, transparent);
+
+  /* on-surface 透明度档位（边框、hover、弱分割） */
+  --app-on-surface-05: color-mix(in srgb, rgb(var(--v-theme-on-surface)) 5%, transparent);
+  --app-on-surface-06: color-mix(in srgb, rgb(var(--v-theme-on-surface)) 6%, transparent);
+  --app-on-surface-08: color-mix(in srgb, rgb(var(--v-theme-on-surface)) 8%, transparent);
+  --app-on-surface-09: color-mix(in srgb, rgb(var(--v-theme-on-surface)) 9%, transparent);
+  --app-on-surface-10: color-mix(in srgb, rgb(var(--v-theme-on-surface)) 10%, transparent);
+  --app-on-surface-12: color-mix(in srgb, rgb(var(--v-theme-on-surface)) 12%, transparent);
+  --app-on-surface-14: color-mix(in srgb, rgb(var(--v-theme-on-surface)) 14%, transparent);
+
+  /* 主强调区渐变（与 accent-gradient 中 CTA 一致） */
+  --app-gradient-primary-secondary-135: linear-gradient(
+    135deg,
+    rgb(var(--v-theme-primary)),
+    rgb(var(--v-theme-secondary))
+  );
+
+  /* 浮层阴影（右键菜单等） */
+  --app-shadow-overlay-lg: 0 10px 40px var(--app-on-surface-14);
+
+  --app-primary-06: color-mix(in srgb, rgb(var(--v-theme-primary)) 6%, transparent);
+
+  /* 页面水平内边距 */
+  --app-page-pad-x: 1rem;
+  --app-page-pad-y: 1.5rem;
+}

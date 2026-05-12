@@ -14,6 +14,13 @@
 
 - Python CLI **`uuid-migrate`**：Java 版存档目录内将旧玩家 UUID 批量替换为新 UUID（`playerdata` / `advancements` / `stats` 重命名 + 文本与 gzip NBT）；使用说明见 [使用说明（USAGE）](docs/zh-cn/USAGE.md)。
 - **应用内更新（Tauri updater）**：开启 `bundle.createUpdaterArtifacts`；`desktop-release` 合并各平台 `latest.fragment.*.json` 并上传 **`latest.json`** 与 **`.sig`**；需在 GitHub Actions 配置 **`TAURI_SIGNING_PRIVATE_KEY`**（详见 [仓库设置说明](docs/zh-cn/REPO_SETUP.md)）。
+- **桌面壳与窗口**：无边框主窗、自定义标题栏与拖拽区、毛玻璃卡片与设计令牌、全局右键菜单与主内容区滚动；设置布局与导航/访问标签体验调整。
+- **系统托盘**：托盘菜单独立小窗与路由，**Rust** 侧托盘逻辑与 **capabilities** 能力同步扩展。
+- **设置与提示**：设置面板/顶栏呈现、SnackBar 队列与应用日志相关体验；外观/日志/更新/关于等设置页布局与文案更新。
+- **字体与主题**：通过 **Fontsource** 引入可选 Web 字体（含中文与像素风格等），外观设置支持字体预设；**Vuetify** 主题与组件样式扩展。
+- **UUID 迁移页与欢迎页**：表单与向导流程、样式与中英文案优化。
+- **品牌与安装图标**：`public/app-logo.svg` / `docs/img/logo.svg` 与 **`pnpm gen:logo`** 管线调整，并重新生成 **Tauri** 多平台图标资源。
+- **开发者文档**：中文开发者文档索引补充 **[UI 令牌与壳层样式](docs/zh-cn/developers/UI_STYLES.md)**。
 
 ## [0.2.0] - 2026-05-12
 

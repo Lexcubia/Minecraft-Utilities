@@ -19,7 +19,7 @@
 
 - **业务逻辑**放在 Python 引擎；Vue 只做展示与调用本机 API / Tauri `invoke`，不在前端复制解析规则。
 - **Python**：`ruff`（含 **format**）+ `pytest`；提交前 `ruff check python tests`、`ruff format --check python tests` 与 `pytest`。
-- **前端**：`pnpm lint:app`（**ESLint 9** flat + `typescript-eslint` + `eslint-plugin-vue`，与 Prettier 由 `eslint-config-prettier` 对齐）、`pnpm test`（**Vitest**）、`pnpm build`（`vue-tsc` + Vite）；完整 `tauri build` 需本机 Rust。
+- **前端**：`pnpm lint:app`（**ESLint 9** flat + `typescript-eslint` + `eslint-plugin-vue`，与 Prettier 由 `eslint-config-prettier` 对齐）、`pnpm test`（**Vitest**）、`pnpm build`（`vue-tsc` + Vite）；完整 `tauri build` 需本机 Rust。**UI 令牌与壳层样式**见 [docs/zh-cn/developers/UI_STYLES.md](docs/zh-cn/developers/UI_STYLES.md)。
 - **Markdown**：根目录 `pnpm lint:md`（**markdownlint-cli2**，规则见 [.markdownlint.json](.markdownlint.json)；根 README 含 HTML 居中块，已关闭 **MD041**）。
 - **一键（仅 JS 侧）**：`pnpm verify:js`（format + lint + test + build）。
 - **Windows 免安装包**：`pnpm tauri:build:portable`（前端 + `tauri build --no-bundle` + zip）或完整 `tauri build` 后执行 `pnpm desktop:pack:portable`；产出见 `artifacts/portable/*.zip`，逻辑在 `scripts/pack-windows-portable.mjs`；CI 见 `desktop-release.yml`。

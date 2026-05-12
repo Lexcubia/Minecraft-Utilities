@@ -1,0 +1,37 @@
+/**
+ * 语义化 UI 类：页面容器、分区边框、焦点环。
+ * 与 Vuetify 组件组合使用（颜色/主题仍优先用 Vuetify props + 令牌）。
+ */
+
+.app-page {
+  box-sizing: border-box;
+  width: 100%;
+  /* 与 `APP_PAGE_MAX_WIDTH_REM`（src/constants/ui-layout.ts）一致 */
+  max-width: 48rem;
+  margin-inline: auto;
+  padding: var(--app-page-pad-y) var(--app-page-pad-x);
+}
+
+/** 列表/对话框顶部分割（替代零散 `border-b` 与 theme 不一致写法） */
+.app-border-block-end {
+  border-bottom: thin solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+/** 与 Vuetify `border-sm` + surface 卡片常见组合一致（圆角与 `app-glass-card` 对齐） */
+.app-panel-border {
+  border: thin solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: var(--app-radius-md);
+}
+
+/** 可点击行：键盘焦点环与主题一致 */
+.app-focus-ring-inset:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: -2px;
+}
+
+/** 品牌像素 logo（app-logo.svg）：缩放时保持硬边，避免模糊插值 */
+img.app-pixel-logo {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+}

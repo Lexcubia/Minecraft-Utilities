@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppGlassSectionCard from '@/components/ui/AppGlassSectionCard.vue';
 import {
   APP_BACKGROUND_PRESETS,
   getAppBackgroundStyle,
@@ -10,6 +11,11 @@ import {
   THEME_SOLID_PRESETS,
   gradientSwatchStyle,
 } from '@/constants/theme-color-presets';
+import {
+  UI_FONT_PRESET_IDS,
+  uiFontStackVar,
+  type UiFontPresetId,
+} from '@/constants/ui-font-presets';
 import type { ColorScheme } from '@/stores/settings';
 import { useSettingsStore } from '@/stores/settings';
 import { pickAppBackgroundWithNativeDialog } from '@/utils/pickAppBackgroundNative';
@@ -61,6 +67,13 @@ const themeOptions = computed((): { label: string; value: ColorScheme }[] => [
   { label: t('settings.appearance.themeDark'), value: 'dark' },
   { label: t('settings.appearance.themeSystem'), value: 'system' },
 ]);
+
+const fontPresetOptions = computed((): { label: string; value: UiFontPresetId }[] =>
+  [...UI_FONT_PRESET_IDS].map((id) => ({
+    value: id,
+    label: t(`settings.appearance.fontPreset.${id}`),
+  })),
+);
 
 const solidAccentPresets = computed(() =>
   THEME_SOLID_PRESETS.map((p) => ({
@@ -115,14 +128,15 @@ const backgroundChoices = computed(() =>
     previewStyle: getAppBackgroundStyle(p.id),
   })),
 );
+
+
 </script>
 
 <template>
   <div class="d-flex flex-column gap-4">
-    <v-card color="surface" variant="flat" rounded="lg" elevation="1">
-      <v-card-title class="text-subtitle-1">{{ t('settings.appearance.themeTitle') }}</v-card-title>
-      <v-card-text>
-        <div class="flex flex-wrap gap-2">
+    <AppGlassSectionCard>
+      <template #title>{{ t('settings.appearance.themeTitle') }}</template>
+      <div class="flex flex-wrap gap-2">
           <v-btn
             v-for="opt in themeOptions"
             :key="opt.value"
@@ -134,12 +148,11 @@ const backgroundChoices = computed(() =>
             {{ opt.label }}
           </v-btn>
         </div>
-      </v-card-text>
-    </v-card>
+    </AppGlassSectionCard>
 
-    <v-card color="surface" variant="flat" rounded="lg" elevation="1">
-      <v-card-title class="text-subtitle-1">{{ t('settings.appearance.colorTitle') }}</v-card-title>
-      <v-card-text class="d-flex flex-column gap-4">
+    <AppGlassSectionCard>
+      <template #title>{{ t('settings.appearance.colorTitle') }}</template>
+      <div class="d-flex flex-column gap-4">
         <div class="flex flex-wrap gap-2">
           <v-btn
             v-for="p in solidAccentPresets"
@@ -211,10 +224,10 @@ const backgroundChoices = computed(() =>
                 {{ t('settings.appearance.customColorButton') }}
               </v-btn>
             </template>
-            <v-card class="color-custom-menu" min-width="300" max-width="360" rounded="xl" elevation="12">
+            <v-card class="color-custom-menu" min-width="300" max-width="360" rounded="md" elevation="12">
               <div class="color-custom-menu-header pa-4 pb-3">
                 <div class="d-flex align-center gap-2 mb-1">
-                  <v-avatar size="36" color="primary" variant="tonal" rounded="lg">
+                  <v-avatar size="36" color="primary" variant="tonal" rounded="md">
                     <v-icon icon="mdi-palette-swatch" size="22" color="primary" />
                   </v-avatar>
                   <div class="min-w-0">
@@ -347,12 +360,30 @@ const backgroundChoices = computed(() =>
             </v-card>
           </v-menu>
         </div>
-      </v-card-text>
-    </v-card>
+      </div>
+    </AppGlassSectionCard>
 
-    <v-card color="surface" variant="flat" rounded="lg" elevation="1">
-      <v-card-title class="text-subtitle-1">{{ t('settings.appearance.backgroundTitle') }}</v-card-title>
-      <v-card-text>
+    <AppGlassSectionCard>
+      <template #title>{{ t('settings.appearance.fontTitle') }}</template>
+      <div class="flex flex-wrap gap-2">
+        <v-btn
+          v-for="opt in fontPresetOptions"
+          :key="opt.value"
+          min-width="112"
+          class="appearance-font-preset-btn text-none"
+          :style="{ fontFamily: uiFontStackVar(opt.value) }"
+          :variant="settings.uiFontPreset === opt.value ? 'flat' : 'tonal'"
+          :color="settings.uiFontPreset === opt.value ? 'primary' : 'surface-variant'"
+          @click="settings.uiFontPreset = opt.value"
+        >
+          {{ opt.label }}
+        </v-btn>
+      </div>
+    </AppGlassSectionCard>
+
+    <AppGlassSectionCard>
+      <template #title>{{ t('settings.appearance.backgroundTitle') }}</template>
+      <div>
         <div class="d-flex flex-wrap gap-2">
           <v-btn
             v-for="row in backgroundChoices"
@@ -407,12 +438,12 @@ const backgroundChoices = computed(() =>
         >
           {{ t('settings.appearance.customBackgroundActive') }}: {{ customBackgroundSummary }}
         </div>
-      </v-card-text>
-    </v-card>
+      </div>
+    </AppGlassSectionCard>
 
-    <v-card color="surface" variant="flat" rounded="lg" elevation="1">
-      <v-card-title class="text-subtitle-1">{{ t('settings.appearance.layoutTitle') }}</v-card-title>
-      <v-card-text class="d-flex flex-column gap-5">
+    <AppGlassSectionCard>
+      <template #title>{{ t('settings.appearance.layoutTitle') }}</template>
+      <div class="d-flex flex-column gap-5">
         <div>
           <div class="text-subtitle-2 font-weight-medium mb-2">
             {{ t('settings.appearance.layoutDrawerTitle') }}
@@ -446,12 +477,16 @@ const backgroundChoices = computed(() =>
             :label="t('settings.appearance.layoutVisitedTabsSwitch')"
           />
         </div>
-      </v-card-text>
-    </v-card>
+      </div>
+    </AppGlassSectionCard>
   </div>
 </template>
 
 <style scoped>
+.appearance-font-preset-btn :deep(.v-btn__content) {
+  font-family: inherit;
+}
+
 /* 颜色预设按钮：文案与 prepend 色块整体左对齐 */
 .appearance-color-preset-btn :deep(.v-btn__content) {
   justify-content: flex-start;
@@ -562,6 +597,7 @@ const backgroundChoices = computed(() =>
 }
 
 .app-bg-preview {
+  display: inline-block;
   width: 56px;
   height: 36px;
   border: 1px solid rgba(var(--v-theme-on-surface), 0.12);

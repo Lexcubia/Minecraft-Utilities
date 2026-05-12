@@ -1,0 +1,80 @@
+/**
+ * UI 字体预设：由根节点 `data-app-font` 切换（见 `constants/ui-font-presets.ts`）。
+ * `--app-font-stack-*` 供外观页预设按钮预览与 `html[data-app-font]` 共用。
+ * 自托管字体均为 SIL OFL（Fusion Pixel、Press Start 2P、Noto Sans SC、DM Sans、Nunito Sans）。
+ */
+@import '@fontsource/fusion-pixel-12px-proportional-sc/400.css';
+@import '@fontsource/press-start-2p/400.css';
+@import '@fontsource/noto-sans-sc/400.css';
+@import '@fontsource/noto-sans-sc/500.css';
+@import '@fontsource/dm-sans/400.css';
+@import '@fontsource/dm-sans/500.css';
+@import '@fontsource/nunito-sans/400.css';
+@import '@fontsource/nunito-sans/500.css';
+
+:root {
+  --app-font-stack-minecraft:
+    'Fusion Pixel 12px Proportional SC', 'Press Start 2P', system-ui, 'Segoe UI', sans-serif;
+  --app-font-stack-system:
+    system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei',
+    sans-serif;
+  --app-font-stack-readable:
+    'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+  --app-font-stack-notoSc:
+    'Noto Sans SC', 'Segoe UI', system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --app-font-stack-modern:
+    'DM Sans', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --app-font-stack-soft:
+    'Nunito Sans', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --app-font-stack-serif:
+    ui-serif, Georgia, Cambria, 'Times New Roman', 'Songti SC', 'SimSun', 'Noto Serif CJK SC', serif;
+  --app-font-stack-mono:
+    ui-monospace, 'Cascadia Code', 'Cascadia Mono', 'SF Mono', Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', 'PingFang SC', 'Microsoft YaHei', monospace;
+}
+
+html[data-app-font='minecraft'],
+html:not([data-app-font]) {
+  --app-font-ui: var(--app-font-stack-minecraft);
+}
+
+html[data-app-font='system'] {
+  --app-font-ui: var(--app-font-stack-system);
+}
+
+html[data-app-font='readable'] {
+  --app-font-ui: var(--app-font-stack-readable);
+}
+
+html[data-app-font='notoSc'] {
+  --app-font-ui: var(--app-font-stack-notoSc);
+}
+
+html[data-app-font='modern'] {
+  --app-font-ui: var(--app-font-stack-modern);
+}
+
+html[data-app-font='soft'] {
+  --app-font-ui: var(--app-font-stack-soft);
+}
+
+html[data-app-font='serif'] {
+  --app-font-ui: var(--app-font-stack-serif);
+}
+
+html[data-app-font='mono'] {
+  --app-font-ui: var(--app-font-stack-mono);
+}
+
+html {
+  font-family: var(--app-font-ui, system-ui, sans-serif);
+}
+
+body {
+  font-family: inherit;
+}
+
+.v-application {
+  font-family: var(--app-font-ui, system-ui, sans-serif);
+}

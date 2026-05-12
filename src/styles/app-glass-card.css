@@ -1,0 +1,37 @@
+/**
+ * 统一「卡片」毛玻璃表面（GitHub Release 式：小圆角 + 轻边框；圆角见 `--app-radius-md`）。
+ * 与 `AppGlassCard.vue` / `AppGlassSectionCard.vue` 默认 class 一致，也可单独加 `app-glass-card`。
+ */
+.app-glass-card {
+  position: relative;
+  border-radius: var(--app-radius-md);
+  border: 1px solid var(--app-on-surface-12);
+  background: var(--app-glass-card-bg);
+  box-shadow: 0 1px 0 var(--app-on-surface-06);
+  overflow: hidden;
+}
+
+.app-glass-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  -webkit-backdrop-filter: var(--app-glass-card-blur);
+  backdrop-filter: var(--app-glass-card-blur);
+  background: transparent;
+}
+
+.app-glass-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-glass-card::before {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: color-mix(in srgb, rgb(var(--v-theme-surface)) 92%, transparent);
+  }
+}

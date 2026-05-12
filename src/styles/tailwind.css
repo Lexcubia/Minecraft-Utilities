@@ -1,1 +1,5 @@
 @import 'tailwindcss';
+
+@theme {
+  --font-sans: var(--app-font-ui, ui-sans-serif, system-ui, sans-serif);
+}

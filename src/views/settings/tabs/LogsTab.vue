@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AppGlassSectionCard from '@/components/ui/AppGlassSectionCard.vue';
+import { APP_LOG_CLEAR_EVENT } from '@/constants/app-log-sync';
 import {
   APP_LOG_LEVELS,
   APP_LOG_MODULES,
@@ -7,6 +9,9 @@ import {
   type AppLogLevel,
   type AppLogModule,
 } from '@/stores/app-log';
+import { isTauriRuntime } from '@/utils/isTauriRuntime';
+import { appSnackbar } from '@/utils/appSnackbar';
+import { emit } from '@tauri-apps/api/event';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -18,8 +23,6 @@ const levelFilter = ref<'all' | AppLogLevel>('all');
 const search = ref('');
 const detailOpen = ref(false);
 const detailText = ref('');
-const snackbar = ref(false);
-const snackbarText = ref('');
 
 const levelItems = computed(() => [
   { title: t('settings.logs.levelAll'), value: 'all' as const },
@@ -70,31 +73,31 @@ function levelIcon(lv: AppLogLevel): string {
 }
 
 function formatEntry(e: AppLogEntry): string {
-  const head = `[${formatTs(e.ts)}] [${t(`settings.logs.modules.${e.module}`)}] [${t(`settings.logs.levels.${e.level}`)}] ${e.message}`;
+  const head = `[${formatTs(e.ts)}] [${t(`settings.logs.modules.${e.module}`)}] [${e.level}] ${e.message}`;
   return e.detail ? `${head}\n${e.detail}` : head;
 }
 
 function copyVisible() {
   const body = filtered.value.map(formatEntry).join('\n\n');
   if (!body) {
-    snackbarText.value = t('settings.logs.copyEmpty');
-    snackbar.value = true;
+    appSnackbar.brief(t('settings.logs.copyEmpty'));
     return;
   }
   void navigator.clipboard.writeText(body).then(
     () => {
-      snackbarText.value = t('settings.logs.copyOk');
-      snackbar.value = true;
+      appSnackbar.brief(t('settings.logs.copyOk'));
     },
     () => {
-      snackbarText.value = t('settings.logs.copyFail');
-      snackbar.value = true;
+      appSnackbar.brief(t('settings.logs.copyFail'));
     },
   );
 }
 
 function clearAll() {
   logStore.clear();
+  if (isTauriRuntime()) {
+    void emit(APP_LOG_CLEAR_EVENT);
+  }
 }
 
 function showDetail(e: AppLogEntry) {
@@ -119,9 +122,9 @@ function clearModuleFilter() {
 
 <template>
   <div class="d-flex flex-column gap-4">
-    <v-card color="surface" variant="flat" rounded="lg" elevation="1">
-      <v-card-title class="text-subtitle-1">{{ t('settings.logs.cardTitle') }}</v-card-title>
-      <v-card-text class="d-flex flex-column gap-4">
+    <AppGlassSectionCard>
+      <template #title>{{ t('settings.logs.cardTitle') }}</template>
+      <div class="d-flex flex-column gap-4">
         <p class="text-body-2 text-medium-emphasis mb-0">{{ t('settings.logs.hint') }}</p>
 
         <div class="d-flex flex-wrap align-center gap-2">
@@ -151,7 +154,7 @@ function clearModuleFilter() {
             density="comfortable"
             variant="outlined"
             hide-details
-            rounded="lg"
+            rounded="md"
             class="logs-filter-level"
           />
           <v-text-field
@@ -160,7 +163,7 @@ function clearModuleFilter() {
             density="comfortable"
             variant="outlined"
             hide-details
-            rounded="lg"
+            rounded="md"
             clearable
             prepend-inner-icon="mdi-magnify"
             class="flex-grow-1"
@@ -179,11 +182,10 @@ function clearModuleFilter() {
             {{ t('settings.logs.showing', { n: filtered.length, total: logStore.count }) }}
           </span>
         </div>
-      </v-card-text>
-    </v-card>
+      </div>
+    </AppGlassSectionCard>
 
-    <v-card color="surface" variant="flat" rounded="lg" elevation="1" class="logs-list-card">
-      <v-card-text class="pa-0">
+    <AppGlassSectionCard body-padding="none" class="logs-list-card">
         <div v-if="!filtered.length" class="pa-8 text-center text-medium-emphasis text-body-2">
           {{ t('settings.logs.empty') }}
         </div>
@@ -203,7 +205,7 @@ function clearModuleFilter() {
             <v-list-item-subtitle class="text-caption d-flex flex-wrap align-center gap-2 mt-1">
               <span>{{ formatTs(e.ts) }}</span>
               <v-chip size="x-small" variant="tonal" :color="levelColor(e.level)" label>
-                {{ t(`settings.logs.levels.${e.level}`) }}
+                {{ e.level }}
               </v-chip>
               <v-chip size="x-small" variant="outlined" label>
                 {{ t(`settings.logs.modules.${e.module}`) }}
@@ -221,25 +223,19 @@ function clearModuleFilter() {
             </v-list-item-subtitle>
           </v-list-item>
         </v-list>
-      </v-card-text>
-    </v-card>
+    </AppGlassSectionCard>
 
     <v-dialog v-model="detailOpen" max-width="720" scrollable>
-      <v-card rounded="lg">
-        <v-card-title class="text-subtitle-1">{{ t('settings.logs.detailTitle') }}</v-card-title>
-        <v-card-text>
+      <AppGlassSectionCard body-padding="none">
+        <template #title>{{ t('settings.logs.detailTitle') }}</template>
+        <div class="pa-4 pt-2">
           <pre class="logs-detail-pre text-body-2">{{ detailText }}</pre>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
+        </div>
+        <div class="d-flex flex-wrap justify-end gap-2 pa-4 pt-0">
           <v-btn variant="text" @click="detailOpen = false">{{ t('common.close') }}</v-btn>
-        </v-card-actions>
-      </v-card>
+        </div>
+      </AppGlassSectionCard>
     </v-dialog>
-
-    <v-snackbar v-model="snackbar" location="bottom" timeout="2200">
-      {{ snackbarText }}
-    </v-snackbar>
   </div>
 </template>
 
@@ -254,6 +250,13 @@ function clearModuleFilter() {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+.logs-list-card :deep(.app-glass-section-card__body) {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .logs-list {

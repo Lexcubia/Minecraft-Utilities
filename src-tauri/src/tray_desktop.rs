@@ -1,27 +1,45 @@
-//! 系统托盘：桌面端；右键菜单（打开主面板 / 设置 / 关闭）与左键还原窗口。
-//! 菜单为系统原生绘制，样式随 OS；文案由前端按语言同步。
+//! 系统托盘：桌面端。
+//! - **Linux**：原生右键菜单（无菜单时图标可能异常）；左键尽量还原主窗。
+//! - **Windows / macOS**：左键还原主窗；右键由独立透明小窗 `tray-menu` 展示毛玻璃菜单（`tray-flyout-open`）。
 
 #![cfg(desktop)]
 
 use serde::Deserialize;
 use tauri::{
     image::Image,
-    menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Emitter, Manager, Runtime,
+    AppHandle, Emitter, Manager, Position, Runtime, Size,
 };
 
+#[cfg(target_os = "linux")]
+use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
+
 const TRAY_ID: &str = "main-tray";
+
+#[cfg(target_os = "linux")]
 const MENU_ID_OPEN_MAIN: &str = "mc_tray_open_main";
+#[cfg(target_os = "linux")]
 const MENU_ID_SETTINGS: &str = "mc_tray_settings";
+#[cfg(target_os = "linux")]
 const MENU_ID_CLOSE: &str = "mc_tray_close";
 
+#[derive(Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct TrayFlyoutOpenPayload {
+    cursor_x: f64,
+    cursor_y: f64,
+    icon_x: f64,
+    icon_y: f64,
+    icon_width: f64,
+    icon_height: f64,
+}
+
 fn tray_icon() -> tauri::Result<Image<'static>> {
-    // 须与仓库根 `config/app-icons.json` 中 `tauriBundleIcons.trayPngRelativeToSrcTauriDir` 一致
     const PNG: &[u8] = include_bytes!("../icons/32x32.png");
     Image::from_bytes(PNG)
 }
 
+#[cfg(target_os = "linux")]
 fn emit_tray<R: Runtime>(app: &AppHandle<R>, event: &str) {
     if let Some(w) = app.get_webview_window("main") {
         let _ = w.show();
@@ -38,7 +56,8 @@ fn show_main_window<R: Runtime>(app: &AppHandle<R>) {
     }
 }
 
-pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
+#[cfg(target_os = "linux")]
+fn create_tray_linux<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     let open_main = MenuItem::with_id(app, MENU_ID_OPEN_MAIN, "Open main window", true, None::<&str>)?;
     let sep = PredefinedMenuItem::separator(app)?;
     let settings_item = MenuItem::with_id(app, MENU_ID_SETTINGS, "Settings", true, None::<&str>)?;
@@ -71,6 +90,75 @@ pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     Ok(())
 }
 
+fn tray_icon_bounds_physical(rect: tauri::Rect) -> (f64, f64, f64, f64) {
+    let (x, y) = match rect.position {
+        Position::Physical(p) => (p.x as f64, p.y as f64),
+        Position::Logical(l) => (l.x, l.y),
+    };
+    let (w, h) = match rect.size {
+        Size::Physical(s) => (s.width as f64, s.height as f64),
+        Size::Logical(l) => (l.width, l.height),
+    };
+    (x, y, w.max(1.0), h.max(1.0))
+}
+
+#[cfg(not(target_os = "linux"))]
+fn create_tray_non_linux<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
+    TrayIconBuilder::with_id(TRAY_ID)
+        .icon(tray_icon()?)
+        .tooltip("Minecraft Utilities")
+        .show_menu_on_left_click(false)
+        .on_tray_icon_event(|tray, event| {
+            let app = tray.app_handle();
+            if let TrayIconEvent::Click {
+                button,
+                button_state: MouseButtonState::Up,
+                position,
+                rect,
+                ..
+            } = event
+            {
+                match button {
+                    MouseButton::Left => show_main_window(&app),
+                    MouseButton::Right => {
+                        if let Some(w) = app.get_webview_window("main") {
+                            let _ = w.show();
+                            let _ = w.set_focus();
+                            let (icon_x, icon_y, icon_width, icon_height) =
+                                tray_icon_bounds_physical(rect);
+                            let _ = w.emit(
+                                "tray-flyout-open",
+                                TrayFlyoutOpenPayload {
+                                    cursor_x: position.x,
+                                    cursor_y: position.y,
+                                    icon_x,
+                                    icon_y,
+                                    icon_width,
+                                    icon_height,
+                                },
+                            );
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        })
+        .build(app)?;
+
+    Ok(())
+}
+
+pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
+    #[cfg(target_os = "linux")]
+    {
+        create_tray_linux(app)
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        create_tray_non_linux(app)
+    }
+}
+
 #[tauri::command]
 pub fn exit_app(app: AppHandle) {
     app.exit(0);
@@ -79,28 +167,45 @@ pub fn exit_app(app: AppHandle) {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TrayMenuLabelsPayload {
+    #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
     pub open_main: String,
+    #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
     pub settings: String,
+    #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
     pub close: String,
     pub tooltip: String,
 }
 
 #[tauri::command]
 pub fn sync_tray_menu_labels(app: AppHandle, payload: TrayMenuLabelsPayload) -> Result<(), String> {
-    let open_item = MenuItem::with_id(&app, MENU_ID_OPEN_MAIN, &payload.open_main, true, None::<&str>)
-        .map_err(|e| e.to_string())?;
-    let sep = PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?;
-    let settings_item =
-        MenuItem::with_id(&app, MENU_ID_SETTINGS, &payload.settings, true, None::<&str>).map_err(|e| e.to_string())?;
-    let close_item =
-        MenuItem::with_id(&app, MENU_ID_CLOSE, &payload.close, true, None::<&str>).map_err(|e| e.to_string())?;
-    let menu = Menu::with_items(&app, &[&open_item, &sep, &settings_item, &close_item])
-        .map_err(|e| e.to_string())?;
-    let tray = app
-        .tray_by_id(TRAY_ID)
-        .ok_or_else(|| "tray icon not initialized".to_string())?;
-    tray.set_menu(Some(menu)).map_err(|e| e.to_string())?;
-    let TrayMenuLabelsPayload { tooltip, .. } = payload;
-    let _ = tray.set_tooltip(Some(tooltip));
-    Ok(())
+    #[cfg(target_os = "linux")]
+    {
+        let open_item =
+            MenuItem::with_id(&app, MENU_ID_OPEN_MAIN, &payload.open_main, true, None::<&str>)
+                .map_err(|e| e.to_string())?;
+        let sep = PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?;
+        let settings_item =
+            MenuItem::with_id(&app, MENU_ID_SETTINGS, &payload.settings, true, None::<&str>)
+                .map_err(|e| e.to_string())?;
+        let close_item =
+            MenuItem::with_id(&app, MENU_ID_CLOSE, &payload.close, true, None::<&str>)
+                .map_err(|e| e.to_string())?;
+        let menu = Menu::with_items(&app, &[&open_item, &sep, &settings_item, &close_item])
+            .map_err(|e| e.to_string())?;
+        let tray = app
+            .tray_by_id(TRAY_ID)
+            .ok_or_else(|| "tray icon not initialized".to_string())?;
+        tray.set_menu(Some(menu)).map_err(|e| e.to_string())?;
+        let TrayMenuLabelsPayload { tooltip, .. } = payload;
+        let _ = tray.set_tooltip(Some(tooltip));
+        Ok(())
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        let tray = app
+            .tray_by_id(TRAY_ID)
+            .ok_or_else(|| "tray icon not initialized".to_string())?;
+        let TrayMenuLabelsPayload { tooltip, .. } = payload;
+        tray.set_tooltip(Some(tooltip)).map_err(|e| e.to_string())
+    }
 }

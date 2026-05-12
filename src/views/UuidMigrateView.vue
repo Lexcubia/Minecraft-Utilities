@@ -10,6 +10,8 @@ import {
   worldUuidMigrateBatch,
   type WorldPlayerRow,
 } from '@/api/worldUuidMigrate';
+import AppGlassSectionCard from '@/components/ui/AppGlassSectionCard.vue';
+import { appSnackbar } from '@/utils/appSnackbar';
 import { isTauriRuntime } from '@/utils/isTauriRuntime';
 import { appLog, truncatePath } from '@/utils/appLog';
 import { open } from '@tauri-apps/plugin-dialog';
@@ -18,7 +20,22 @@ import { useI18n } from 'vue-i18n';
 
 defineOptions({ name: 'UuidMigrateView' });
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
+
+/** 非桌面环境：页内提示 */
+const bannerNeedDesktop = ref('');
+/** 桌面环境：备份警告，页内固定展示 */
+const bannerBackupWarn = ref('');
+
+function setUuidError(msg: string) {
+  void appSnackbar.show({
+    text: msg,
+    color: 'error',
+    timeout: 12_000,
+    multiLine: true,
+    rounded: 'md',
+  });
+}
 
 const ISOLATED_KEY = 'mu-uuid-migrate-client-isolated';
 
@@ -45,7 +62,6 @@ const usercacheExists = ref(false);
 const rows = ref<(WorldPlayerRow & { toUuid: string })[]>([]);
 const loading = ref(false);
 const logText = ref('');
-const errorBanner = ref('');
 
 const canUse = computed(() => isTauriRuntime());
 
@@ -113,7 +129,6 @@ watch(mode, () => {
   serverRoot.value = '';
   usercacheFullPath.value = '';
   usercacheExists.value = false;
-  errorBanner.value = '';
 });
 
 watch(clientIsolated, () => {
@@ -130,6 +145,16 @@ onMounted(() => {
   const v = localStorage.getItem(ISOLATED_KEY);
   clientIsolated.value = v !== '0';
 });
+
+watch([canUse, locale], ([cu]) => {
+  bannerNeedDesktop.value = '';
+  bannerBackupWarn.value = '';
+  if (!cu) {
+    bannerNeedDesktop.value = t('tools.uuidMigrate.needDesktop');
+  } else {
+    bannerBackupWarn.value = t('tools.uuidMigrate.backupWarn');
+  }
+}, { immediate: true });
 
 async function checkUsercache() {
   if (!usercacheFullPath.value.trim()) {
@@ -167,7 +192,6 @@ function updateClientUsercachePath() {
 
 async function bootstrapClientDirs() {
   if (!clientRoot.value) return;
-  errorBanner.value = '';
   try {
     if (clientIsolated.value) {
       versionOptions.value = await listSubdirs(joinPathSegments(clientRoot.value, 'versions'));
@@ -181,12 +205,11 @@ async function bootstrapClientDirs() {
       selectedSaveName.value = null;
     }
   } catch (e) {
-    errorBanner.value = e instanceof Error ? e.message : String(e);
+    setUuidError(e instanceof Error ? e.message : String(e));
   }
 }
 
 async function pickClientMinecraft() {
-  errorBanner.value = '';
   const selected = await open({
     directory: true,
     multiple: false,
@@ -213,13 +236,12 @@ async function onVersionSelected(id: string | null) {
     await checkUsercache();
     return;
   }
-  errorBanner.value = '';
   try {
     const savesDir = joinPathSegments(clientRoot.value, 'versions', id, 'saves');
     saveOptions.value = await listSubdirs(savesDir);
   } catch (e) {
     saveOptions.value = [];
-    errorBanner.value = e instanceof Error ? e.message : String(e);
+    setUuidError(e instanceof Error ? e.message : String(e));
   }
   updateClientUsercachePath();
   await checkUsercache();
@@ -246,7 +268,6 @@ async function onSaveSelected(name: string | null) {
 }
 
 async function pickServerRoot() {
-  errorBanner.value = '';
   const selected = await open({
     directory: true,
     multiple: false,
@@ -263,7 +284,7 @@ async function pickServerRoot() {
     serverWorldOptions.value = await listServerWorldDirs(path);
   } catch (e) {
     serverWorldOptions.value = [];
-    errorBanner.value = e instanceof Error ? e.message : String(e);
+    setUuidError(e instanceof Error ? e.message : String(e));
   }
 }
 
@@ -277,7 +298,6 @@ async function onServerWorldSelected(name: string | null) {
 }
 
 async function refreshPlayers() {
-  errorBanner.value = '';
   logText.value = '';
   if (!worldFullPath.value.trim() || !usercacheFullPath.value.trim()) {
     return;
@@ -299,10 +319,10 @@ async function refreshPlayers() {
       );
     }
     if (!list.length) {
-      errorBanner.value = t('tools.uuidMigrate.errNoPlayers');
+      setUuidError(t('tools.uuidMigrate.errNoPlayers'));
     }
   } catch (e) {
-    errorBanner.value = e instanceof Error ? e.message : String(e);
+    setUuidError(e instanceof Error ? e.message : String(e));
     rows.value = [];
     appLog(
       'uuid_migrate',
@@ -316,15 +336,14 @@ async function refreshPlayers() {
 }
 
 async function runMigrate(dryRun: boolean) {
-  errorBanner.value = '';
   logText.value = '';
   if (!worldFullPath.value.trim()) {
-    errorBanner.value = t('tools.uuidMigrate.errNoWorld');
+    setUuidError(t('tools.uuidMigrate.errNoWorld'));
     return;
   }
   const pairs = validPairs.value;
   if (!pairs.length) {
-    errorBanner.value = t('tools.uuidMigrate.errNoMappings');
+    setUuidError(t('tools.uuidMigrate.errNoMappings'));
     return;
   }
   loading.value = true;
@@ -340,7 +359,7 @@ async function runMigrate(dryRun: boolean) {
       out || undefined,
     );
   } catch (e) {
-    errorBanner.value = e instanceof Error ? e.message : String(e);
+    setUuidError(e instanceof Error ? e.message : String(e));
     appLog(
       'uuid_migrate',
       'error',
@@ -369,48 +388,49 @@ async function runMigrate(dryRun: boolean) {
       </div>
     </header>
 
-    <v-alert v-if="!canUse" type="info" variant="tonal" class="mb-4 rounded-xl">
-      <template #prepend>
-        <v-icon icon="mdi-information-outline" />
-      </template>
-      {{ t('tools.uuidMigrate.needDesktop') }}
-    </v-alert>
-
-    <v-alert v-else type="warning" variant="tonal" class="mb-4 rounded-xl">
-      <template #prepend>
-        <v-icon icon="mdi-shield-alert-outline" />
-      </template>
-      {{ t('tools.uuidMigrate.backupWarn') }}
-    </v-alert>
-
-    <v-alert
-      v-if="errorBanner"
-      type="error"
-      variant="tonal"
-      class="mb-4 rounded-xl"
-      closable
-      @click:close="errorBanner = ''"
+    <section
+      class="uuid-page-banners d-flex flex-column ga-3 mb-5"
+      role="region"
+      :aria-label="t('tools.uuidMigrate.pageBannersAria')"
     >
-      <template #prepend>
-        <v-icon icon="mdi-alert-circle-outline" />
+      <v-alert
+        v-if="bannerNeedDesktop"
+        type="info"
+        variant="tonal"
+        density="comfortable"
+        rounded="lg"
+        class="uuid-page-banner mb-0"
+      >
+        {{ bannerNeedDesktop }}
+      </v-alert>
+      <v-alert
+        v-if="bannerBackupWarn"
+        type="warning"
+        variant="tonal"
+        density="comfortable"
+        rounded="lg"
+        class="uuid-page-banner mb-0"
+      >
+        {{ bannerBackupWarn }}
+      </v-alert>
+    </section>
+
+    <AppGlassSectionCard v-if="canUse" class="mb-5" body-padding="none">
+      <template #head>
+        <div class="d-flex flex-wrap align-start gap-3 pa-4 pt-5 pb-2">
+          <v-icon icon="mdi-folder-cog-outline" color="primary" size="26" class="flex-shrink-0 mt-0" />
+          <div class="flex-grow-1 min-width-0 ps-1">
+            <div class="text-h6 font-weight-semibold">
+              {{ t('tools.uuidMigrate.sectionSetup') }}
+            </div>
+            <div class="text-body-2 text-medium-emphasis text-wrap">
+              {{ t('tools.uuidMigrate.modeLabel') }}
+            </div>
+          </div>
+        </div>
       </template>
-      {{ errorBanner }}
-    </v-alert>
 
-    <v-card v-if="canUse" class="uuid-panel rounded-xl mb-5" variant="flat">
-      <v-card-item class="pb-2 pt-5 px-5">
-        <template #prepend>
-          <v-icon icon="mdi-folder-cog-outline" color="primary" size="26" />
-        </template>
-        <v-card-title class="text-h6 font-weight-semibold ps-1">
-          {{ t('tools.uuidMigrate.sectionSetup') }}
-        </v-card-title>
-        <v-card-subtitle class="text-body-2 ps-1 text-wrap">
-          {{ t('tools.uuidMigrate.modeLabel') }}
-        </v-card-subtitle>
-      </v-card-item>
-
-      <v-card-text class="px-5 pb-5 pt-0">
+      <div class="px-5 pb-5 pt-0">
         <v-btn-toggle
           v-model="mode"
           mandatory
@@ -441,16 +461,15 @@ async function runMigrate(dryRun: boolean) {
             >
               {{ t('tools.uuidMigrate.pickMinecraft') }}
             </v-btn>
-            <v-sheet class="uuid-switch-sheet rounded-lg pa-2 flex-grow-1 flex-sm-grow-0" rounded="lg">
+            <div class="uuid-client-isolated-toggle flex-grow-1 flex-sm-grow-0 d-flex align-center">
               <v-switch
                 v-model="clientIsolated"
                 color="primary"
-                density="comfortable"
+                density="compact"
                 hide-details
-                inset
                 :label="t('tools.uuidMigrate.clientIsolated')"
               />
-            </v-sheet>
+            </div>
           </div>
           <v-sheet
             v-if="clientRoot"
@@ -565,39 +584,49 @@ async function runMigrate(dryRun: boolean) {
         >
           {{ t('tools.uuidMigrate.reload') }}
         </v-btn>
-      </v-card-text>
-    </v-card>
+      </div>
+    </AppGlassSectionCard>
 
-    <v-card v-if="canUse && worldFullPath" class="uuid-panel uuid-player-card rounded-xl mb-4 overflow-hidden">
-      <v-progress-linear v-if="loading" indeterminate color="primary" class="uuid-progress" />
-      <v-card-item class="uuid-player-header py-4 px-5">
-        <template #prepend>
-          <v-icon icon="mdi-account-multiple-outline" color="primary" size="26" />
-        </template>
-        <v-card-title class="text-h6 font-weight-semibold ps-1 d-flex flex-wrap align-center gap-2">
-          {{ t('tools.uuidMigrate.sectionPlayers') }}
-          <v-chip
-            v-if="worldBasename"
-            size="small"
-            variant="tonal"
-            color="primary"
-            class="font-weight-medium"
-            prepend-icon="mdi-folder-outline"
-          >
-            {{ t('tools.uuidMigrate.currentWorldChip', { name: worldBasename }) }}
-          </v-chip>
-          <v-spacer class="d-none d-sm-flex" />
-          <span v-if="rows.length" class="text-caption text-medium-emphasis ms-sm-auto">
-            {{ t('tools.uuidMigrate.playerCount', { n: rows.length }) }}
-          </span>
-        </v-card-title>
-      </v-card-item>
+    <AppGlassSectionCard
+      v-if="canUse && worldFullPath"
+      class="uuid-player-card mb-4 overflow-hidden"
+      body-padding="none"
+    >
+      <template #overline>
+        <v-progress-linear v-if="loading" indeterminate color="primary" class="uuid-progress" />
+      </template>
+      <template #head>
+        <div class="uuid-player-header py-4 px-5">
+          <div class="d-flex flex-wrap align-start gap-3">
+            <v-icon icon="mdi-account-multiple-outline" color="primary" size="26" class="flex-shrink-0" />
+            <div class="flex-grow-1 min-width-0 ps-1">
+              <div class="text-h6 font-weight-semibold d-flex flex-wrap align-center gap-2">
+                {{ t('tools.uuidMigrate.sectionPlayers') }}
+                <v-chip
+                  v-if="worldBasename"
+                  size="small"
+                  variant="tonal"
+                  color="primary"
+                  class="font-weight-medium"
+                  prepend-icon="mdi-folder-outline"
+                >
+                  {{ t('tools.uuidMigrate.currentWorldChip', { name: worldBasename }) }}
+                </v-chip>
+                <v-spacer class="d-none d-sm-flex" />
+                <span v-if="rows.length" class="text-caption text-medium-emphasis ms-sm-auto">
+                  {{ t('tools.uuidMigrate.playerCount', { n: rows.length }) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
 
       <div v-if="rows.length" class="uuid-player-list pa-3 pa-sm-4">
         <div
           v-for="(r, i) in rows"
           :key="r.uuid + String(i)"
-          class="uuid-player-row d-flex flex-column flex-md-row flex-wrap align-stretch align-md-center gap-3 px-4 py-4 rounded-xl mb-3"
+          class="uuid-player-row d-flex flex-column flex-md-row flex-wrap align-stretch align-md-center gap-3 px-4 py-4 rounded-md mb-3"
         >
           <div class="uuid-player-identity d-flex flex-grow-1 align-center gap-3 min-width-0">
             <v-avatar size="40" color="primary" variant="tonal" rounded="lg" class="flex-shrink-0">
@@ -632,19 +661,19 @@ async function runMigrate(dryRun: boolean) {
         </div>
       </div>
 
-      <v-card-text v-else-if="loading" class="py-12 text-center">
+      <div v-else-if="loading" class="py-12 text-center">
         <v-progress-circular indeterminate color="primary" size="40" width="3" class="mb-3" />
         <div class="text-body-2 text-medium-emphasis">{{ t('tools.uuidMigrate.loadingPlayers') }}</div>
-      </v-card-text>
+      </div>
 
-      <v-card-text v-else-if="!errorBanner" class="py-12 text-center">
+      <div v-else class="py-12 text-center">
         <v-icon icon="mdi-account-off-outline" size="48" class="text-disabled mb-2" />
         <div class="text-body-2 text-medium-emphasis">{{ t('tools.uuidMigrate.waitOrEmpty') }}</div>
-      </v-card-text>
+      </div>
 
       <v-divider v-if="rows.length" class="border-opacity-10" />
 
-      <v-card-actions v-if="rows.length" class="uuid-player-actions pa-4 pa-sm-5 flex-wrap gap-3">
+      <div v-if="rows.length" class="uuid-player-actions pa-4 pa-sm-5 flex-wrap gap-3 d-flex">
         <v-btn
           color="primary"
           variant="tonal"
@@ -671,17 +700,21 @@ async function runMigrate(dryRun: boolean) {
         <span class="text-caption text-medium-emphasis align-self-center">
           {{ t('tools.uuidMigrate.mappingCount', { n: validPairs.length }) }}
         </span>
-      </v-card-actions>
-    </v-card>
-
-    <v-card v-if="logText" class="uuid-panel rounded-xl pa-5" variant="tonal" color="surface-variant">
-      <div class="d-flex align-center gap-2 mb-2">
-        <v-icon icon="mdi-text-box-outline" size="22" />
-        <span class="text-subtitle-1 font-weight-semibold">{{ t('tools.uuidMigrate.logTitle') }}</span>
       </div>
-      <p class="text-caption text-medium-emphasis mb-3">{{ t('tools.uuidMigrate.logScopeHint') }}</p>
-      <pre class="log-pre text-body-2">{{ logText }}</pre>
-    </v-card>
+    </AppGlassSectionCard>
+
+    <AppGlassSectionCard v-if="logText" class="mb-5">
+      <template #title>
+        <span class="d-inline-flex align-center gap-2">
+          <v-icon icon="mdi-text-box-outline" size="22" />
+          <span>{{ t('tools.uuidMigrate.logTitle') }}</span>
+        </span>
+      </template>
+      <div>
+        <p class="text-caption text-medium-emphasis mb-3">{{ t('tools.uuidMigrate.logScopeHint') }}</p>
+        <pre class="log-pre text-body-2">{{ logText }}</pre>
+      </div>
+    </AppGlassSectionCard>
   </div>
 </template>
 
@@ -699,14 +732,6 @@ async function runMigrate(dryRun: boolean) {
   max-width: 52rem;
 }
 
-.uuid-panel {
-  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-  background: rgb(var(--v-theme-surface));
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 6px 24px rgba(0, 0, 0, 0.06);
-}
-
 .uuid-mode-toggle {
   display: flex;
   width: 100%;
@@ -719,12 +744,37 @@ async function runMigrate(dryRun: boolean) {
   letter-spacing: normal;
 }
 
+/* 分段切换：仅外侧圆角，衔接处直角（避免两钮中间出现「双圆角」） */
+.uuid-mode-toggle :deep(.v-btn:first-child),
+.uuid-mode-toggle :deep(.v-btn:first-child .v-btn__overlay),
+.uuid-mode-toggle :deep(.v-btn:first-child .v-btn__underlay) {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.uuid-mode-toggle :deep(.v-btn:last-child),
+.uuid-mode-toggle :deep(.v-btn:last-child .v-btn__overlay),
+.uuid-mode-toggle :deep(.v-btn:last-child .v-btn__underlay) {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+}
+
 .uuid-primary-btn {
   min-width: 8.5rem;
 }
 
-.uuid-switch-sheet {
-  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+.uuid-client-isolated-toggle {
+  min-width: 0;
+}
+
+.uuid-client-isolated-toggle :deep(.v-switch) {
+  flex: 0 1 auto;
+}
+
+.uuid-client-isolated-toggle :deep(.v-label) {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  opacity: 0.92;
 }
 
 .uuid-path-box {
@@ -741,21 +791,13 @@ async function runMigrate(dryRun: boolean) {
   border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
 
-.uuid-player-card {
-  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-  background: rgb(var(--v-theme-surface));
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 8px 28px rgba(0, 0, 0, 0.07);
-}
-
 .log-pre {
   white-space: pre-wrap;
   word-break: break-word;
   max-height: 360px;
   overflow-y: auto;
   padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
+  border-radius: var(--app-radius-sm);
   background: rgba(var(--v-theme-on-surface), 0.04);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 }

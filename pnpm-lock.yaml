@@ -8,6 +8,21 @@ importers:
 
   .:
     dependencies:
+      '@fontsource/dm-sans':
+        specifier: ^5.2.8
+        version: 5.2.8
+      '@fontsource/fusion-pixel-12px-proportional-sc':
+        specifier: ^5.2.5
+        version: 5.2.5
+      '@fontsource/noto-sans-sc':
+        specifier: ^5.2.9
+        version: 5.2.9
+      '@fontsource/nunito-sans':
+        specifier: ^5.2.7
+        version: 5.2.7
+      '@fontsource/press-start-2p':
+        specifier: ^5.2.7
+        version: 5.2.7
       '@mdi/font':
         specifier: ^7.4.47
         version: 7.4.47
@@ -573,6 +588,21 @@ packages:
     peerDependenciesMeta:
       '@noble/hashes':
         optional: true
+
+  '@fontsource/dm-sans@5.2.8':
+    resolution: {integrity: sha512-tlovG42m9ESG28WiHpLq3F5umAlm64rv0RkqTbYowRn70e9OlRr5a3yTJhrhrY+k5lftR/OFJjPzOLQzk8EfCA==}
+
+  '@fontsource/fusion-pixel-12px-proportional-sc@5.2.5':
+    resolution: {integrity: sha512-TMFojLE0JUJUqgoL1pRxohnm11u59BYSkogyN9VbTQp2kh1HkkQ1FSkPboce3GGQXPskNTip9+oRp3ju83U0tw==}
+
+  '@fontsource/noto-sans-sc@5.2.9':
+    resolution: {integrity: sha512-bTUIWGBgJDpwi5qAr+x0/lcgv80IHTB9vl6s2f6EymZEa7qYV99yNRBZuKFT+SYDKVunZrjCEhWtpxqmbXWl5Q==}
+
+  '@fontsource/nunito-sans@5.2.7':
+    resolution: {integrity: sha512-Vh+xhMsrH1eA9Q83Va82su3rDmNilYg+ur/TfHAOyr5kTpCOWMB8B1tDoJvSe+yJPpZ2jEWtnBHGqI2LUPVxUA==}
+
+  '@fontsource/press-start-2p@5.2.7':
+    resolution: {integrity: sha512-ezSxYRchANoteja170ZHh2Tt4oejmVEvX42VFPOVVvERSZ68pcuZFjbhHfrK/sNjYmaGg656y7B3431ojO9PCQ==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -3102,6 +3132,16 @@ snapshots:
       levn: 0.4.1
 
   '@exodus/bytes@1.15.0': {}
+
+  '@fontsource/dm-sans@5.2.8': {}
+
+  '@fontsource/fusion-pixel-12px-proportional-sc@5.2.5': {}
+
+  '@fontsource/noto-sans-sc@5.2.9': {}
+
+  '@fontsource/nunito-sans@5.2.7': {}
+
+  '@fontsource/press-start-2p@5.2.7': {}
 
   '@humanfs/core@0.19.2':
     dependencies:

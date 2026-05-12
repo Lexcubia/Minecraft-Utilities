@@ -5,6 +5,53 @@ import { en as vuetifyEn, zhHans } from 'vuetify/locale';
 import 'vuetify/styles';
 
 export default createVuetify({
+  defaults: {
+    global: {
+      ripple: false,
+    },
+    VBtn: {
+      rounded: 'lg',
+    },
+    VSheet: {
+      rounded: 'lg',
+    },
+    VCard: {
+      rounded: 'xl',
+    },
+    VTextField: {
+      variant: 'outlined',
+      density: 'comfortable',
+      hideDetails: 'auto',
+    },
+    VTextarea: {
+      variant: 'outlined',
+      density: 'comfortable',
+      hideDetails: 'auto',
+    },
+    VSelect: {
+      variant: 'outlined',
+      density: 'comfortable',
+      hideDetails: 'auto',
+    },
+    VAutocomplete: {
+      variant: 'outlined',
+      density: 'comfortable',
+      hideDetails: 'auto',
+    },
+    VCombobox: {
+      variant: 'outlined',
+      density: 'comfortable',
+      hideDetails: 'auto',
+    },
+    VCheckbox: {
+      density: 'comfortable',
+      hideDetails: true,
+    },
+    VSwitch: {
+      density: 'comfortable',
+      hideDetails: true,
+    },
+  },
   theme: {
     defaultTheme: 'light',
     themes: {

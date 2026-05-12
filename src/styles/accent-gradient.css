@@ -3,11 +3,7 @@
 .v-application.app-accent-gradient .v-btn.bg-primary.v-btn--variant-flat,
 .v-application.app-accent-gradient .v-btn.bg-primary.v-btn--variant-elevated {
   background-color: transparent !important;
-  background-image: linear-gradient(
-    135deg,
-    rgb(var(--v-theme-primary)),
-    rgb(var(--v-theme-secondary))
-  ) !important;
+  background-image: var(--app-gradient-primary-secondary-135) !important;
   color: rgb(var(--v-theme-on-primary)) !important;
 }
 
@@ -25,11 +21,7 @@
 .v-application.app-accent-gradient .v-chip.bg-primary.v-chip--variant-elevated,
 .v-application.app-accent-gradient .v-chip.bg-primary {
   background-color: transparent !important;
-  background-image: linear-gradient(
-    135deg,
-    rgb(var(--v-theme-primary)),
-    rgb(var(--v-theme-secondary))
-  ) !important;
+  background-image: var(--app-gradient-primary-secondary-135) !important;
   color: rgb(var(--v-theme-on-primary)) !important;
 }
 

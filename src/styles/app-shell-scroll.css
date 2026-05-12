@@ -13,6 +13,7 @@
 html {
   height: 100%;
   overflow: hidden;
+  overscroll-behavior: none;
   --app-shell-scrollbar-thumb: color-mix(
     in srgb,
     rgb(var(--v-theme-primary)) 44%,
@@ -37,6 +38,7 @@ body {
   margin: 0;
   height: 100%;
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 #app {
@@ -71,6 +73,8 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* 勿铺实色，否则会盖住 v-app 根上的背景渐变 / 自定义图 */
+  background: transparent !important;
 }
 
 /* 主内容外壳：不自身滚动（否则滚动条会与 fixed 顶栏重叠被盖住） */
@@ -82,6 +86,7 @@ body {
   min-height: 0 !important;
   max-height: 100%;
   overflow: hidden !important;
+  background: transparent !important;
 }
 
 /*
@@ -118,6 +123,45 @@ body {
   scrollbar-gutter: stable;
   -webkit-user-select: text;
   user-select: text;
+  /* 主内容区轻毛玻璃，与侧栏/顶栏风格统一 */
+  background: var(--app-glass-main-tint);
+  -webkit-backdrop-filter: blur(14px) saturate(1.12);
+  backdrop-filter: blur(14px) saturate(1.12);
+}
+
+html[data-app-bg-preset='blocks'] .app-shell-main-scroll {
+  background: var(--app-glass-main-tint-blocks);
+}
+
+/*
+ * 仅独立 Webview 窗（如设置）：子页需 flex 占满高度 + 内层滚动（AppScrollableDocumentFrame）。
+ * 主窗内路由勿加此类，避免与 scrollbar-gutter 叠加出「双滚动条/错位」观感。
+ */
+.app-shell-main-scroll.app-shell-main-scroll--nested-document {
+  display: flex;
+  flex-direction: column;
+}
+
+/*
+ * 外壳不作为纵向滚动容器：不占 scrollbar-gutter，Tabs 与顶栏同宽；
+ * 滚动仅发生在子级 AppScrollableDocumentFrame 正文（独立设置窗等）。
+ */
+.app-shell-main-scroll.app-shell-main-scroll--inner-scroll-host {
+  overflow-y: hidden;
+  scrollbar-gutter: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell-main-scroll {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: rgb(var(--v-theme-background));
+  }
+
+  /* 无 backdrop 时若铺实色会盖住根上的方块网格 */
+  html[data-app-bg-preset='blocks'] .app-shell-main-scroll {
+    background: var(--app-glass-main-tint-blocks);
+  }
 }
 
 .app-shell-main-scroll * {
