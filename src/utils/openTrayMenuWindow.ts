@@ -43,7 +43,10 @@ function trayMenuAbsoluteUrl(): string {
   return new URL(href, window.location.origin).href;
 }
 
-async function layoutTrayMenuOuterPhysical(win: WebviewWindow, p: TrayFlyoutOpenPayload): Promise<void> {
+async function layoutTrayMenuOuterPhysical(
+  win: WebviewWindow,
+  p: TrayFlyoutOpenPayload,
+): Promise<void> {
   const anchor = trayAnchorPhysical(p);
   const mon = await monitorFromPoint(anchor.x, anchor.y);
   const scale = mon?.scaleFactor ?? (await win.scaleFactor());

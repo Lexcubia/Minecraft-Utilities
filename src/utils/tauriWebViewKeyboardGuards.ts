@@ -63,7 +63,16 @@ function isDevtoolsChord(e: KeyboardEvent): boolean {
   const mod = e.ctrlKey || e.metaKey;
   if (!mod || !e.shiftKey || e.altKey) return false;
   const k = e.key;
-  return k === 'I' || k === 'i' || k === 'J' || k === 'j' || k === 'C' || k === 'c' || k === 'K' || k === 'k';
+  return (
+    k === 'I' ||
+    k === 'i' ||
+    k === 'J' ||
+    k === 'j' ||
+    k === 'C' ||
+    k === 'c' ||
+    k === 'K' ||
+    k === 'k'
+  );
 }
 
 /** 在输入框里也会触发「页面级」行为的 Ctrl+ 组合（Chromium 默认） */

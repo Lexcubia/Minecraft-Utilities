@@ -150,9 +150,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const updateChannel = ref<UpdateChannel>('stable');
   const uiLanguage = ref<UiLanguage>('system');
   const themeColorPreset = ref<ThemeColorPresetId>(DEFAULT_THEME_COLOR_PRESET_ID);
-  const customThemeColors = ref<ThemeColorSchemePair>(
-    normalizeCustomThemeColors(undefined),
-  );
+  const customThemeColors = ref<ThemeColorSchemePair>(normalizeCustomThemeColors(undefined));
   const drawerLocation = ref<DrawerLocation>(DEFAULT_DRAWER_LOCATION);
   const showVisitedTabBar = ref(true);
   const appBackgroundPreset = ref<AppBackgroundPresetId>(DEFAULT_APP_BACKGROUND_PRESET_ID);
