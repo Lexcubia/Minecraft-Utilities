@@ -144,14 +144,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mapfile -t metas < <(find src-tauri/target/release/bundle -name latest.json -type f 2>/dev/null || true)
-          if [ "${#metas[@]}" -eq 0 ]; then
+          # macOS runners use Bash 3.2 (no mapfile); use read -d '' + process substitution.
+          found=0
+          while IFS= read -r -d '' f; do
+            printf 'OK: %s\n' "$f"
+            found=1
+          done < <(find src-tauri/target/release/bundle -name latest.json -type f -print0 2>/dev/null || true)
+          if [ "$found" -eq 0 ]; then
             echo '::error::构建完成后在 src-tauri/target/release/bundle 下未找到 latest.json（应用内更新元数据）。请确认 TAURI_SIGNING_PRIVATE_KEY 格式正确且与 pubkey 成对，且 tauri.conf.json 中 bundle.createUpdaterArtifacts 为 true。'
             echo 'Bundle tree (max depth 5):'
             find src-tauri/target/release/bundle -type f -maxdepth 5 -print 2>/dev/null || true
             exit 1
           fi
-          printf 'OK: %s\n' "${metas[@]}"
 
       - name: Pack Windows portable (zip)
         if: matrix.os == 'windows-latest'
@@ -260,7 +264,11 @@ jobs:
           VERSION="$(jq -r .version package.json)"
           TAG="v${VERSION}"
           SHA="${{ github.sha }}"
-          mapfile -t assets < <(find release-files -type f \( \
+          # Bash 3.2–compatible (no mapfile); publish job is Ubuntu but keep portable.
+          assets=()
+          while IFS= read -r f; do
+            [ -n "$f" ] && assets+=("$f")
+          done < <(find release-files -type f \( \
             -name '*.exe' -o -name '*.msi' -o -name '*.dmg' -o \
             -name '*.AppImage' -o -name '*.deb' -o -name '*.zip' -o \
             -name '*.sig' -o -name 'latest.json' \
