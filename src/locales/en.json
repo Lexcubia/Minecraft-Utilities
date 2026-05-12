@@ -60,10 +60,7 @@
     "versionLabel": "Version {version}",
     "quickTitle": "Quick access",
     "openDocs": "Chinese documentation",
-    "openDocsHint": "Usage, development, and legal index",
-    "openRepo": "GitHub repository",
-    "openRepoHint": "Source, issues, and releases",
-    "devPing": "Test Tauri invoke"
+    "openRepo": "GitHub repository"
   },
   "settings": {
     "sections": {
@@ -146,7 +143,7 @@
       "channelStable": "Stable",
       "channelBeta": "Beta",
       "inAppTitle": "In-app update",
-      "inAppHint": "Download and install signed updates from the configured endpoint (no browser download from the list below).",
+      "inAppHint": "Download and install signed updates from the configured endpoint",
       "inAppApply": "Check and install update",
       "inAppNoUpdate": "You are on the latest version.",
       "inAppError": "Update failed: {msg}",
