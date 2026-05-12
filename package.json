@@ -25,7 +25,7 @@
     "desktop:dev": "pnpm dev",
     "desktop:tauri": "pnpm tauri dev",
     "desktop:build": "pnpm build",
-    "gen:logo": "node scripts/gen-app-logo-svg.mjs && node scripts/sync-tauri-bundle-icons-from-config.mjs",
+    "gen:logo": "node scripts/gen-app-logo-svg.mjs && pnpm exec tauri icon public/app-logo.svg -o src-tauri/icons && node scripts/sync-tauri-bundle-icons-from-config.mjs",
     "sync:version": "node scripts/sync-version.mjs",
     "version": "node scripts/sync-version.mjs",
     "prepare": "husky"

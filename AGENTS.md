@@ -4,12 +4,16 @@
 
 ## 项目组成
 
-| 部分                       | 路径                      | 说明                                                                                                                                                                                                                                                                                            |
-| -------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Python 引擎                | `python/modpack_updater/` | 清单/整合包解析、Curse/Modrinth、差异、下载、写回等引擎能力；CLI 入口 `minecraft-utilities`（兼容别名 `modpack-updater`）                                                                                                                                                                       |
-| 桌面端（仓库根）           | `src/`、`src-tauri/`      | Tauri 2 + Vite + Vue + TS + Tailwind + Vuetify + Pinia + Vue Router                                                                                                                                                                                                                             |
-| 文档（使用 / 开发 / 法律） | `docs/`                   | 入口 [docs/zh-cn/README.md](docs/zh-cn/README.md)；根 [README](README.md) 为架构与功能一览                                                                                                                                                                                                      |
-| 品牌 / 图标                | `config/app-icons.json`   | 唯一配置：Web favicon 路径、SVG 输出列表、`tauri.conf.json` 的 `bundle.icon`、README 居中图路径；`pnpm gen:logo` 写 SVG 并同步 Tauri；前端用 `src/constants/app-icons.ts`（`app-meta` 再导出 `APP_LOGO_URL`）；托盘 PNG 与 `tray_desktop.rs` 注释须与配置中 `trayPngRelativeToSrcTauriDir` 一致 |
+<!-- markdownlint-disable MD060 -->
+
+| 部分                       | 路径                      | 说明                                                                                                                                                                         |
+| -------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Python 引擎                | `python/modpack_updater/` | 清单/整合包解析、Curse/Modrinth、差异、下载、写回等引擎能力；CLI 入口 `minecraft-utilities`（兼容别名 `modpack-updater`）                                                    |
+| 桌面端（仓库根）           | `src/`、`src-tauri/`      | Tauri 2 + Vite + Vue + TS + Tailwind + Vuetify + Pinia + Vue Router                                                                                                          |
+| 文档（使用 / 开发 / 法律） | `docs/`                   | 入口 [docs/zh-cn/README.md](docs/zh-cn/README.md)；根 [README](README.md) 为架构与功能一览                                                                                   |
+| 品牌 / 图标                | `config/app-icons.json`   | 唯一配置见 `config/app-icons.json`。**pnpm gen:logo**：SVG → **tauri icon** 生成 `src-tauri/icons`（安装包/任务栏）并同步 `bundle.icon`；前端 `APP_LOGO_URL` 见 `app-meta`。 |
+
+<!-- markdownlint-enable MD060 -->
 
 ## 编码约定
 
