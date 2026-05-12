@@ -48,4 +48,11 @@ export default tseslint.config(
     },
   },
   eslintConfigPrettier,
+  {
+    files: ['src/views/settings/tabs/UpdatesTab.vue'],
+    rules: {
+      // 发布说明经 DOMPurify 清洗后注入；见 `renderMarkdownToSafeHtml`
+      'vue/no-v-html': 'off',
+    },
+  },
 );

@@ -9,7 +9,10 @@ function detectPlatform(): 'windows' | 'macos' | 'linux' | 'unknown' {
   return 'unknown';
 }
 
-function findByExtensions(assets: GitHubReleaseAsset[], exts: string[]): GitHubReleaseAsset | undefined {
+function findByExtensions(
+  assets: GitHubReleaseAsset[],
+  exts: string[],
+): GitHubReleaseAsset | undefined {
   const lower = exts.map((e) => e.toLowerCase());
   return assets.find((a) => {
     const n = a.name.toLowerCase();
@@ -20,7 +23,9 @@ function findByExtensions(assets: GitHubReleaseAsset[], exts: string[]): GitHubR
 /**
  * 为当前平台挑选最合适的安装包；无匹配时退回第一个带下载地址的资源。
  */
-export function pickPreferredInstallAsset(assets: GitHubReleaseAsset[]): GitHubReleaseAsset | undefined {
+export function pickPreferredInstallAsset(
+  assets: GitHubReleaseAsset[],
+): GitHubReleaseAsset | undefined {
   if (!assets.length) return undefined;
   const platform = detectPlatform();
   let picked: GitHubReleaseAsset | undefined;

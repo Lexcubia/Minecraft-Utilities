@@ -32,6 +32,29 @@ minecraft-utilities --help
 # modpack-updater --help
 ```
 
+### 存档 UUID 迁移（换号 / 迁移账号）
+
+将**整个存档目录**（含 `level.dat`、`playerdata` 等）中的旧玩家 UUID 批量替换为新 UUID：重命名 `playerdata`、`advancements`、`stats` 下同名文件，并在常见文本扩展名与 gzip NBT（`.dat`）中替换字符串写法及 NBT `UUID` IntArray。
+
+**请先完整备份存档。** 建议先 **`--dry-run`** 查看将执行的操作。
+
+```bash
+# 预览（不写盘）。将下方路径换为你的「存档根目录」（含 level.dat、playerdata 等）。
+minecraft-utilities uuid-migrate "C:\Minecraft\instances\YourInstance\saves\YourWorld" ^
+  --from 00000000-0000-4000-8000-000000000001 ^
+  --to 11111111-1111-4111-8111-111111111111 ^
+  --dry-run
+
+# 确认后执行（将写盘）
+minecraft-utilities uuid-migrate "C:\Minecraft\instances\YourInstance\saves\YourWorld" ^
+  --from 00000000-0000-4000-8000-000000000001 ^
+  --to 11111111-1111-4111-8111-111111111111
+```
+
+（Linux / macOS 下去掉 `^`，用反斜杠续行或写成一行即可。）
+
+**说明**：当前不扫描 `region` / `poi` / `entities` 下的 `.mca` 区块文件；区块实体中的 UUID 不会自动替换。
+
 ### 桌面端（仓库根目录）
 
 ```bash

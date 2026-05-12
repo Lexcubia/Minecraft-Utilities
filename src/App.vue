@@ -6,11 +6,13 @@ import {
 } from '@/utils/buildAppRootBackgroundStyle';
 import { usePrefersColorSchemeDark } from '@/composables/usePrefersColorSchemeDark';
 import { useSettingsStore } from '@/stores/settings';
+import { APP_VERSION } from '@/constants/app-meta';
 import {
   CUSTOM_THEME_PRESET_ID,
   usesAccentControlGradient,
 } from '@/constants/theme-color-presets';
 import { applyVuetifyThemeColors } from '@/utils/applyVuetifyThemeColors';
+import { appLog } from '@/utils/appLog';
 import { computed, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useLocale, useTheme } from 'vuetify';
@@ -76,6 +78,7 @@ function onSystemLanguageChange() {
 
 onMounted(() => {
   window.addEventListener('languagechange', onSystemLanguageChange);
+  appLog('app', 'info', `UI ready (${APP_VERSION})`);
 });
 
 onUnmounted(() => {

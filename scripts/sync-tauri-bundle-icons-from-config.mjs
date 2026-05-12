@@ -14,7 +14,9 @@ const tauriPath = path.join(root, 'src-tauri', 'tauri.conf.json');
 const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
 const nextIcons = cfg.tauriBundleIcons.pathsRelativeToSrcTauriDir;
 if (!Array.isArray(nextIcons) || nextIcons.length === 0) {
-  throw new Error('config/app-icons.json: tauriBundleIcons.pathsRelativeToSrcTauriDir must be a non-empty array');
+  throw new Error(
+    'config/app-icons.json: tauriBundleIcons.pathsRelativeToSrcTauriDir must be a non-empty array',
+  );
 }
 
 const tauri = JSON.parse(fs.readFileSync(tauriPath, 'utf8'));

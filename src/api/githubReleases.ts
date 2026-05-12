@@ -1,5 +1,6 @@
 import { GITHUB_RELEASES_API } from '@/constants/github-repo';
 import type { GitHubRelease, GitHubReleaseAsset } from '@/types/github-release';
+import { appLog } from '@/utils/appLog';
 import { invoke } from '@tauri-apps/api/core';
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -51,9 +52,17 @@ function parseRelease(raw: unknown): GitHubRelease | null {
 
 export async function fetchGithubReleasesList(): Promise<GitHubRelease[]> {
   let text: string;
+  let via: 'tauri' | 'web' = 'tauri';
   try {
     text = await invoke<string>('fetch_github_releases');
-  } catch {
+  } catch (e) {
+    appLog(
+      'network',
+      'debug',
+      'fetch_github_releases (Tauri) failed, using web',
+      e instanceof Error ? e.message : String(e),
+    );
+    via = 'web';
     const res = await fetch(GITHUB_RELEASES_API, {
       headers: {
         Accept: 'application/vnd.github+json',
@@ -61,7 +70,9 @@ export async function fetchGithubReleasesList(): Promise<GitHubRelease[]> {
       },
     });
     if (!res.ok) {
-      throw new Error(`GitHub API HTTP ${res.status}`);
+      const err = new Error(`GitHub API HTTP ${res.status}`) as Error & { cause?: unknown };
+      err.cause = e;
+      throw err;
     }
     text = await res.text();
   }
@@ -77,5 +88,6 @@ export async function fetchGithubReleasesList(): Promise<GitHubRelease[]> {
     const tb = b.published_at ? Date.parse(b.published_at) : 0;
     return tb - ta;
   });
+  appLog('network', 'info', `GitHub releases loaded (${list.length})`, `via ${via}`);
   return list;
 }

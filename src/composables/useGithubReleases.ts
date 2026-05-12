@@ -1,6 +1,7 @@
 import { fetchGithubReleasesList } from '@/api/githubReleases';
 import { useSettingsStore } from '@/stores/settings';
 import type { GitHubRelease } from '@/types/github-release';
+import { appLog } from '@/utils/appLog';
 import { computed, ref } from 'vue';
 
 export function useGithubReleases() {
@@ -22,6 +23,12 @@ export function useGithubReleases() {
     } catch (e) {
       error.value = e instanceof Error ? e.message : String(e);
       releases.value = [];
+      appLog(
+        'network',
+        'error',
+        'GitHub releases: load failed',
+        e instanceof Error ? e.message : String(e),
+      );
     } finally {
       loading.value = false;
     }

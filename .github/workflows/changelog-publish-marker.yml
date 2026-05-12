@@ -78,7 +78,7 @@ jobs:
               )
 
           rest = changelog[m.end() :]
-          m2 = re.search(r"^## \[", rest, re.MULTILINE)
+          m2 = re.search(r"^## ", rest, re.MULTILINE)
           body = rest[: m2.start()] if m2 else rest
           if marker not in body:
               raise SystemExit(

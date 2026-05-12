@@ -1,4 +1,4 @@
-export const SETTINGS_TABS = ['general', 'appearance', 'updates', 'about'] as const;
+export const SETTINGS_TABS = ['general', 'appearance', 'updates', 'logs', 'about'] as const;
 
 export type SettingsTab = (typeof SETTINGS_TABS)[number];
 
@@ -6,6 +6,7 @@ export const SETTINGS_SECTIONS: { id: SettingsTab; labelKey: string }[] = [
   { id: 'general', labelKey: 'settings.sections.general' },
   { id: 'appearance', labelKey: 'settings.sections.appearance' },
   { id: 'updates', labelKey: 'settings.sections.updates' },
+  { id: 'logs', labelKey: 'settings.sections.logs' },
   { id: 'about', labelKey: 'settings.sections.about' },
 ];
 
@@ -14,6 +15,7 @@ export const SETTINGS_SECTION_ICONS: Record<SettingsTab, string> = {
   general: 'mdi-tune-vertical',
   appearance: 'mdi-palette-outline',
   updates: 'mdi-update',
+  logs: 'mdi-text-search',
   about: 'mdi-information-outline',
 };
 
