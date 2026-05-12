@@ -41,15 +41,17 @@ function leafCacheName(routeName: string | null | undefined): string | null {
     'settings-appearance': 'AppearanceSettingsView',
     'settings-general': 'GeneralSettingsView',
     'settings-updates': 'UpdatesSettingsView',
+    'settings-logs': 'LogsSettingsView',
     'settings-about': 'AboutSettingsView',
   };
   return map[routeName] ?? null;
 }
 
-function tabShellCache(tab: VisitedPageTab): 'WelcomeView' | 'SettingsLayout' | null {
+function tabShellCache(tab: VisitedPageTab): 'WelcomeView' | 'SettingsLayout' | 'UuidMigrateView' | null {
   const n = tab.routeName == null ? '' : String(tab.routeName);
   const pathOnly = tab.fullPath.split('?')[0] || '';
   if (n === 'welcome' || pathOnly === '/' || pathOnly === '') return 'WelcomeView';
+  if (n === 'uuid-migrate' || pathOnly.startsWith('/tools/uuid-migrate')) return 'UuidMigrateView';
   if (n.startsWith('settings-') || pathOnly.startsWith('/settings')) return 'SettingsLayout';
   return null;
 }
@@ -60,6 +62,7 @@ export function visitedTabTitle(
 ): string {
   if (routeName === 'welcome') return t('nav.home');
   if (!routeName) return APP_TITLE;
+  if (routeName === 'uuid-migrate') return t('tools.uuidMigrate.navTitle');
   const tab = routeNameToSettingsTab(routeName);
   if (tab) {
     const row = SETTINGS_SECTIONS.find((s) => s.id === tab);

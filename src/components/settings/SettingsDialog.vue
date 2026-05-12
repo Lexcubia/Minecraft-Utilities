@@ -2,6 +2,7 @@
 import AboutTab from '@/views/settings/tabs/AboutTab.vue';
 import AppearanceTab from '@/views/settings/tabs/AppearanceTab.vue';
 import GeneralTab from '@/views/settings/tabs/GeneralTab.vue';
+import LogsTab from '@/views/settings/tabs/LogsTab.vue';
 import UpdatesTab from '@/views/settings/tabs/UpdatesTab.vue';
 import {
   SETTINGS_SECTIONS,
@@ -28,6 +29,7 @@ const tabComponents: Record<SettingsTab, typeof AppearanceTab> = {
   general: GeneralTab,
   appearance: AppearanceTab,
   updates: UpdatesTab,
+  logs: LogsTab,
   about: AboutTab,
 };
 

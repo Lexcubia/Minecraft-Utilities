@@ -91,6 +91,20 @@ const drawerBrandLine = computed(() => `${t('app.navBrandShort')} · ${t('app.dr
             v-if="!drawerUsesRail"
             class="text-uppercase text-caption font-weight-medium"
           >
+            {{ t('nav.toolsSection') }}
+          </v-list-subheader>
+
+          <v-list-item
+            :to="{ name: 'uuid-migrate' }"
+            :title="t('tools.uuidMigrate.navTitle')"
+            prepend-icon="mdi-swap-horizontal"
+            rounded="lg"
+          />
+
+          <v-list-subheader
+            v-if="!drawerUsesRail"
+            class="text-uppercase text-caption font-weight-medium"
+          >
             {{ t('nav.settings') }}
           </v-list-subheader>
 

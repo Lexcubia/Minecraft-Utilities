@@ -14,7 +14,7 @@
 - **自动同步**：执行 **`pnpm version patch`**、**`pnpm version minor`** 或 **`pnpm version major`** 时，npm/pnpm 会更新 `package.json` 并触发 **`scripts.version`** → 运行 **`scripts/sync-version.mjs`**，将同一版本写入 **`src-tauri/Cargo.toml`**、**`src-tauri/tauri.conf.json`**、**`pyproject.toml`**、**`python/modpack_updater/__init__.py`**，并尝试在 **`src-tauri`** 下执行 **`cargo build -q`** 以刷新 **`Cargo.lock`**。
 - **无 Rust 环境**：可设 **`SKIP_CARGO_SYNC=1`** 再执行 `pnpm version …`，之后在本机或 CI 有 Rust 时再 `cargo build` 一次即可。
 - **仅手动改过 `package.json` 版本时**：运行 **`pnpm sync:version`** 同步其余文件。
-- **显式指定版本**（同时写回 `package.json`）：`node scripts/sync-version.mjs 0.3.0`。
+- **显式指定版本**（同时写回 `package.json`）：`node scripts/sync-version.mjs x.y.z`。
 - **CHANGELOG**：发版说明仍需在 **`CHANGELOG.md`** 手写 **`## [x.y.z]`** 小节与 **`<!-- release:publish -->`**；版本号 bump 不会自动改 CHANGELOG。
 
 ## 桌面端发布（`main` + CHANGELOG 标记）
@@ -28,6 +28,19 @@
 合并前 CI 会校验：若 **`package.json` 版本相对目标分支有提升**，则 **`CHANGELOG.md` 中对应 `## [新版本]`** 小节必须包含 **`<!-- release:publish -->`**（见 `.github/workflows/changelog-publish-marker.yml`）。
 
 安装包文件名不含空格：由 `tauri.conf.json` 的 **`productName`**（如 `Minecraft-Utilities`）与 **`mainBinaryName`** 控制；窗口标题仍可为带空格的 **Minecraft Utilities**。
+
+### 应用内更新（Tauri updater）
+
+桌面发版工作流会为 GitHub Release 生成并上传 **`latest.json`** 与各平台 **`.sig`**（需在仓库 **Settings → Secrets and variables → Actions** 中配置）：
+
+| Secret                                   | 说明                                                                                                                                                                                                                                          |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`TAURI_SIGNING_PRIVATE_KEY`**          | Minisign **私钥**全文（与 `src-tauri/tauri.conf.json` 里 `plugins.updater.pubkey` 成对；本地勿提交私钥，见根目录 `.gitignore`）。可用 `pnpm exec tauri signer generate -w src-tauri/tauri-updater.key` 生成，再把公钥写入 `tauri.conf.json`。 |
+| **`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`** | 若生成密钥时设置了密码则填写；否则可省略或留空。                                                                                                                                                                                              |
+
+未配置私钥时，`tauri build` 在开启 **`bundle.createUpdaterArtifacts`** 的情况下会失败。若 **Fork** 仓库发版，请把 `tauri.conf.json` 中 **`plugins.updater.endpoints`** 的 GitHub URL 改成你的 **`用户名或组织/仓库名`**，与 `github.repository` 一致。
+
+本机执行 **`pnpm exec tauri build`**（或 `pnpm tauri:build`）做完整桌面包时，同样需要导出上述环境变量；仅日常 **`tauri dev`** 不受影响。
 
 ## 手动重跑
 

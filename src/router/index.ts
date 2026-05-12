@@ -4,8 +4,10 @@ import { AppShellLayout, SettingsLayout } from '@/layouts';
 import AboutSettingsView from '@/views/settings/AboutSettingsView.vue';
 import AppearanceSettingsView from '@/views/settings/AppearanceSettingsView.vue';
 import GeneralSettingsView from '@/views/settings/GeneralSettingsView.vue';
+import LogsSettingsView from '@/views/settings/LogsSettingsView.vue';
 import UpdatesSettingsView from '@/views/settings/UpdatesSettingsView.vue';
 import WelcomeView from '@/views/WelcomeView.vue';
+import UuidMigrateView from '@/views/UuidMigrateView.vue';
 import {
   hashToSettingsTab,
   normalizeSettingsTab,
@@ -30,6 +32,11 @@ const router = createRouter({
       children: [
         { path: '', name: 'welcome', component: WelcomeView },
         {
+          path: 'tools/uuid-migrate',
+          name: 'uuid-migrate',
+          component: UuidMigrateView,
+        },
+        {
           path: 'settings',
           name: 'settings',
           component: SettingsLayout,
@@ -49,6 +56,11 @@ const router = createRouter({
               path: 'updates',
               name: 'settings-updates',
               component: UpdatesSettingsView,
+            },
+            {
+              path: 'logs',
+              name: 'settings-logs',
+              component: LogsSettingsView,
             },
             {
               path: 'about',

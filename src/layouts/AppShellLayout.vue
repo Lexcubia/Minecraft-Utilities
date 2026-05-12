@@ -3,6 +3,7 @@ import SettingsDialog from '@/components/settings/SettingsDialog.vue';
 import AppShellAppBar from '@/layouts/AppShellAppBar.vue';
 import AppShellNavigationDrawer from '@/layouts/AppShellNavigationDrawer.vue';
 import AppShellVisitedTabs from '@/layouts/AppShellVisitedTabs.vue';
+import { checkInAppUpdate } from '@/composables/useInAppUpdater';
 import { usePrefersColorSchemeDark } from '@/composables/usePrefersColorSchemeDark';
 import {
   getUiLanguageChoiceIds,
@@ -12,6 +13,7 @@ import {
 import { shellWindowControlKey, type ShellWindowControl } from '@/shell/shell-window-context';
 import { useSettingsStore } from '@/stores/settings';
 import { useVisitedPagesStore } from '@/stores/visited-pages';
+import { appLog } from '@/utils/appLog';
 import { isTauriRuntime } from '@/utils/isTauriRuntime';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
@@ -132,6 +134,21 @@ let unlistenCloseRequested: UnlistenFn | undefined;
 let unlistenTrayOpenSettings: UnlistenFn | undefined;
 let unlistenTrayRequestExit: UnlistenFn | undefined;
 
+const updateAvailableSnack = ref(false);
+const updateAvailableVersion = ref('');
+
+function scheduleStartupInAppUpdateHint() {
+  if (!settings.autoCheckUpdates) return;
+  window.setTimeout(() => {
+    void (async () => {
+      const pre = await checkInAppUpdate();
+      if (pre.kind !== 'available') return;
+      updateAvailableVersion.value = pre.version;
+      updateAvailableSnack.value = true;
+    })();
+  }, 5000);
+}
+
 async function syncTrayMenuLabels() {
   if (!isTauriRuntime()) return;
   try {
@@ -141,8 +158,14 @@ async function syncTrayMenuLabels() {
       close: t('tray.menuClose'),
       tooltip: t('tray.tooltip'),
     });
-  } catch {
-    /* 托盘尚未就绪等 */
+    appLog('tray', 'debug', 'Tray menu labels synced');
+  } catch (e) {
+    appLog(
+      'tray',
+      'warn',
+      'sync_tray_menu_labels skipped',
+      e instanceof Error ? e.message : String(e),
+    );
   }
 }
 
@@ -169,6 +192,7 @@ onMounted(async () => {
     void requestAppExit();
   });
   await syncTrayMenuLabels();
+  scheduleStartupInAppUpdateHint();
 });
 
 watch(
@@ -222,6 +246,11 @@ function toggleDrawerRail() {
 function goBack() {
   if (window.history.length > 1) router.back();
   else void router.push({ name: 'welcome' });
+}
+
+function onUpdateAvailableSnackOpenUpdates() {
+  updateAvailableSnack.value = false;
+  openSettingsDialog('updates');
 }
 </script>
 
@@ -281,6 +310,22 @@ function goBack() {
     v-model="settingsDialogOpen"
     :initial-tab="settingsDialogInitialTab"
   />
+
+  <v-snackbar
+    v-model="updateAvailableSnack"
+    :timeout="10000"
+    location="bottom"
+    color="surface-variant"
+    elevation="6"
+    multi-line
+  >
+    {{ t('settings.updates.snackUpdateAvailable', { version: updateAvailableVersion }) }}
+    <template #actions>
+      <v-btn variant="text" color="primary" @click="onUpdateAvailableSnackOpenUpdates">
+        {{ t('settings.updates.snackOpenUpdates') }}
+      </v-btn>
+    </template>
+  </v-snackbar>
 
   <v-dialog
     v-model="exitConfirmOpen"

@@ -1,24 +1,43 @@
 <script setup lang="ts">
-import { APP_VERSION } from '@/constants/app-meta';
-import { GITHUB_RELEASES_WEB } from '@/constants/github-repo';
+import { APP_VERSION, REPO_URL } from '@/constants/app-meta';
+import { checkInAppUpdate, downloadAndInstallAppUpdate } from '@/composables/useInAppUpdater';
 import { useGithubReleases } from '@/composables/useGithubReleases';
 import type { UpdateChannel } from '@/stores/settings';
 import { useSettingsStore } from '@/stores/settings';
 import type { GitHubRelease } from '@/types/github-release';
 import { openExternal } from '@/utils/openExternal';
-import { formatAssetSize, pickPreferredInstallAsset } from '@/utils/pickReleaseAsset';
+import { findChangelogBodyForTag, parseKeepAChangelogPublished } from '@/utils/parseChangelog';
+import { renderMarkdownToSafeHtml } from '@/utils/renderMarkdown';
 import { compareTagToAppVersion } from '@/utils/semverTagCompare';
-import { computed, onMounted } from 'vue';
+import changelogSource from '../../../../CHANGELOG.md?raw';
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t, locale } = useI18n();
 const settings = useSettingsStore();
 const { filteredReleases, loading, error, load } = useGithubReleases();
 
+const changelogPublished = computed(() => parseKeepAChangelogPublished(changelogSource));
+
 const channelOptions = computed((): { label: string; value: UpdateChannel }[] => [
   { label: t('settings.updates.channelStable'), value: 'stable' },
   { label: t('settings.updates.channelBeta'), value: 'beta' },
 ]);
+
+const releaseNotesHtmlMap = computed((): Record<number, string> => {
+  const m: Record<number, string> = {};
+  for (const rel of filteredReleases.value) {
+    const body = releaseNotesBody(rel);
+    if (body.trim()) m[rel.id] = renderMarkdownToSafeHtml(body);
+  }
+  return m;
+});
+
+const inAppBusy = ref(false);
+const inAppProgress = ref(0);
+const inAppProgressIndeterminate = ref(false);
+const inAppSnack = ref(false);
+const inAppSnackText = ref('');
 
 function formatPublishedAt(iso: string | null): string {
   if (!iso) return '—';
@@ -38,8 +57,68 @@ function versionBadge(release: GitHubRelease): { text: string; color: string } |
   return { text: t('settings.updates.badgeUnknown'), color: 'default' };
 }
 
-function preferredAsset(release: GitHubRelease) {
-  return pickPreferredInstallAsset(release.assets);
+/** 内置 CHANGELOG 优先，否则 GitHub Release 正文 */
+function releaseNotesBody(rel: GitHubRelease): string {
+  const fromLog = findChangelogBodyForTag(changelogPublished.value, rel.tag_name);
+  if (fromLog) return fromLog;
+  return (rel.body ?? '').trim();
+}
+
+function openChangelogOnGithub() {
+  void openExternal(`${REPO_URL}/blob/main/CHANGELOG.md`);
+}
+
+async function runInAppUpdate() {
+  inAppSnack.value = false;
+  inAppBusy.value = true;
+  inAppProgress.value = 0;
+  inAppProgressIndeterminate.value = true;
+  const pre = await checkInAppUpdate();
+  if (pre.kind === 'none') {
+    inAppBusy.value = false;
+    inAppProgressIndeterminate.value = false;
+    inAppSnackText.value = t('settings.updates.inAppNoUpdate');
+    inAppSnack.value = true;
+    return;
+  }
+  if (pre.kind === 'error' || pre.kind === 'unsupported') {
+    inAppBusy.value = false;
+    inAppProgressIndeterminate.value = false;
+    const msg =
+      pre.kind === 'error'
+        ? pre.message
+        : t('settings.updates.inAppUnsupported');
+    inAppSnackText.value = t('settings.updates.inAppError', { msg });
+    inAppSnack.value = true;
+    return;
+  }
+
+  let total = 0;
+  let current = 0;
+  const r = await downloadAndInstallAppUpdate((ev) => {
+    if (ev.event === 'Started') {
+      inAppProgressIndeterminate.value = false;
+      total = ev.data.contentLength ?? 0;
+      current = 0;
+      inAppProgress.value = 0;
+    } else if (ev.event === 'Progress') {
+      current += ev.data.chunkLength;
+      if (total > 0) inAppProgress.value = Math.min(100, Math.round((current / total) * 100));
+      else inAppProgress.value = Math.min(99, inAppProgress.value + 1);
+    } else if (ev.event === 'Finished') {
+      inAppProgress.value = 100;
+    }
+  });
+  inAppBusy.value = false;
+  inAppProgressIndeterminate.value = false;
+  if (!r.ok) {
+    const msg = r.message === 'NO_UPDATE' ? t('settings.updates.inAppNoUpdate') : r.message;
+    inAppSnackText.value = t('settings.updates.inAppError', { msg });
+    inAppSnack.value = true;
+    return;
+  }
+  inAppSnackText.value = t('settings.updates.inAppDone');
+  inAppSnack.value = true;
 }
 
 onMounted(() => {
@@ -89,126 +168,303 @@ onMounted(() => {
             </v-btn>
           </div>
         </div>
+
+        <v-divider class="border-opacity-25" />
+
+        <div>
+          <div class="d-flex align-center gap-2 mb-2">
+            <v-icon icon="mdi-download-circle-outline" color="primary" size="22" />
+            <span class="text-body-1 font-weight-medium">{{ t('settings.updates.inAppTitle') }}</span>
+          </div>
+          <p class="text-body-2 text-medium-emphasis mb-4">{{ t('settings.updates.inAppHint') }}</p>
+          <v-btn
+            color="primary"
+            variant="flat"
+            size="large"
+            rounded="lg"
+            class="mb-2"
+            :loading="inAppBusy"
+            prepend-icon="mdi-update"
+            @click="runInAppUpdate()"
+          >
+            {{ t('settings.updates.inAppApply') }}
+          </v-btn>
+          <v-progress-linear
+            v-if="inAppBusy && inAppProgressIndeterminate"
+            class="mt-2 rounded"
+            height="6"
+            color="primary"
+            indeterminate
+          />
+          <v-progress-linear
+            v-else-if="inAppBusy"
+            class="mt-2 rounded"
+            height="6"
+            color="primary"
+            :model-value="inAppProgress"
+          />
+        </div>
       </v-card-text>
     </v-card>
 
-    <v-card color="surface" variant="flat" rounded="lg" elevation="1">
-      <v-card-title class="d-flex flex-wrap align-center gap-2 text-subtitle-1">
-        <span>{{ t('settings.updates.releasesTitle') }}</span>
-        <v-spacer />
-        <v-btn
-          variant="tonal"
-          color="surface-variant"
-          size="small"
-          :loading="loading"
-          prepend-icon="mdi-refresh"
-          @click="load()"
-        >
-          {{ t('settings.updates.refresh') }}
-        </v-btn>
-      </v-card-title>
-      <v-card-text class="d-flex flex-column gap-3">
-        <v-progress-linear v-if="loading" indeterminate color="primary" rounded height="4" />
+    <v-card class="updates-releases-card" color="surface" variant="flat" rounded="xl" elevation="0">
+      <v-card-item class="updates-releases-header pb-2 pt-5 px-5">
+        <template #prepend>
+          <v-avatar color="primary" variant="tonal" size="48" rounded="xl" class="flex-shrink-0">
+            <v-icon icon="mdi-rocket-launch-outline" size="28" />
+          </v-avatar>
+        </template>
+        <v-card-title class="text-h6 font-weight-semibold ps-2">
+          {{ t('settings.updates.releasesTitle') }}
+        </v-card-title>
+        <v-card-subtitle class="text-body-2 ps-2 text-wrap">
+          {{ t('settings.updates.releasesListHint') }}
+        </v-card-subtitle>
+        <template #append>
+          <div class="d-flex flex-wrap justify-end gap-1">
+            <v-btn variant="text" size="small" color="primary" @click="openChangelogOnGithub">
+              {{ t('settings.about.changelogFull') }}
+            </v-btn>
+            <v-btn
+              variant="tonal"
+              color="primary"
+              size="small"
+              rounded="lg"
+              :loading="loading"
+              prepend-icon="mdi-refresh"
+              @click="load()"
+            >
+              {{ t('settings.updates.refresh') }}
+            </v-btn>
+          </div>
+        </template>
+      </v-card-item>
 
-        <v-alert v-if="error" type="warning" variant="flat" density="comfortable" class="text-body-2">
+      <v-card-text class="px-5 pb-5 pt-0">
+        <p class="text-caption text-medium-emphasis mb-3">{{ t('settings.about.changelogHint') }}</p>
+
+        <v-progress-linear v-if="loading" class="mb-3" indeterminate color="primary" rounded height="4" />
+
+        <v-alert v-if="error" type="warning" variant="tonal" density="comfortable" rounded="lg" class="text-body-2">
           {{ error }}
         </v-alert>
 
         <v-alert
           v-else-if="!loading && filteredReleases.length === 0"
           type="info"
-          variant="flat"
+          variant="tonal"
           density="comfortable"
+          rounded="lg"
           class="text-body-2"
         >
           {{ t('settings.updates.empty') }}
         </v-alert>
 
-        <v-list v-else-if="filteredReleases.length > 0" bg-color="transparent" class="pa-0" density="comfortable">
-          <v-list-item
-            v-for="rel in filteredReleases"
-            :key="rel.id"
-            class="release-row px-0"
-            rounded="lg"
-          >
-            <template #prepend>
-              <v-avatar color="primary" size="40" variant="tonal" rounded="lg">
-                <v-icon icon="mdi-tag-outline" color="primary" />
-              </v-avatar>
-            </template>
-
-            <v-list-item-title class="font-weight-medium">
-              {{ rel.tag_name }}
-              <span v-if="rel.name" class="text-medium-emphasis text-body-2"> · {{ rel.name }}</span>
-            </v-list-item-title>
-            <v-list-item-subtitle class="text-wrap">
-              {{ formatPublishedAt(rel.published_at) }}
-              <template v-if="rel.prerelease">
-                · {{ t('settings.updates.prerelease') }}
-              </template>
-            </v-list-item-subtitle>
-
-            <template #append>
-              <div class="d-flex flex-column flex-sm-row align-stretch align-sm-center gap-2 ms-2">
-                <v-chip
-                  v-if="versionBadge(rel)"
-                  size="small"
-                  :color="versionBadge(rel)!.color"
-                  variant="flat"
-                  class="text-caption"
-                >
-                  {{ versionBadge(rel)!.text }}
-                </v-chip>
-                <div class="d-flex flex-wrap gap-1 justify-end">
-                  <v-btn
-                    size="small"
-                    variant="text"
-                    color="primary"
-                    @click="openExternal(rel.html_url)"
-                  >
-                    {{ t('settings.updates.openRelease') }}
-                  </v-btn>
-                  <v-btn
-                    v-if="preferredAsset(rel)"
-                    size="small"
-                    variant="flat"
-                    color="primary"
-                    @click="openExternal(preferredAsset(rel)!.browser_download_url)"
-                  >
-                    {{ t('settings.updates.download') }}
-                    <span class="text-caption ms-1 opacity-80">
-                      ({{ formatAssetSize(preferredAsset(rel)!.size) }})
-                    </span>
-                  </v-btn>
-                  <v-tooltip v-else location="top">
-                    <template #activator="{ props: tipProps }">
-                      <span v-bind="tipProps">
-                        <v-btn size="small" variant="text" disabled>
-                          {{ t('settings.updates.noAssets') }}
-                        </v-btn>
+        <v-sheet
+          v-else-if="filteredReleases.length > 0"
+          class="release-panels-wrap rounded-xl"
+          color="surface"
+          border
+        >
+          <v-expansion-panels variant="accordion" multiple flat class="release-panels">
+            <v-expansion-panel
+              v-for="rel in filteredReleases"
+              :key="rel.id"
+              class="release-panel"
+              elevation="0"
+            >
+              <v-expansion-panel-title class="release-panel-title px-4 py-4">
+                <div class="d-flex flex-wrap align-center gap-3 flex-grow-1 min-width-0">
+                  <v-avatar color="primary" size="42" variant="tonal" rounded="lg" class="flex-shrink-0">
+                    <v-icon icon="mdi-tag-outline" size="22" />
+                  </v-avatar>
+                  <div class="flex-grow-1 min-width-0">
+                    <div class="font-weight-semibold text-body-1 text-truncate">
+                      {{ rel.tag_name }}
+                      <span v-if="rel.name" class="text-medium-emphasis font-weight-regular text-body-2">
+                        · {{ rel.name }}
                       </span>
-                    </template>
-                    {{ t('settings.updates.noAssetsHint') }}
-                  </v-tooltip>
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      {{ formatPublishedAt(rel.published_at) }}
+                      <template v-if="rel.prerelease"> · {{ t('settings.updates.prerelease') }}</template>
+                    </div>
+                  </div>
+                  <v-chip
+                    v-if="versionBadge(rel)"
+                    size="small"
+                    :color="versionBadge(rel)!.color"
+                    variant="flat"
+                    class="text-caption flex-shrink-0"
+                    label
+                    @click.stop
+                  >
+                    {{ versionBadge(rel)!.text }}
+                  </v-chip>
                 </div>
-              </div>
-            </template>
-          </v-list-item>
-        </v-list>
-
-        <v-btn variant="text" size="small" color="primary" class="align-self-start" @click="openExternal(GITHUB_RELEASES_WEB)">
-          {{ t('settings.updates.openReleasesPage') }}
-        </v-btn>
+              </v-expansion-panel-title>
+              <v-expansion-panel-text class="release-panel-text pa-0">
+                <div class="release-notes-shell pa-4 pa-sm-5">
+                  <div class="text-overline text-medium-emphasis letter-spacing-normal mb-3">
+                    {{ t('settings.updates.releaseNotesHeading') }}
+                  </div>
+                  <div
+                    v-if="releaseNotesHtmlMap[rel.id]"
+                    class="release-notes-md markdown-body text-body-2"
+                    v-html="releaseNotesHtmlMap[rel.id]"
+                  />
+                  <div v-else class="text-body-2 text-medium-emphasis">
+                    {{ t('settings.about.changelogEmpty') }}
+                  </div>
+                </div>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+          </v-expansion-panels>
+        </v-sheet>
       </v-card-text>
     </v-card>
+
+    <v-snackbar v-model="inAppSnack" location="bottom" :timeout="5200" rounded="lg">
+      {{ inAppSnackText }}
+    </v-snackbar>
   </div>
 </template>
 
 <style scoped>
-.release-row {
-  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+.updates-releases-card {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  background: rgb(var(--v-theme-surface));
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 8px 28px rgba(0, 0, 0, 0.07);
 }
-.release-row:last-child {
+
+.updates-releases-header :deep(.v-card-item__append) {
+  align-self: flex-start;
+}
+
+.release-panels-wrap {
+  overflow: hidden;
+  border-color: rgba(var(--v-border-color), calc(var(--v-border-opacity) * 0.9)) !important;
+}
+
+.release-panels {
+  background: transparent;
+}
+
+.release-panels :deep(.v-expansion-panel) {
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+.release-panels :deep(.v-expansion-panel:last-child) {
   border-bottom: none;
+}
+
+.release-panel-title :deep(.v-expansion-panel-title__overlay) {
+  border-radius: 0;
+}
+
+.release-panel-text {
+  background: rgba(var(--v-theme-on-surface), 0.03);
+}
+
+.release-notes-shell {
+  border-top: 1px dashed rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+.release-notes-md :deep(h1),
+.release-notes-md :deep(h2),
+.release-notes-md :deep(h3),
+.release-notes-md :deep(h4) {
+  margin: 0.75rem 0 0.35rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.release-notes-md :deep(h1:first-child),
+.release-notes-md :deep(h2:first-child),
+.release-notes-md :deep(h3:first-child),
+.release-notes-md :deep(h4:first-child) {
+  margin-top: 0;
+}
+
+.release-notes-md :deep(p) {
+  margin: 0.4rem 0;
+  line-height: 1.55;
+}
+
+.release-notes-md :deep(ul),
+.release-notes-md :deep(ol) {
+  margin: 0.35rem 0 0.5rem;
+  padding-left: 1.25rem;
+}
+
+.release-notes-md :deep(li) {
+  margin: 0.2rem 0;
+  line-height: 1.5;
+}
+
+.release-notes-md :deep(a) {
+  color: rgb(var(--v-theme-primary));
+  text-decoration: none;
+}
+
+.release-notes-md :deep(a:hover) {
+  text-decoration: underline;
+}
+
+.release-notes-md :deep(code) {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.88em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: rgba(var(--v-theme-on-surface), 0.08);
+}
+
+.release-notes-md :deep(pre) {
+  margin: 0.6rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  background: rgba(var(--v-theme-on-surface), 0.08);
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+.release-notes-md :deep(pre code) {
+  padding: 0;
+  background: transparent;
+  font-size: 0.85em;
+}
+
+.release-notes-md :deep(blockquote) {
+  margin: 0.5rem 0;
+  padding: 0.35rem 0 0.35rem 0.85rem;
+  border-left: 3px solid rgba(var(--v-theme-primary), 0.45);
+  color: rgba(var(--v-theme-on-surface), 0.75);
+}
+
+.release-notes-md :deep(hr) {
+  margin: 0.75rem 0;
+  border: none;
+  border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+.release-notes-md :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+  font-size: 0.92em;
+}
+
+.release-notes-md :deep(th),
+.release-notes-md :deep(td) {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+}
+
+.release-notes-md :deep(th) {
+  background: rgba(var(--v-theme-on-surface), 0.06);
+  font-weight: 600;
 }
 </style>

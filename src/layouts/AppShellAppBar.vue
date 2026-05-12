@@ -25,6 +25,12 @@ const breadcrumbItems = computed((): AppBarBreadcrumbItem[] => {
   if (name === 'welcome') {
     return [{ title: APP_TITLE }];
   }
+  if (name === 'uuid-migrate') {
+    return [
+      { title: t('nav.home'), to: { name: 'welcome' } },
+      { title: t('tools.uuidMigrate.navTitle') },
+    ];
+  }
   const tab = routeNameToSettingsTab(name);
   const items: AppBarBreadcrumbItem[] = [
     { title: t('nav.home'), to: { name: 'welcome' } },

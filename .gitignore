@@ -18,6 +18,8 @@ dist-web/
 
 # Tauri / Rust
 src-tauri/target/
+# Tauri 增量更新私钥（勿提交；CI 使用 GitHub Secret `TAURI_SIGNING_PRIVATE_KEY`）
+src-tauri/tauri-updater.key
 
 # IDE
 .idea/
