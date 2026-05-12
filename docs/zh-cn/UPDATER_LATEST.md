@@ -1,8 +1,20 @@
 # 应用内更新：`latest.json` 放哪里
 
-本文件说明：**手动**准备 Tauri updater 所需的 `latest.json` 时，应放在何处、如何填内容。若你使用仓库自带的 **`desktop-release.yml`** 发版，一般**无需**手抄本文件，工作流会合并各平台产物后上传。
+## 推荐：完全自动化（无需手动上传 Release 资源）
 
-## 应放在何处（与 `tauri.conf.json` 的 `endpoints` 一致）
+本仓库 **[`.github/workflows/desktop-release.yml`](../../.github/workflows/desktop-release.yml)** 在发版成功时会自动：
+
+1. 多平台 **`tauri build`**（需配置 Actions Secret **`TAURI_SIGNING_PRIVATE_KEY`** 等，见 [仓库设置说明](REPO_SETUP.md)）。
+2. 用 **`scripts/merge-github-updater-latest.mjs`** 合并各平台的 `latest.fragment.*.json` 为 **`latest.json`**。
+3. 通过 **`gh release create` / `gh release upload`** 把安装包、**`.sig`**、**`latest.json`** 一并挂到 **GitHub Release Assets**。
+
+你只要按 [仓库设置说明](REPO_SETUP.md) 完成 **版本号 + CHANGELOG 发布标记 + 合并到 `main`**（并确保 Secrets 与 **`pubkey`** 正确），**不必**在网页上手动上传 `latest.json`。
+
+---
+
+以下章节仅在**不走该工作流**、需要**手动**维护更新清单时参考。
+
+## 手动：应放在何处（与 `tauri.conf.json` 的 `endpoints` 一致）
 
 当前配置为：
 
@@ -20,7 +32,7 @@
 
 若你 Fork 了仓库，请把 `tauri.conf.json` 里的 `endpoints` 改成你的 `owner/repo`，并在对应仓库的 Latest Release 上同样上传 `latest.json`。
 
-## 如何得到可用的内容
+## 手动：如何得到可用的内容
 
 1. 在本机配置 **`TAURI_SIGNING_PRIVATE_KEY`**（与 `pubkey` 成对），执行 **`pnpm exec tauri build`**（需已开启 `bundle.createUpdaterArtifacts`）。
 2. 在 **`src-tauri/target/release/bundle/`** 下查找构建生成的 **`latest.json`** 与 **`*.sig`**；或参考工作流里 **`scripts/merge-github-updater-latest.mjs`** 的合并方式（多平台）。
