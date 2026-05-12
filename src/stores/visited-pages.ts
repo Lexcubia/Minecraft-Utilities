@@ -47,7 +47,9 @@ function leafCacheName(routeName: string | null | undefined): string | null {
   return map[routeName] ?? null;
 }
 
-function tabShellCache(tab: VisitedPageTab): 'WelcomeView' | 'SettingsLayout' | 'UuidMigrateView' | null {
+function tabShellCache(
+  tab: VisitedPageTab,
+): 'WelcomeView' | 'SettingsLayout' | 'UuidMigrateView' | null {
   const n = tab.routeName == null ? '' : String(tab.routeName);
   const pathOnly = tab.fullPath.split('?')[0] || '';
   if (n === 'welcome' || pathOnly === '/' || pathOnly === '') return 'WelcomeView';
