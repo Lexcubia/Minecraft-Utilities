@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import AppShellTrayActions from '@/layouts/AppShellTrayActions.vue';
-import AppShellWindowChrome from '@/layouts/AppShellWindowChrome.vue';
+import AppWindowTitlebarControls from '@/components/shell/AppWindowTitlebarControls.vue';
 import { APP_TITLE } from '@/constants/app-meta';
 import { isTauriRuntime } from '@/utils/isTauriRuntime';
 import type { UiLanguage } from '@/constants/ui-languages';
 import { SETTINGS_SECTIONS, routeNameToSettingsTab } from '@/views/settings/settings-tabs';
+import { bindTauriWindowDragRegion } from '@/composables/bindTauriWindowDragRegion';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import type { RouteLocationRaw } from 'vue-router';
 import { useRoute } from 'vue-router';
@@ -73,8 +74,8 @@ async function onAppBarDblclick(e: MouseEvent) {
 }
 
 /**
- * WebView2 下仅靠 data-tauri-drag-region 可能无效；在顶栏根节点上对主键 pointerdown 调用 startDragging()。
- * 用 ref 回调绑定到 VAppBar 解析出的真实 HTMLElement（与模板 @pointerdown 是否透传无关）。
+ * WebView2 下仅靠 data-tauri-drag-region 可能无效；在 v-app-bar 根上绑定拖窗。
+ * 使用「移动超过阈值后再 startDragging」，避免吞掉双击最大化（见 bindTauriWindowDragRegion）。
  */
 let detachTitleBarPointerDrag: (() => void) | undefined;
 
@@ -91,21 +92,9 @@ function setAppBarDragHostRef(el: Element | ComponentPublicInstance | null) {
   detachTitleBarPointerDrag?.();
   detachTitleBarPointerDrag = undefined;
   const host = resolveAppBarHostElement(el);
-  if (!host || !isTauriRuntime()) return;
+  if (!host) return;
 
-  const onPointerDown = (e: PointerEvent) => {
-    if (e.button !== 0) return;
-    const t = e.target;
-    if (!(t instanceof Element)) return;
-    if (t.closest('[data-tauri-drag-region-exclude]')) return;
-    void getCurrentWindow().startDragging();
-  };
-
-  host.addEventListener('pointerdown', onPointerDown);
-  detachTitleBarPointerDrag = () => {
-    host.removeEventListener('pointerdown', onPointerDown);
-    detachTitleBarPointerDrag = undefined;
-  };
+  detachTitleBarPointerDrag = bindTauriWindowDragRegion(host);
 }
 
 onUnmounted(() => detachTitleBarPointerDrag?.());
@@ -215,11 +204,11 @@ onUnmounted(() => detachTitleBarPointerDrag?.());
               />
             </div>
             <div class="app-bar-append-cluster d-flex align-center">
-              <AppShellWindowChrome embedded />
+              <AppWindowTitlebarControls embedded />
             </div>
           </div>
         </template>
-        <AppShellWindowChrome v-else class="app-bar-window-chrome-desktop" />
+        <AppWindowTitlebarControls v-else class="app-bar-window-chrome-desktop" />
       </div>
     </template>
 
@@ -328,13 +317,13 @@ onUnmounted(() => detachTitleBarPointerDrag?.());
 .app-bar-append-cluster {
   gap: 0;
   padding: 4px 6px;
-  border-radius: 10px;
-  background: color-mix(in srgb, rgb(var(--v-theme-on-surface)) 5%, transparent);
+  border-radius: var(--app-radius-md);
+  background: var(--app-on-surface-05);
 }
 
 .app-bar-append-cluster :deep(.v-btn:hover),
 .app-bar-append-cluster :deep(.v-btn:focus-visible) {
-  background: color-mix(in srgb, rgb(var(--v-theme-on-surface)) 8%, transparent) !important;
+  background: var(--app-on-surface-08) !important;
 }
 
 .app-bar-prepend {

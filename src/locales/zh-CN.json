@@ -1,7 +1,6 @@
 {
   "app": {
-    "navBrandShort": "MC Utils",
-    "drawerSubtitle": "Player utilities"
+    "navBrandShort": "MC Utils"
   },
   "meta": {
     "description": "Minecraft Utilities: practical tools for Minecraft players (Tauri 2 + Python)"
@@ -12,6 +11,12 @@
     "close": "关闭",
     "cancel": "取消"
   },
+  "snackbar": {
+    "queueRegionAria": "应用消息",
+    "pendingCount": "还有 {n} 条待显示",
+    "queueFoldExpand": "还有 {n} 条排队，点击展开",
+    "queueFoldCollapse": "收起队列"
+  },
   "window": {
     "exitConfirmTitle": "退出 Minecraft Utilities",
     "exitConfirmMessage": "确定要退出应用吗？内存中未持久化的内容将丢失。",
@@ -20,10 +25,12 @@
     "exitConfirmDontRemind": "不再提醒"
   },
   "tray": {
+    "menuTitle": "菜单",
     "menuOpenMain": "打开主面板",
     "menuSettings": "设置",
     "menuClose": "退出",
-    "tooltip": "Minecraft Utilities"
+    "tooltip": "Minecraft Utilities",
+    "flyoutAria": "托盘菜单"
   },
   "nav": {
     "home": "首页",
@@ -52,6 +59,13 @@
       "closeAll": "关闭全部",
       "closeLeft": "关闭左侧",
       "closeRight": "关闭右侧"
+    },
+    "contextMenu": {
+      "ariaLabel": "上下文菜单",
+      "cut": "剪切",
+      "copy": "复制",
+      "paste": "粘贴",
+      "selectAll": "全选"
     }
   },
   "welcome": {
@@ -60,10 +74,7 @@
     "versionLabel": "当前版本 {version}",
     "quickTitle": "快速入口",
     "openDocs": "中文文档",
-    "openDocsHint": "使用说明、开发与法律信息索引",
-    "openRepo": "GitHub 仓库",
-    "openRepoHint": "源码、Issue 与发布",
-    "devPing": "测试 Tauri 调用"
+    "openRepo": "GitHub 仓库"
   },
   "settings": {
     "sections": {
@@ -78,6 +89,17 @@
       "themeLight": "浅色",
       "themeDark": "深色",
       "themeSystem": "系统",
+      "fontTitle": "字体",
+      "fontPreset": {
+        "minecraft": "方块像素",
+        "system": "系统默认",
+        "readable": "清晰无衬线（系统）",
+        "notoSc": "Noto 黑体（简体）",
+        "modern": "现代几何（DM Sans）",
+        "soft": "圆润（Nunito Sans）",
+        "serif": "衬线阅读",
+        "mono": "等宽界面"
+      },
       "layoutTitle": "布局",
       "layoutDrawerTitle": "侧栏",
       "layoutVisitedTabsTitle": "访问标签",
@@ -146,7 +168,7 @@
       "channelStable": "稳定版",
       "channelBeta": "测试版",
       "inAppTitle": "应用内升级",
-      "inAppHint": "从已配置的更新源下载并安装签名更新（下方列表不提供浏览器直链下载）。",
+      "inAppHint": "从已配置的更新源下载并安装签名更新",
       "inAppApply": "检查并安装更新",
       "inAppNoUpdate": "当前已是最新版本。",
       "inAppError": "更新失败：{msg}",
@@ -213,6 +235,7 @@
   "tools": {
     "uuidMigrate": {
       "navTitle": "UUID 迁移",
+      "pageBannersAria": "本页说明",
       "title": "存档 UUID 迁移",
       "intro": "列表来自所选存档的 playerdata；名称来自 usercache.json。未开启版本隔离时用 .minecraft 根目录；开启后用所选版本目录 .minecraft/versions/ 下的 usercache。需 Python 3.11+ 与 pip install -e . 或 MINECRAFT_UTILITIES_PYTHONPATH。",
       "needDesktop": "此工具仅在桌面版中可用。",

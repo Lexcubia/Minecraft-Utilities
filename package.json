@@ -25,7 +25,7 @@
     "desktop:dev": "pnpm dev",
     "desktop:tauri": "pnpm tauri dev",
     "desktop:build": "pnpm build",
-    "gen:logo": "node scripts/gen-app-logo-svg.mjs && node scripts/sync-tauri-bundle-icons-from-config.mjs",
+    "gen:logo": "node scripts/gen-app-logo-svg.mjs && pnpm exec tauri icon public/app-logo.svg -o src-tauri/icons && node scripts/sync-tauri-bundle-icons-from-config.mjs",
     "sync:version": "node scripts/sync-version.mjs",
     "version": "node scripts/sync-version.mjs",
     "prepare": "husky"
@@ -38,6 +38,11 @@
     "trailingComma": "all"
   },
   "dependencies": {
+    "@fontsource/dm-sans": "^5.2.8",
+    "@fontsource/fusion-pixel-12px-proportional-sc": "^5.2.5",
+    "@fontsource/noto-sans-sc": "^5.2.9",
+    "@fontsource/nunito-sans": "^5.2.7",
+    "@fontsource/press-start-2p": "^5.2.7",
     "@mdi/font": "^7.4.47",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-dialog": "^2.7.1",

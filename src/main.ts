@@ -1,6 +1,11 @@
+import '@/styles/app-fonts.css';
 import '@/styles/tailwind.css';
 import vuetify from '@/plugins/vuetify';
+import '@/styles/design-tokens.css';
+import '@/styles/app-ui.css';
+import '@/styles/app-glass-card.css';
 import '@/styles/app-shell-scroll.css';
+import '@/styles/app-context-menu-surface.css';
 import '@/styles/shell-glass.css';
 import '@/styles/accent-gradient.css';
 import { i18n } from '@/i18n';

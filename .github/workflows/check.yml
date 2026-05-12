@@ -1,8 +1,11 @@
 name: check
 
 on:
+  # main/master 仅允许经 PR 合并；push 到默认分支不跑本工作流（避免与 PR 上已跑的检查重复）。
   push:
-    branches: [main, master]
+    branches-ignore:
+      - main
+      - master
     paths:
       - '.github/workflows/check.yml'
       - 'src/**'

@@ -1,13 +1,7 @@
 <script setup lang="ts">
-import AboutTab from '@/views/settings/tabs/AboutTab.vue';
-import AppearanceTab from '@/views/settings/tabs/AppearanceTab.vue';
-import GeneralTab from '@/views/settings/tabs/GeneralTab.vue';
-import LogsTab from '@/views/settings/tabs/LogsTab.vue';
-import UpdatesTab from '@/views/settings/tabs/UpdatesTab.vue';
-import {
-  SETTINGS_SECTIONS,
-  type SettingsTab,
-} from '@/views/settings/settings-tabs';
+import AppGlassCard from '@/components/ui/AppGlassCard.vue';
+import SettingsPanel from '@/components/settings/SettingsPanel.vue';
+import type { SettingsTab } from '@/views/settings/settings-tabs';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -24,14 +18,6 @@ const emit = defineEmits<{
 }>();
 
 const activeTab = ref<SettingsTab>('general');
-
-const tabComponents: Record<SettingsTab, typeof AppearanceTab> = {
-  general: GeneralTab,
-  appearance: AppearanceTab,
-  updates: UpdatesTab,
-  logs: LogsTab,
-  about: AboutTab,
-};
 
 watch(
   () => props.modelValue,
@@ -54,8 +40,8 @@ function close() {
     scrollable
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <v-card color="surface" variant="flat" rounded="xl">
-      <v-toolbar color="surface" class="px-2 border-b">
+    <AppGlassCard tag="div" class="settings-dialog-card overflow-hidden d-flex flex-column">
+      <v-toolbar color="transparent" class="px-2 app-border-block-end" flat>
         <v-toolbar-title class="text-h6 font-weight-medium">{{ t('nav.settingsHeader') }}</v-toolbar-title>
         <v-spacer />
         <v-btn icon variant="text" :aria-label="t('common.close')" @click="close">
@@ -63,47 +49,13 @@ function close() {
         </v-btn>
       </v-toolbar>
 
-      <v-tabs
-        v-model="activeTab"
-        bg-color="surface"
-        color="primary"
-        grow
-        show-arrows
-        class="settings-dialog-tabs border-b"
-      >
-        <v-tab
-          v-for="item in SETTINGS_SECTIONS"
-          :key="item.id"
-          :text="t(item.labelKey)"
-          :value="item.id"
-        />
-      </v-tabs>
-
-      <v-card-text class="pa-4 settings-dialog-body">
-        <v-window v-model="activeTab">
-          <v-window-item
-            v-for="item in SETTINGS_SECTIONS"
-            :key="item.id"
-            :value="item.id"
-            class="pt-2"
-          >
-            <component :is="tabComponents[item.id]" />
-          </v-window-item>
-        </v-window>
-      </v-card-text>
-    </v-card>
+      <SettingsPanel v-model="activeTab" variant="dialog" class="flex-grow-1 min-h-0" />
+    </AppGlassCard>
   </v-dialog>
 </template>
 
 <style scoped>
-.settings-dialog-body {
-  max-height: min(70vh, 640px);
-  overflow-y: auto;
-}
-
-.settings-dialog-tabs :deep(.v-tab) {
-  min-width: 0;
-  text-transform: none;
-  letter-spacing: normal;
+.settings-dialog-card {
+  max-height: min(92vh, 760px);
 }
 </style>

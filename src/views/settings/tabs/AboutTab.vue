@@ -7,6 +7,7 @@ import {
   DOCS_ZH_CN_README_URL,
   REPO_URL,
 } from '@/constants/app-meta';
+import AppGlassSectionCard from '@/components/ui/AppGlassSectionCard.vue';
 import { openExternal } from '@/utils/openExternal';
 import { useI18n } from 'vue-i18n';
 
@@ -14,16 +15,21 @@ const { t } = useI18n();
 </script>
 
 <template>
-  <v-card color="surface" variant="flat" rounded="lg" elevation="1">
-    <v-card-title class="text-subtitle-1">{{ t('settings.about.cardTitle') }}</v-card-title>
-    <v-card-text class="d-flex flex-column gap-4">
+  <AppGlassSectionCard>
+    <div class="d-flex flex-column gap-4">
       <div class="d-flex align-center gap-3">
-        <v-avatar size="56" rounded="lg" variant="tonal" color="primary" class="flex-shrink-0">
-          <img :src="APP_LOGO_URL" alt="" width="48" height="48" class="about-brand-logo" />
-        </v-avatar>
+        <div class="about-brand-mark flex-shrink-0" aria-hidden="true">
+          <img
+            :src="APP_LOGO_URL"
+            alt=""
+            width="48"
+            height="48"
+            class="about-brand-logo app-pixel-logo"
+          />
+        </div>
         <div class="text-h6 font-weight-medium">{{ APP_TITLE }}</div>
       </div>
-      <v-sheet color="surface-variant" variant="flat" rounded="lg" class="about-table">
+      <v-sheet color="surface-variant" variant="flat" rounded="md" class="about-table">
         <v-table density="compact">
           <tbody>
             <tr>
@@ -53,17 +59,21 @@ const { t } = useI18n();
           {{ t('settings.about.docsZh') }}
         </v-btn>
       </div>
-    </v-card-text>
-  </v-card>
+    </div>
+  </AppGlassSectionCard>
 </template>
 
 <style scoped>
+.about-brand-mark {
+  line-height: 0;
+  overflow: hidden;
+}
+
 .about-brand-logo {
+  display: block;
   width: 48px;
   height: 48px;
   object-fit: contain;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
 }
 
 .about-table :deep(table) {

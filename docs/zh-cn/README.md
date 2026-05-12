@@ -20,3 +20,4 @@
 
 - [法律信息](LEGAL.md) — 开源许可证、第三方商标声明
 - [仓库与链接说明](REPO_SETUP.md) — 产品名为 **Minecraft Utilities**；GitHub 仓库为 **Lexcubia/Minecraft-Utilities**、`main` 发布流程与 CHANGELOG 发布标记说明
+- [应用内更新 `latest.json`](UPDATER_LATEST.md) — 手动上传 `latest.json` 的位置与填写说明（模板见 `examples/updater-latest.template.json`）

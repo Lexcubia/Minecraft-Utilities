@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppGlassSectionCard from '@/components/ui/AppGlassSectionCard.vue';
 import { getUiLanguageChoiceIds, uiLanguageOptionLabelKey, type UiLanguage } from '@/constants/ui-languages';
 import { useSettingsStore } from '@/stores/settings';
 import { computed, ref } from 'vue';
@@ -17,9 +18,8 @@ const languageOptions = computed((): { label: string; value: UiLanguage }[] =>
 </script>
 
 <template>
-  <v-card color="surface" variant="flat" rounded="lg" elevation="1">
-    <v-card-title class="text-subtitle-1">{{ t('settings.general.cardTitle') }}</v-card-title>
-    <v-card-text class="d-flex flex-column gap-5">
+  <AppGlassSectionCard>
+    <div class="d-flex flex-column gap-5">
       <div>
         <div class="text-body-1 font-weight-medium mb-2">{{ t('settings.general.languageTitle') }}</div>
         <div class="flex flex-wrap gap-2">
@@ -95,6 +95,6 @@ const languageOptions = computed((): { label: string; value: UiLanguage }[] =>
           @click:append-inner="showKey = !showKey"
         />
       </div>
-    </v-card-text>
-  </v-card>
+    </div>
+  </AppGlassSectionCard>
 </template>

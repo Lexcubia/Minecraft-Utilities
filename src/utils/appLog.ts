@@ -1,5 +1,8 @@
+import { APP_LOG_BROADCAST_EVENT } from '@/constants/app-log-sync';
 import type { AppLogLevel, AppLogModule } from '@/stores/app-log';
 import { useAppLogStore } from '@/stores/app-log';
+import { emit } from '@tauri-apps/api/event';
+import { isTauriRuntime } from '@/utils/isTauriRuntime';
 
 export function appLog(
   module: AppLogModule,
@@ -7,7 +10,10 @@ export function appLog(
   message: string,
   detail?: string,
 ): void {
-  useAppLogStore().push({ module, level, message, detail });
+  const entry = useAppLogStore().push({ module, level, message, detail });
+  if (isTauriRuntime()) {
+    void emit(APP_LOG_BROADCAST_EVENT, entry);
+  }
 }
 
 export function truncatePath(s: string, max = 96): string {

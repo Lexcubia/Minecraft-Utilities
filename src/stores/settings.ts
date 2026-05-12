@@ -1,4 +1,9 @@
 import {
+  DEFAULT_UI_FONT_PRESET_ID,
+  isUiFontPresetId,
+  type UiFontPresetId,
+} from '@/constants/ui-font-presets';
+import {
   DEFAULT_DRAWER_LOCATION,
   isDrawerLocation,
   type DrawerLocation,
@@ -17,8 +22,12 @@ import {
   type ThemeColorPresetId,
   type ThemeColorSchemePair,
 } from '@/constants/theme-color-presets';
-import { SETTINGS_STORAGE_KEY } from '@/constants/settings-persist';
+import {
+  SETTINGS_PERSIST_BROADCAST_EVENT,
+  SETTINGS_STORAGE_KEY,
+} from '@/constants/settings-persist';
 import { normalizePersistedUiLanguage, type UiLanguage } from '@/constants/ui-languages';
+import { isTauriRuntime } from '@/utils/isTauriRuntime';
 import { defineStore } from 'pinia';
 import { ref, watch } from 'vue';
 
@@ -36,6 +45,8 @@ export type ColorScheme = 'light' | 'dark' | 'system';
 export type CloseBehavior = 'tray' | 'quit';
 
 export type UpdateChannel = 'stable' | 'beta';
+
+export type { UiFontPresetId };
 
 function isCloseBehavior(v: unknown): v is CloseBehavior {
   return v === 'tray' || v === 'quit';
@@ -94,6 +105,8 @@ type PersistedSettings = {
   appBackgroundPreset: AppBackgroundPresetId;
   /** Tauri 下为系统绝对路径；浏览器预览用 `customBackgroundObjectUrl` */
   customAppBackgroundPath: string;
+  /** 界面 UI 字体预设（`html[data-app-font]`） */
+  uiFontPreset: UiFontPresetId;
 };
 
 function load(): Partial<PersistedSettings> {
@@ -112,42 +125,122 @@ function save(state: PersistedSettings): void {
   localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(state));
 }
 
-export const useSettingsStore = defineStore('settings', () => {
-  const snap = load();
+let broadcastTimer: ReturnType<typeof setTimeout> | undefined;
 
-  const colorScheme = ref<ColorScheme>(snap.colorScheme ?? 'system');
-  const confirmBeforeClose = ref(snap.confirmBeforeClose !== false);
-  const closeBehavior = ref<CloseBehavior>(initialCloseBehavior(snap));
-  const defaultDryRun = ref(snap.defaultDryRun ?? true);
+function scheduleBroadcastPersisted(json: string) {
+  if (!isTauriRuntime()) return;
+  clearTimeout(broadcastTimer);
+  broadcastTimer = setTimeout(() => {
+    broadcastTimer = undefined;
+    void (async () => {
+      const { emit } = await import('@tauri-apps/api/event');
+      await emit(SETTINGS_PERSIST_BROADCAST_EVENT, { json });
+    })();
+  }, 80);
+}
+
+export const useSettingsStore = defineStore('settings', () => {
+  const colorScheme = ref<ColorScheme>('system');
+  const confirmBeforeClose = ref(true);
+  const closeBehavior = ref<CloseBehavior>('quit');
+  const defaultDryRun = ref(true);
   /** 仅内存；正式版由 Tauri / 引擎写入应用数据目录，不写入 localStorage */
   const curseForgeApiKey = ref('');
-  const autoCheckUpdates = ref(snap.autoCheckUpdates ?? true);
-  const updateChannel = ref<UpdateChannel>(snap.updateChannel ?? 'stable');
-  const uiLanguage = ref<UiLanguage>(normalizePersistedUiLanguage(snap.uiLanguage));
-  const themeColorPreset = ref<ThemeColorPresetId>(
-    snap.themeColorPreset && isThemeColorPresetId(snap.themeColorPreset)
-      ? snap.themeColorPreset
-      : DEFAULT_THEME_COLOR_PRESET_ID,
-  );
-  const customThemeColors = ref<ThemeColorSchemePair>(
-    normalizeCustomThemeColors(snap.customThemeColors),
-  );
-  const drawerLocation = ref<DrawerLocation>(
-    snap.drawerLocation && isDrawerLocation(snap.drawerLocation)
-      ? snap.drawerLocation
-      : DEFAULT_DRAWER_LOCATION,
-  );
-  const showVisitedTabBar = ref(snap.showVisitedTabBar !== false);
-  const appBackgroundPreset = ref<AppBackgroundPresetId>(
-    snap.appBackgroundPreset && isAppBackgroundPresetId(snap.appBackgroundPreset)
-      ? snap.appBackgroundPreset
-      : DEFAULT_APP_BACKGROUND_PRESET_ID,
-  );
-  const customAppBackgroundPath = ref(
-    typeof snap.customAppBackgroundPath === 'string' ? snap.customAppBackgroundPath : '',
-  );
+  const autoCheckUpdates = ref(true);
+  const updateChannel = ref<UpdateChannel>('stable');
+  const uiLanguage = ref<UiLanguage>('system');
+  const themeColorPreset = ref<ThemeColorPresetId>(DEFAULT_THEME_COLOR_PRESET_ID);
+  const customThemeColors = ref<ThemeColorSchemePair>(normalizeCustomThemeColors(undefined));
+  const drawerLocation = ref<DrawerLocation>(DEFAULT_DRAWER_LOCATION);
+  const showVisitedTabBar = ref(true);
+  const appBackgroundPreset = ref<AppBackgroundPresetId>(DEFAULT_APP_BACKGROUND_PRESET_ID);
+  const customAppBackgroundPath = ref('');
   /** 非 Tauri（如纯 Vite）下选图后的 blob URL，不入库 */
   const customBackgroundObjectUrl = ref('');
+  const uiFontPreset = ref<UiFontPresetId>(DEFAULT_UI_FONT_PRESET_ID);
+
+  let applyingSnapshot = false;
+
+  function applySnapshotInner(snap: Partial<PersistedSettings>) {
+    colorScheme.value = snap.colorScheme ?? 'system';
+    confirmBeforeClose.value = snap.confirmBeforeClose !== false;
+    closeBehavior.value = initialCloseBehavior(snap);
+    defaultDryRun.value = snap.defaultDryRun ?? true;
+    autoCheckUpdates.value = snap.autoCheckUpdates ?? true;
+    updateChannel.value = snap.updateChannel ?? 'stable';
+    uiLanguage.value = normalizePersistedUiLanguage(snap.uiLanguage);
+    themeColorPreset.value =
+      snap.themeColorPreset && isThemeColorPresetId(snap.themeColorPreset)
+        ? snap.themeColorPreset
+        : DEFAULT_THEME_COLOR_PRESET_ID;
+    customThemeColors.value = normalizeCustomThemeColors(snap.customThemeColors);
+    drawerLocation.value =
+      snap.drawerLocation && isDrawerLocation(snap.drawerLocation)
+        ? snap.drawerLocation
+        : DEFAULT_DRAWER_LOCATION;
+    showVisitedTabBar.value = snap.showVisitedTabBar !== false;
+    appBackgroundPreset.value =
+      snap.appBackgroundPreset && isAppBackgroundPresetId(snap.appBackgroundPreset)
+        ? snap.appBackgroundPreset
+        : DEFAULT_APP_BACKGROUND_PRESET_ID;
+    customAppBackgroundPath.value =
+      typeof snap.customAppBackgroundPath === 'string' ? snap.customAppBackgroundPath : '';
+    uiFontPreset.value =
+      snap.uiFontPreset && isUiFontPresetId(snap.uiFontPreset)
+        ? snap.uiFontPreset
+        : DEFAULT_UI_FONT_PRESET_ID;
+  }
+
+  function applySnapshot(snap: Partial<PersistedSettings>) {
+    applyingSnapshot = true;
+    try {
+      applySnapshotInner(snap);
+    } finally {
+      applyingSnapshot = false;
+    }
+  }
+
+  applySnapshot(load());
+
+  function collectPersistedPayload(): PersistedSettings {
+    return {
+      colorScheme: colorScheme.value,
+      confirmBeforeClose: confirmBeforeClose.value,
+      closeBehavior: closeBehavior.value,
+      defaultDryRun: defaultDryRun.value,
+      autoCheckUpdates: autoCheckUpdates.value,
+      updateChannel: updateChannel.value,
+      uiLanguage: uiLanguage.value,
+      themeColorPreset: themeColorPreset.value,
+      customThemeColors: customThemeColors.value,
+      drawerLocation: drawerLocation.value,
+      showVisitedTabBar: showVisitedTabBar.value,
+      appBackgroundPreset: appBackgroundPreset.value,
+      customAppBackgroundPath: customAppBackgroundPath.value,
+      uiFontPreset: uiFontPreset.value,
+    };
+  }
+
+  function hydrateFromDisk() {
+    applySnapshot(load());
+  }
+
+  function hydrateFromRemoteJson(json: string) {
+    try {
+      const parsed = JSON.parse(json) as Partial<PersistedSettings>;
+      applyingSnapshot = true;
+      try {
+        applySnapshotInner(parsed);
+      } finally {
+        applyingSnapshot = false;
+      }
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(SETTINGS_STORAGE_KEY, json);
+      }
+    } catch {
+      /* 忽略损坏的 payload */
+    }
+  }
 
   function revokeCustomBackgroundObjectUrl() {
     if (customBackgroundObjectUrl.value) {
@@ -177,23 +270,28 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   watch(
-    () =>
-      ({
-        colorScheme: colorScheme.value,
-        confirmBeforeClose: confirmBeforeClose.value,
-        closeBehavior: closeBehavior.value,
-        defaultDryRun: defaultDryRun.value,
-        autoCheckUpdates: autoCheckUpdates.value,
-        updateChannel: updateChannel.value,
-        uiLanguage: uiLanguage.value,
-        themeColorPreset: themeColorPreset.value,
-        customThemeColors: customThemeColors.value,
-        drawerLocation: drawerLocation.value,
-        showVisitedTabBar: showVisitedTabBar.value,
-        appBackgroundPreset: appBackgroundPreset.value,
-        customAppBackgroundPath: customAppBackgroundPath.value,
-      }) satisfies PersistedSettings,
-    (payload) => save(payload),
+    [
+      colorScheme,
+      confirmBeforeClose,
+      closeBehavior,
+      defaultDryRun,
+      autoCheckUpdates,
+      updateChannel,
+      uiLanguage,
+      themeColorPreset,
+      customThemeColors,
+      drawerLocation,
+      showVisitedTabBar,
+      appBackgroundPreset,
+      customAppBackgroundPath,
+      uiFontPreset,
+    ],
+    () => {
+      if (applyingSnapshot) return;
+      const payload = collectPersistedPayload();
+      save(payload);
+      scheduleBroadcastPersisted(JSON.stringify(payload));
+    },
     { deep: true },
   );
 
@@ -214,7 +312,10 @@ export const useSettingsStore = defineStore('settings', () => {
     appBackgroundPreset,
     customAppBackgroundPath,
     customBackgroundObjectUrl,
+    uiFontPreset,
     revokeCustomBackgroundObjectUrl,
     clearCustomAppBackground,
+    hydrateFromDisk,
+    hydrateFromRemoteJson,
   };
 });

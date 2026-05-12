@@ -6,6 +6,7 @@
 2. [架构说明](../../ARCHITECTURE.md) — 分层、Python 引擎、Tauri + Vite + Vue + TS + Tailwind + Vuetify
 3. [路线图](../../ROADMAP.md) — 任务与勾选状态
 4. 仓库根目录 [AGENTS.md](../../../AGENTS.md) — Agent 与贡献者约定
+5. [UI 样式与令牌](UI_STYLES.md) — 设计令牌、语义类、Vuetify 默认项
 
 ## 本地环境与命令
 

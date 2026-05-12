@@ -1,7 +1,6 @@
 {
   "app": {
-    "navBrandShort": "MC Utils",
-    "drawerSubtitle": "Player utilities"
+    "navBrandShort": "MC Utils"
   },
   "meta": {
     "description": "Minecraft Utilities: practical tools for Minecraft players (Tauri 2 + Python)"
@@ -12,6 +11,12 @@
     "close": "Close",
     "cancel": "Cancel"
   },
+  "snackbar": {
+    "queueRegionAria": "App messages",
+    "pendingCount": "{n} more in queue",
+    "queueFoldExpand": "{n} more queued — tap to expand",
+    "queueFoldCollapse": "Collapse queue"
+  },
   "window": {
     "exitConfirmTitle": "Exit Minecraft Utilities",
     "exitConfirmMessage": "Are you sure you want to quit? Unsaved changes in memory may be lost.",
@@ -20,10 +25,12 @@
     "exitConfirmDontRemind": "Don't ask again"
   },
   "tray": {
+    "menuTitle": "Menu",
     "menuOpenMain": "Open main window",
     "menuSettings": "Settings",
     "menuClose": "Quit",
-    "tooltip": "Minecraft Utilities"
+    "tooltip": "Minecraft Utilities",
+    "flyoutAria": "Tray menu"
   },
   "nav": {
     "home": "Home",
@@ -52,6 +59,13 @@
       "closeAll": "Close all",
       "closeLeft": "Close to the left",
       "closeRight": "Close to the right"
+    },
+    "contextMenu": {
+      "ariaLabel": "Context menu",
+      "cut": "Cut",
+      "copy": "Copy",
+      "paste": "Paste",
+      "selectAll": "Select all"
     }
   },
   "welcome": {
@@ -60,10 +74,7 @@
     "versionLabel": "Version {version}",
     "quickTitle": "Quick access",
     "openDocs": "Chinese documentation",
-    "openDocsHint": "Usage, development, and legal index",
-    "openRepo": "GitHub repository",
-    "openRepoHint": "Source, issues, and releases",
-    "devPing": "Test Tauri invoke"
+    "openRepo": "GitHub repository"
   },
   "settings": {
     "sections": {
@@ -78,6 +89,17 @@
       "themeLight": "Light",
       "themeDark": "Dark",
       "themeSystem": "System",
+      "fontTitle": "Font",
+      "fontPreset": {
+        "minecraft": "Block pixel",
+        "system": "System UI",
+        "readable": "Clear sans (system)",
+        "notoSc": "Noto Sans SC",
+        "modern": "Modern (DM Sans)",
+        "soft": "Rounded (Nunito Sans)",
+        "serif": "Serif reading",
+        "mono": "Monospace UI"
+      },
       "layoutTitle": "Layout",
       "layoutDrawerTitle": "Sidebar",
       "layoutVisitedTabsTitle": "Visited tabs",
@@ -146,7 +168,7 @@
       "channelStable": "Stable",
       "channelBeta": "Beta",
       "inAppTitle": "In-app update",
-      "inAppHint": "Download and install signed updates from the configured endpoint (no browser download from the list below).",
+      "inAppHint": "Download and install signed updates from the configured endpoint",
       "inAppApply": "Check and install update",
       "inAppNoUpdate": "You are on the latest version.",
       "inAppError": "Update failed: {msg}",
@@ -213,6 +235,7 @@
   "tools": {
     "uuidMigrate": {
       "navTitle": "UUID migrate",
+      "pageBannersAria": "Notices for this page",
       "title": "World UUID migration",
       "intro": "Players come from the world’s playerdata; names from usercache.json at .minecraft root when not isolated, or under .minecraft/versions/<version>/ when isolated. Requires Python 3.11+ with pip install -e . or MINECRAFT_UTILITIES_PYTHONPATH.",
       "needDesktop": "This tool is only available in the desktop app.",

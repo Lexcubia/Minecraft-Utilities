@@ -4,7 +4,15 @@ function shellQuote(file) {
 }
 
 export default {
-  'src/**/*.{ts,vue,js}': (files) =>
+  // Match `pnpm format`: Prettier formats `src/**/*.ts`; Vue SFCs stay ESLint-only (AGENTS.md).
+  'src/**/*.ts': (files) =>
+    files.length
+      ? [
+          `eslint --fix ${files.map(shellQuote).join(' ')}`,
+          `prettier --write ${files.map(shellQuote).join(' ')}`,
+        ]
+      : [],
+  'src/**/*.{vue,js}': (files) =>
     files.length ? `eslint --fix ${files.map(shellQuote).join(' ')}` : [],
   'src/**/*.css': (files) =>
     files.length ? `prettier --write ${files.map(shellQuote).join(' ')}` : [],

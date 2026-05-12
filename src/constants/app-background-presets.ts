@@ -49,12 +49,16 @@ export const APP_BACKGROUND_PRESETS = [
     id: 'blocks',
     style: {
       backgroundColor: 'rgb(var(--v-theme-background))',
+      /* 须略强于「细线 + 主区毛玻璃」叠层后的可见度；色值用 design-tokens 的 on-surface 档位 */
       backgroundImage: [
-        `linear-gradient(rgba(var(--v-theme-on-surface), 0.04) 1px, transparent 1px)`,
-        `linear-gradient(90deg, rgba(var(--v-theme-on-surface), 0.04) 1px, transparent 1px)`,
+        `linear-gradient(var(--app-on-surface-12) 1px, transparent 1px)`,
+        `linear-gradient(90deg, var(--app-on-surface-12) 1px, transparent 1px)`,
       ].join(', '),
-      backgroundSize: '20px 20px',
-      backgroundAttachment: 'fixed',
+      backgroundSize: '22px 22px, 22px 22px',
+      backgroundPosition: '0 0, 0 0',
+      backgroundRepeat: 'repeat, repeat',
+      /* fixed 与主区 backdrop-filter 叠在一起时，部分 WebView 会吞掉根背景图案 */
+      backgroundAttachment: 'scroll, scroll',
     },
   },
 ] as const;

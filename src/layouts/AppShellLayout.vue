@@ -2,22 +2,31 @@
 import SettingsDialog from '@/components/settings/SettingsDialog.vue';
 import AppShellAppBar from '@/layouts/AppShellAppBar.vue';
 import AppShellNavigationDrawer from '@/layouts/AppShellNavigationDrawer.vue';
+import AppShellSettingsBar from '@/layouts/AppShellSettingsBar.vue';
 import AppShellVisitedTabs from '@/layouts/AppShellVisitedTabs.vue';
+import AppShellGlobalContextMenu from '@/layouts/AppShellGlobalContextMenu.vue';
 import { checkInAppUpdate } from '@/composables/useInAppUpdater';
 import { usePrefersColorSchemeDark } from '@/composables/usePrefersColorSchemeDark';
+import { isTrayFlyoutPayload } from '@/constants/tray-menu';
 import {
   getUiLanguageChoiceIds,
   uiLanguageOptionLabelKey,
   type UiLanguage,
 } from '@/constants/ui-languages';
+import { settingsUiModeKey, type SettingsUiMode } from '@/shell/settings-ui-mode';
 import { shellWindowControlKey, type ShellWindowControl } from '@/shell/shell-window-context';
 import { useSettingsStore } from '@/stores/settings';
 import { useVisitedPagesStore } from '@/stores/visited-pages';
 import { appLog } from '@/utils/appLog';
+import { appSnackbar } from '@/utils/appSnackbar';
 import { isTauriRuntime } from '@/utils/isTauriRuntime';
+import { openSettingsWindow } from '@/utils/openSettingsWindow';
+import { openTrayMenuWindow } from '@/utils/openTrayMenuWindow';
+import { installTauriWebViewKeyboardGuards } from '@/utils/tauriWebViewKeyboardGuards';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { getCurrentWindow, type CloseRequestedEvent } from '@tauri-apps/api/window';
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
@@ -31,6 +40,17 @@ const { mdAndUp } = useDisplay();
 const settings = useSettingsStore();
 const visitedPages = useVisitedPagesStore();
 const prefersDark = usePrefersColorSchemeDark();
+
+const isSettingsStandaloneWindow =
+  isTauriRuntime() && WebviewWindow.getCurrent().label === 'settings';
+
+const isMainShellWindow =
+  !isTauriRuntime() || WebviewWindow.getCurrent().label === 'main';
+
+const settingsUiMode = ref<SettingsUiMode>(
+  isSettingsStandaloneWindow ? 'standalone' : 'embedded',
+);
+provide(settingsUiModeKey, settingsUiMode);
 
 const isEffectivelyDark = computed(() => {
   if (settings.colorScheme === 'dark') return true;
@@ -66,6 +86,12 @@ const settingsDialogInitialTab = computed<SettingsTab | undefined>(() => {
 function openSettingsDialog(tab?: SettingsTab) {
   settingsDialogTabOverride.value = tab;
   settingsDialogOpen.value = true;
+}
+
+/** Tauri：独立设置窗口；Web：对话框 */
+function openSettingsUi(tab?: SettingsTab) {
+  if (isTauriRuntime()) void openSettingsWindow(tab);
+  else openSettingsDialog(tab);
 }
 
 watch(settingsDialogOpen, (open) => {
@@ -105,6 +131,10 @@ async function requestAppExit() {
 /** 顶栏关闭键 */
 async function onCloseButton() {
   if (!isTauriRuntime()) return;
+  if (isSettingsStandaloneWindow) {
+    await getCurrentWindow().hide();
+    return;
+  }
   const w = getCurrentWindow();
   if (settings.closeBehavior === 'tray') {
     await w.hide();
@@ -131,11 +161,11 @@ const shellWindowApi: ShellWindowControl = {
 provide(shellWindowControlKey, shellWindowApi);
 
 let unlistenCloseRequested: UnlistenFn | undefined;
+let unlistenTrayFlyoutOpen: UnlistenFn | undefined;
+let unlistenTrayShowMain: UnlistenFn | undefined;
 let unlistenTrayOpenSettings: UnlistenFn | undefined;
 let unlistenTrayRequestExit: UnlistenFn | undefined;
-
-const updateAvailableSnack = ref(false);
-const updateAvailableVersion = ref('');
+let removeWebViewKeyboardGuards: (() => void) | undefined;
 
 function scheduleStartupInAppUpdateHint() {
   if (!settings.autoCheckUpdates) return;
@@ -143,8 +173,23 @@ function scheduleStartupInAppUpdateHint() {
     void (async () => {
       const pre = await checkInAppUpdate();
       if (pre.kind !== 'available') return;
-      updateAvailableVersion.value = pre.version;
-      updateAvailableSnack.value = true;
+      const version = pre.version;
+      appSnackbar.show({
+        id: 'startup-in-app-update',
+        text: t('settings.updates.snackUpdateAvailable', { version }),
+        timeout: 10_000,
+        color: 'surface-variant',
+        multiLine: true,
+        elevation: 6,
+        actions: [
+          {
+            label: t('settings.updates.snackOpenUpdates'),
+            run: () => {
+              openSettingsUi('updates');
+            },
+          },
+        ],
+      });
     })();
   }, 5000);
 }
@@ -170,9 +215,17 @@ async function syncTrayMenuLabels() {
 }
 
 onMounted(async () => {
+  if (isTauriRuntime()) {
+    removeWebViewKeyboardGuards = installTauriWebViewKeyboardGuards();
+  }
   if (!isTauriRuntime()) return;
   unlistenCloseRequested = await getCurrentWindow().onCloseRequested(
     async (event: CloseRequestedEvent) => {
+      if (isSettingsStandaloneWindow) {
+        event.preventDefault();
+        await getCurrentWindow().hide();
+        return;
+      }
       if (settings.closeBehavior === 'tray') {
         event.preventDefault();
         await getCurrentWindow().hide();
@@ -186,11 +239,23 @@ onMounted(async () => {
     },
   );
   unlistenTrayOpenSettings = await listen('tray-open-settings', () => {
-    openSettingsDialog('general');
+    void openSettingsWindow('general');
   });
   unlistenTrayRequestExit = await listen('tray-request-exit', () => {
+    if (isSettingsStandaloneWindow) return;
     void requestAppExit();
   });
+  if (isMainShellWindow) {
+    unlistenTrayFlyoutOpen = await listen<unknown>('tray-flyout-open', (ev) => {
+      const raw = ev.payload;
+      if (!isTrayFlyoutPayload(raw)) return;
+      void openTrayMenuWindow(raw);
+    });
+    unlistenTrayShowMain = await listen('tray-show-main', async () => {
+      await getCurrentWindow().show();
+      await getCurrentWindow().setFocus();
+    });
+  }
   await syncTrayMenuLabels();
   scheduleStartupInAppUpdateHint();
 });
@@ -203,7 +268,10 @@ watch(
 );
 
 onUnmounted(() => {
+  removeWebViewKeyboardGuards?.();
   unlistenCloseRequested?.();
+  unlistenTrayFlyoutOpen?.();
+  unlistenTrayShowMain?.();
   unlistenTrayOpenSettings?.();
   unlistenTrayRequestExit?.();
 });
@@ -247,85 +315,83 @@ function goBack() {
   if (window.history.length > 1) router.back();
   else void router.push({ name: 'welcome' });
 }
-
-function onUpdateAvailableSnackOpenUpdates() {
-  updateAvailableSnack.value = false;
-  openSettingsDialog('updates');
-}
 </script>
 
 <template>
-  <AppShellNavigationDrawer
-    v-model:drawer-open="drawerOpen"
-    v-model:drawer-rail="drawerRail"
-    :md-and-up="mdAndUp"
-    :drawer-location="settings.drawerLocation"
-    :is-effectively-dark="isEffectivelyDark"
-    :language-choices="languageChoices"
-    :current-ui-language="settings.uiLanguage"
-    @toggle-light-dark="toggleLightDark"
-    @open-settings="openSettingsDialog"
-    @set-ui-language="setUiLanguage"
-  />
+  <template v-if="isSettingsStandaloneWindow">
+    <AppShellSettingsBar />
+    <v-main class="app-shell-main app-shell-main--settings d-flex flex-column">
+      <div
+        class="app-shell-main-scroll app-shell-main-scroll--nested-document app-shell-main-scroll--inner-scroll-host"
+      >
+        <router-view v-slot="{ Component }">
+          <keep-alive :include="visitedPages.shellKeepAliveNames">
+            <component :is="Component" />
+          </keep-alive>
+        </router-view>
+      </div>
+    </v-main>
+  </template>
+  <template v-else>
+    <AppShellNavigationDrawer
+      v-model:drawer-open="drawerOpen"
+      v-model:drawer-rail="drawerRail"
+      :md-and-up="mdAndUp"
+      :drawer-location="settings.drawerLocation"
+      :is-effectively-dark="isEffectivelyDark"
+      :language-choices="languageChoices"
+      :current-ui-language="settings.uiLanguage"
+      @toggle-light-dark="toggleLightDark"
+      @open-settings="openSettingsUi"
+      @set-ui-language="setUiLanguage"
+    />
 
-  <AppShellAppBar
-    :is-settings="isSettings"
-    :drawer-open="drawerOpen"
-    :drawer-rail="drawerRail"
-    :md-and-up="mdAndUp"
-    :is-effectively-dark="isEffectivelyDark"
-    :language-choices="languageChoices"
-    :current-ui-language="settings.uiLanguage"
-    @back="goBack"
-    @toggle-drawer-desktop="toggleDrawerDesktop"
-    @toggle-drawer-rail="toggleDrawerRail"
-    @toggle-drawer-mobile="toggleDrawerMobile"
-    @toggle-light-dark="toggleLightDark"
-    @open-settings="openSettingsDialog"
-    @set-ui-language="setUiLanguage"
-  />
+    <AppShellAppBar
+      :is-settings="isSettings"
+      :drawer-open="drawerOpen"
+      :drawer-rail="drawerRail"
+      :md-and-up="mdAndUp"
+      :is-effectively-dark="isEffectivelyDark"
+      :language-choices="languageChoices"
+      :current-ui-language="settings.uiLanguage"
+      @back="goBack"
+      @toggle-drawer-desktop="toggleDrawerDesktop"
+      @toggle-drawer-rail="toggleDrawerRail"
+      @toggle-drawer-mobile="toggleDrawerMobile"
+      @toggle-light-dark="toggleLightDark"
+      @open-settings="openSettingsUi"
+      @set-ui-language="setUiLanguage"
+    />
 
-  <v-main class="app-shell-main d-flex flex-column">
-    <!-- 滚动放在内层，避免 fixed app-bar 盖住 v-main 顶部滚动条轨道 -->
-    <div
-      class="app-shell-main-scroll"
-      :class="{ 'app-shell-main-scroll--with-floating-tabs': settings.showVisitedTabBar }"
-    >
-      <router-view v-slot="{ Component }">
-        <keep-alive :include="visitedPages.shellKeepAliveNames">
-          <component :is="Component" />
-        </keep-alive>
-      </router-view>
-    </div>
-    <!-- 叠在滚动区之上；top 须对齐 Vuetify 为顶栏预留的 padding（否则落在顶栏背后不可见） -->
-    <div
-      v-if="settings.showVisitedTabBar"
-      class="app-shell-main-tabs-floating"
-    >
-      <AppShellVisitedTabs />
-    </div>
-  </v-main>
+    <v-main class="app-shell-main d-flex flex-column">
+      <!-- 滚动放在内层，避免 fixed app-bar 盖住 v-main 顶部滚动条轨道 -->
+      <div
+        class="app-shell-main-scroll"
+        :class="{ 'app-shell-main-scroll--with-floating-tabs': settings.showVisitedTabBar }"
+      >
+        <router-view v-slot="{ Component }">
+          <keep-alive :include="visitedPages.shellKeepAliveNames">
+            <component :is="Component" />
+          </keep-alive>
+        </router-view>
+      </div>
+      <!-- 叠在滚动区之上；top 须对齐 Vuetify 为顶栏预留的 padding（否则落在顶栏背后不可见） -->
+      <div
+        v-if="settings.showVisitedTabBar"
+        class="app-shell-main-tabs-floating"
+      >
+        <AppShellVisitedTabs />
+      </div>
+    </v-main>
+  </template>
 
   <SettingsDialog
+    v-if="!isTauriRuntime()"
     v-model="settingsDialogOpen"
     :initial-tab="settingsDialogInitialTab"
   />
 
-  <v-snackbar
-    v-model="updateAvailableSnack"
-    :timeout="10000"
-    location="bottom"
-    color="surface-variant"
-    elevation="6"
-    multi-line
-  >
-    {{ t('settings.updates.snackUpdateAvailable', { version: updateAvailableVersion }) }}
-    <template #actions>
-      <v-btn variant="text" color="primary" @click="onUpdateAvailableSnackOpenUpdates">
-        {{ t('settings.updates.snackOpenUpdates') }}
-      </v-btn>
-    </template>
-  </v-snackbar>
+  <AppShellGlobalContextMenu />
 
   <v-dialog
     v-model="exitConfirmOpen"

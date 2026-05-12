@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { APP_VERSION, REPO_URL } from '@/constants/app-meta';
+import AppGlassSectionCard from '@/components/ui/AppGlassSectionCard.vue';
 import { checkInAppUpdate, downloadAndInstallAppUpdate } from '@/composables/useInAppUpdater';
 import { useGithubReleases } from '@/composables/useGithubReleases';
 import type { UpdateChannel } from '@/stores/settings';
 import { useSettingsStore } from '@/stores/settings';
 import type { GitHubRelease } from '@/types/github-release';
 import { openExternal } from '@/utils/openExternal';
+import { appSnackbar } from '@/utils/appSnackbar';
 import { findChangelogBodyForTag, parseKeepAChangelogPublished } from '@/utils/parseChangelog';
 import { renderMarkdownToSafeHtml } from '@/utils/renderMarkdown';
 import { compareTagToAppVersion } from '@/utils/semverTagCompare';
@@ -36,8 +38,6 @@ const releaseNotesHtmlMap = computed((): Record<number, string> => {
 const inAppBusy = ref(false);
 const inAppProgress = ref(0);
 const inAppProgressIndeterminate = ref(false);
-const inAppSnack = ref(false);
-const inAppSnackText = ref('');
 
 function formatPublishedAt(iso: string | null): string {
   if (!iso) return '—';
@@ -69,7 +69,6 @@ function openChangelogOnGithub() {
 }
 
 async function runInAppUpdate() {
-  inAppSnack.value = false;
   inAppBusy.value = true;
   inAppProgress.value = 0;
   inAppProgressIndeterminate.value = true;
@@ -77,8 +76,7 @@ async function runInAppUpdate() {
   if (pre.kind === 'none') {
     inAppBusy.value = false;
     inAppProgressIndeterminate.value = false;
-    inAppSnackText.value = t('settings.updates.inAppNoUpdate');
-    inAppSnack.value = true;
+    appSnackbar.show({ text: t('settings.updates.inAppNoUpdate'), timeout: 5200, rounded: 'md' });
     return;
   }
   if (pre.kind === 'error' || pre.kind === 'unsupported') {
@@ -88,8 +86,12 @@ async function runInAppUpdate() {
       pre.kind === 'error'
         ? pre.message
         : t('settings.updates.inAppUnsupported');
-    inAppSnackText.value = t('settings.updates.inAppError', { msg });
-    inAppSnack.value = true;
+    appSnackbar.show({
+      text: t('settings.updates.inAppError', { msg }),
+      timeout: 5200,
+      rounded: 'md',
+      color: 'error',
+    });
     return;
   }
 
@@ -113,12 +115,20 @@ async function runInAppUpdate() {
   inAppProgressIndeterminate.value = false;
   if (!r.ok) {
     const msg = r.message === 'NO_UPDATE' ? t('settings.updates.inAppNoUpdate') : r.message;
-    inAppSnackText.value = t('settings.updates.inAppError', { msg });
-    inAppSnack.value = true;
+    appSnackbar.show({
+      text: t('settings.updates.inAppError', { msg }),
+      timeout: 5200,
+      rounded: 'md',
+      color: 'error',
+    });
     return;
   }
-  inAppSnackText.value = t('settings.updates.inAppDone');
-  inAppSnack.value = true;
+  appSnackbar.show({
+    text: t('settings.updates.inAppDone'),
+    timeout: 5200,
+    rounded: 'md',
+    color: 'success',
+  });
 }
 
 onMounted(() => {
@@ -128,9 +138,8 @@ onMounted(() => {
 
 <template>
   <div class="d-flex flex-column gap-4">
-    <v-card color="surface" variant="flat" rounded="lg" elevation="1">
-      <v-card-title class="text-subtitle-1">{{ t('settings.updates.cardTitle') }}</v-card-title>
-      <v-card-text class="d-flex flex-column gap-5">
+    <AppGlassSectionCard>
+      <div class="d-flex flex-column gap-5">
         <div>
           <div class="text-body-1 font-weight-medium mb-2">{{ t('settings.updates.checkTitle') }}</div>
           <div class="flex flex-wrap gap-2">
@@ -181,7 +190,7 @@ onMounted(() => {
             color="primary"
             variant="flat"
             size="large"
-            rounded="lg"
+            rounded="md"
             class="mb-2"
             :loading="inAppBusy"
             prepend-icon="mdi-update"
@@ -204,24 +213,24 @@ onMounted(() => {
             :model-value="inAppProgress"
           />
         </div>
-      </v-card-text>
-    </v-card>
+      </div>
+    </AppGlassSectionCard>
 
-    <v-card class="updates-releases-card" color="surface" variant="flat" rounded="xl" elevation="0">
-      <v-card-item class="updates-releases-header pb-2 pt-5 px-5">
-        <template #prepend>
-          <v-avatar color="primary" variant="tonal" size="48" rounded="xl" class="flex-shrink-0">
+    <AppGlassSectionCard body-padding="none">
+      <template #head>
+        <div class="d-flex flex-wrap align-start gap-3 pa-4 pb-2">
+          <v-avatar color="primary" variant="tonal" size="48" rounded="md" class="flex-shrink-0">
             <v-icon icon="mdi-rocket-launch-outline" size="28" />
           </v-avatar>
-        </template>
-        <v-card-title class="text-h6 font-weight-semibold ps-2">
-          {{ t('settings.updates.releasesTitle') }}
-        </v-card-title>
-        <v-card-subtitle class="text-body-2 ps-2 text-wrap">
-          {{ t('settings.updates.releasesListHint') }}
-        </v-card-subtitle>
-        <template #append>
-          <div class="d-flex flex-wrap justify-end gap-1">
+          <div class="flex-grow-1 min-width-0 ps-2">
+            <div class="text-h6 font-weight-semibold">
+              {{ t('settings.updates.releasesTitle') }}
+            </div>
+            <div class="text-body-2 text-medium-emphasis text-wrap">
+              {{ t('settings.updates.releasesListHint') }}
+            </div>
+          </div>
+          <div class="d-flex flex-wrap justify-end gap-1 updates-releases-actions">
             <v-btn variant="text" size="small" color="primary" @click="openChangelogOnGithub">
               {{ t('settings.about.changelogFull') }}
             </v-btn>
@@ -229,7 +238,7 @@ onMounted(() => {
               variant="tonal"
               color="primary"
               size="small"
-              rounded="lg"
+              rounded="md"
               :loading="loading"
               prepend-icon="mdi-refresh"
               @click="load()"
@@ -237,15 +246,15 @@ onMounted(() => {
               {{ t('settings.updates.refresh') }}
             </v-btn>
           </div>
-        </template>
-      </v-card-item>
+        </div>
+      </template>
 
-      <v-card-text class="px-5 pb-5 pt-0">
+      <div class="px-4 pb-4 pt-0">
         <p class="text-caption text-medium-emphasis mb-3">{{ t('settings.about.changelogHint') }}</p>
 
         <v-progress-linear v-if="loading" class="mb-3" indeterminate color="primary" rounded height="4" />
 
-        <v-alert v-if="error" type="warning" variant="tonal" density="comfortable" rounded="lg" class="text-body-2">
+        <v-alert v-if="error" type="warning" variant="tonal" density="comfortable" rounded="md" class="text-body-2">
           {{ error }}
         </v-alert>
 
@@ -254,7 +263,7 @@ onMounted(() => {
           type="info"
           variant="tonal"
           density="comfortable"
-          rounded="lg"
+          rounded="md"
           class="text-body-2"
         >
           {{ t('settings.updates.empty') }}
@@ -262,7 +271,7 @@ onMounted(() => {
 
         <v-sheet
           v-else-if="filteredReleases.length > 0"
-          class="release-panels-wrap rounded-xl"
+          class="release-panels-wrap rounded-md"
           color="surface"
           border
         >
@@ -275,7 +284,7 @@ onMounted(() => {
             >
               <v-expansion-panel-title class="release-panel-title px-4 py-4">
                 <div class="d-flex flex-wrap align-center gap-3 flex-grow-1 min-width-0">
-                  <v-avatar color="primary" size="42" variant="tonal" rounded="lg" class="flex-shrink-0">
+                  <v-avatar color="primary" size="42" variant="tonal" rounded="md" class="flex-shrink-0">
                     <v-icon icon="mdi-tag-outline" size="22" />
                   </v-avatar>
                   <div class="flex-grow-1 min-width-0">
@@ -321,25 +330,13 @@ onMounted(() => {
             </v-expansion-panel>
           </v-expansion-panels>
         </v-sheet>
-      </v-card-text>
-    </v-card>
-
-    <v-snackbar v-model="inAppSnack" location="bottom" :timeout="5200" rounded="lg">
-      {{ inAppSnackText }}
-    </v-snackbar>
+      </div>
+    </AppGlassSectionCard>
   </div>
 </template>
 
 <style scoped>
-.updates-releases-card {
-  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-  background: rgb(var(--v-theme-surface));
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 8px 28px rgba(0, 0, 0, 0.07);
-}
-
-.updates-releases-header :deep(.v-card-item__append) {
+.updates-releases-actions {
   align-self: flex-start;
 }
 

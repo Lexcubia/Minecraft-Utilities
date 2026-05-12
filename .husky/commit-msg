@@ -1,1 +1,5 @@
+#!/usr/bin/env sh
+
+root=$(git rev-parse --show-toplevel) || exit 1
+node "$root/scripts/strip-cursor-coauthor.mjs" "$1" || exit 1
 pnpm exec commitlint --edit "$1"

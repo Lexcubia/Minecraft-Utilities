@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppGlassCard from '@/components/ui/AppGlassCard.vue';
 import {
   DOCS_ZH_CN_README_URL,
   REPO_URL,
@@ -7,14 +8,7 @@ import {
   APP_VERSION,
 } from '@/constants/app-meta';
 import { openExternal } from '@/utils/openExternal';
-import {
-  SETTINGS_SECTION_ICONS,
-  SETTINGS_SECTIONS,
-  settingsRouteName,
-  type SettingsTab,
-} from '@/views/settings/settings-tabs';
-import { invoke } from '@tauri-apps/api/core';
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 
@@ -22,11 +16,6 @@ defineOptions({ name: 'WelcomeView' });
 
 const { t } = useI18n();
 const router = useRouter();
-const greetMsg = ref('');
-
-function goSettings(tab: SettingsTab) {
-  void router.push({ name: settingsRouteName(tab) });
-}
 
 function openDocs() {
   void openExternal(DOCS_ZH_CN_README_URL);
@@ -36,39 +25,58 @@ function openRepo() {
   void openExternal(REPO_URL);
 }
 
-const settingsQuick = computed(() =>
-  SETTINGS_SECTIONS.map((s) => ({
-    id: s.id,
-    labelKey: s.labelKey,
-  })),
-);
+type MainQuickItem =
+  | {
+      id: string;
+      kind: 'route';
+      routeName: 'uuid-migrate';
+      titleKey: string;
+      icon: string;
+    }
+  | {
+      id: string;
+      kind: 'external';
+      titleKey: string;
+      icon: string;
+      action: () => void;
+    };
 
-const externalQuick = computed(() => [
+const mainQuick = computed<MainQuickItem[]>(() => [
   {
+    id: 'uuid-migrate',
+    kind: 'route',
+    routeName: 'uuid-migrate',
+    titleKey: 'tools.uuidMigrate.navTitle',
+    icon: 'mdi-swap-horizontal',
+  },
+  {
+    id: 'docs',
+    kind: 'external',
     titleKey: 'welcome.openDocs',
-    hintKey: 'welcome.openDocsHint',
     icon: 'mdi-book-open-variant',
     action: openDocs,
   },
   {
+    id: 'repo',
+    kind: 'external',
     titleKey: 'welcome.openRepo',
-    hintKey: 'welcome.openRepoHint',
     icon: 'mdi-github',
     action: openRepo,
   },
 ]);
 
-async function pingRust() {
-  greetMsg.value = await invoke<string>('greet', { name: 'Modpack' });
+function runQuick(item: MainQuickItem) {
+  if (item.kind === 'route') void router.push({ name: item.routeName });
+  else item.action();
 }
 </script>
 
 <template>
-  <div class="welcome-page mx-auto max-w-3xl px-4 py-6">
-    <v-sheet class="pa-6 mb-6" color="surface" elevation="1" rounded="lg" variant="flat">
+  <div class="app-page">
+    <AppGlassCard tag="div" class="pa-6 mb-6">
       <div class="d-flex flex-wrap align-center gap-4 mb-2">
-        <v-avatar size="80" rounded="lg" variant="flat" class="app-welcome-logo flex-shrink-0">
-          <img :src="APP_LOGO_URL" alt="" width="80" height="80" />
+        <v-avatar size="80" rounded="0" variant="flat" class="app-welcome-logo flex-shrink-0">
+          <img :src="APP_LOGO_URL" alt="" width="80" height="80" class="app-pixel-logo" />
         </v-avatar>
         <div class="min-w-0">
           <div class="text-h4 font-weight-bold">{{ APP_TITLE }}</div>
@@ -79,61 +87,22 @@ async function pingRust() {
       <v-chip class="mt-4" color="primary" size="small" variant="tonal">
         {{ t('welcome.versionLabel', { version: APP_VERSION }) }}
       </v-chip>
-    </v-sheet>
+    </AppGlassCard>
 
     <h2 class="text-h6 font-weight-bold mb-3">{{ t('welcome.quickTitle') }}</h2>
 
-    <v-row dense>
-      <v-col v-for="item in settingsQuick" :key="item.id" cols="12" sm="6">
-        <v-card
-          class="quick-card h-100"
-          color="surface"
-          elevation="1"
-          rounded="lg"
-          variant="flat"
-          role="button"
-          tabindex="0"
-          @click="goSettings(item.id)"
-          @keydown.enter="goSettings(item.id)"
-          @keydown.space.prevent="goSettings(item.id)"
-        >
-          <v-card-text class="d-flex flex-column">
-            <v-avatar class="mb-3" color="primary" size="44" variant="tonal" rounded="lg">
-              <v-icon :icon="SETTINGS_SECTION_ICONS[item.id]" color="primary" size="24" />
-            </v-avatar>
-            <div class="text-subtitle-1 font-weight-medium">{{ t(item.labelKey) }}</div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-
-      <v-col v-for="(ext, i) in externalQuick" :key="`ext-${i}`" cols="12" sm="6">
-        <v-card
-          class="quick-card h-100"
-          color="surface"
-          elevation="1"
-          rounded="lg"
-          variant="flat"
-          role="button"
-          tabindex="0"
-          @click="ext.action()"
-          @keydown.enter="ext.action()"
-          @keydown.space.prevent="ext.action()"
-        >
-          <v-card-text class="d-flex flex-column">
-            <v-avatar class="mb-3" color="primary" size="44" variant="tonal" rounded="lg">
-              <v-icon :icon="ext.icon" color="primary" size="24" />
-            </v-avatar>
-            <div class="text-subtitle-1 font-weight-medium">{{ t(ext.titleKey) }}</div>
-            <p class="text-body-2 text-medium-emphasis mb-0 mt-1">{{ t(ext.hintKey) }}</p>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-
-    <div class="mt-6 text-center">
-      <v-btn color="primary" variant="tonal" @click="pingRust">{{ t('welcome.devPing') }}</v-btn>
-      <p v-if="greetMsg" class="text-body-2 text-medium-emphasis mt-3 mb-0">{{ greetMsg }}</p>
-    </div>
+    <AppGlassCard tag="div" class="quick-list overflow-hidden">
+      <button
+        v-for="item in mainQuick"
+        :key="item.id"
+        type="button"
+        class="quick-row app-focus-ring-inset d-flex align-center ga-3 px-4 py-3 text-start w-100"
+        @click="runQuick(item)"
+      >
+        <v-icon :icon="item.icon" color="primary" size="22" class="flex-shrink-0" />
+        <span class="text-body-1 font-weight-medium">{{ t(item.titleKey) }}</span>
+      </button>
+    </AppGlassCard>
   </div>
 </template>
 
@@ -142,15 +111,28 @@ async function pingRust() {
   width: 80px;
   height: 80px;
   object-fit: contain;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
 }
 
-.quick-card {
-  cursor: pointer;
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
+/* 与上方「快速开始」标题衔接：去掉卡片顶边与顶侧阴影，避免读出「按钮上方多一条线」 */
+.quick-list.app-glass-card {
+  border-top: none;
+  box-shadow: none;
 }
-.quick-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+.quick-row {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  transition: background-color 0.12s ease;
+}
+
+.quick-row:not(:last-child) {
+  border-bottom: thin solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+.quick-row:hover {
+  background-color: var(--app-primary-06);
 }
 </style>

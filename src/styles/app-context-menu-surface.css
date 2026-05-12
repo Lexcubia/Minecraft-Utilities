@@ -1,0 +1,44 @@
+/**
+ * 应用内统一右键菜单外壳（与访问标签右键菜单视觉一致）。
+ * 与 `.app-context-menu-surface` 同用；内部列表样式由各组件 :deep 补充。
+ */
+.app-context-menu-surface {
+  --app-context-menu-glass: color-mix(in srgb, rgb(var(--v-theme-surface)) 48%, transparent);
+  position: fixed;
+  z-index: 4000;
+  min-width: 188px;
+  overflow: hidden;
+  font-size: 0.75rem;
+  line-height: 1.25;
+  color: rgb(var(--v-theme-on-surface));
+  border: 1px solid var(--app-on-surface-14);
+  box-shadow:
+    var(--app-shadow-overlay-lg),
+    0 0 0 1px var(--app-on-surface-06) inset;
+  background: transparent;
+}
+
+.app-context-menu-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  -webkit-backdrop-filter: blur(20px) saturate(1.35);
+  backdrop-filter: blur(20px) saturate(1.35);
+  background: var(--app-context-menu-glass);
+}
+
+.app-context-menu-surface > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-context-menu-surface::before {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: color-mix(in srgb, rgb(var(--v-theme-surface)) 94%, transparent);
+  }
+}

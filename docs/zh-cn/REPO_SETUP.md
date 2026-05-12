@@ -33,10 +33,12 @@
 
 桌面发版工作流会为 GitHub Release 生成并上传 **`latest.json`** 与各平台 **`.sig`**（需在仓库 **Settings → Secrets and variables → Actions** 中配置）：
 
-| Secret                                   | 说明                                                                                                                                                                                                                                          |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`TAURI_SIGNING_PRIVATE_KEY`**          | Minisign **私钥**全文（与 `src-tauri/tauri.conf.json` 里 `plugins.updater.pubkey` 成对；本地勿提交私钥，见根目录 `.gitignore`）。可用 `pnpm exec tauri signer generate -w src-tauri/tauri-updater.key` 生成，再把公钥写入 `tauri.conf.json`。 |
-| **`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`** | 若生成密钥时设置了密码则填写；否则可省略或留空。                                                                                                                                                                                              |
+- **`TAURI_SIGNING_PRIVATE_KEY`**：Minisign **私钥**，须为 **`tauri-updater.key` 文件全文**（`tauri signer generate` 写入的**单行 base64**；勿混入 BOM 或多余换行）。与 `tauri.conf.json` 的 **`plugins.updater.pubkey`** 成对；本地勿提交私钥，见根目录 `.gitignore`。可用 `pnpm exec tauri signer generate -w src-tauri/tauri-updater.key` 生成。
+- **`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`**：若生成密钥时设置了密码则填写；否则可省略或留空。
+
+**`pubkey` 格式**：`tauri.conf.json` 中的 **`plugins.updater.pubkey`** 必须与 **`tauri-updater.key.pub` 文件全文**（单行 base64）一致；**不要**只填解码后的内层 `RWQp…` 一行，否则构建 updater 签名时会报 `failed to decode pubkey` / UTF-8 解码错误。
+
+手动准备 **`latest.json`** 时，资源应挂在 GitHub Release 上（与 `endpoints` 的 `releases/latest/download/latest.json` 一致），详见 [应用内更新 `latest.json`](UPDATER_LATEST.md)。
 
 未配置私钥时，`tauri build` 在开启 **`bundle.createUpdaterArtifacts`** 的情况下会失败。若 **Fork** 仓库发版，请把 `tauri.conf.json` 中 **`plugins.updater.endpoints`** 的 GitHub URL 改成你的 **`用户名或组织/仓库名`**，与 `github.repository` 一致。
 
