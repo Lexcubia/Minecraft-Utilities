@@ -6,6 +6,8 @@ use serde::Serialize;
 use serde_json::Value;
 #[cfg(target_os = "windows")]
 use std::process::Stdio;
+#[cfg(target_os = "windows")]
+use std::time::Duration;
 
 const OWNER: &str = "Lexcubia";
 const REPO: &str = "Minecraft-Utilities";
@@ -21,6 +23,16 @@ fn github_user_agent() -> String {
         " (windows-release-update)"
     )
     .to_string()
+}
+
+#[cfg(target_os = "windows")]
+fn github_http_client() -> Result<reqwest::blocking::Client, String> {
+    reqwest::blocking::Client::builder()
+        .user_agent(github_user_agent())
+        .timeout(Duration::from_secs(90))
+        .connect_timeout(Duration::from_secs(25))
+        .build()
+        .map_err(|e| e.to_string())
 }
 
 fn releases_page_url() -> String {
@@ -97,12 +109,14 @@ fn check_windows_release_update_inner() -> Result<String, String> {
         }
     };
 
-    let client = reqwest::blocking::Client::builder()
-        .user_agent(github_user_agent())
-        .build()
-        .map_err(|e| e.to_string())?;
+    let client = github_http_client()?;
     let api = format!("https://api.github.com/repos/{OWNER}/{REPO}/releases/latest");
-    let response = client.get(&api).send().map_err(|e| e.to_string())?;
+    let response = client
+        .get(&api)
+        .header("Accept", "application/vnd.github+json")
+        .header("X-GitHub-Api-Version", "2022-11-28")
+        .send()
+        .map_err(|e| format!("GitHub API request failed ({api}): {e}"))?;
     if !response.status().is_success() {
         let r = WindowsReleaseCheck {
             supported: true,
@@ -237,11 +251,11 @@ fn run_windows_release_update_setup_inner() -> Result<(), String> {
         .setup_download_url
         .ok_or_else(|| "Release has no portable zip download URL.".to_string())?;
 
-    let client = reqwest::blocking::Client::builder()
-        .user_agent(github_user_agent())
-        .build()
-        .map_err(|e| e.to_string())?;
-    let response = client.get(&url).send().map_err(|e| e.to_string())?;
+    let client = github_http_client()?;
+    let response = client
+        .get(&url)
+        .send()
+        .map_err(|e| format!("Release zip download failed: {e}"))?;
     if !response.status().is_success() {
         return Err(format!("Zip download HTTP {}", response.status()));
     }

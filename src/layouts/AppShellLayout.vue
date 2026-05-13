@@ -5,7 +5,6 @@ import AppShellNavigationDrawer from '@/layouts/AppShellNavigationDrawer.vue';
 import AppShellSettingsBar from '@/layouts/AppShellSettingsBar.vue';
 import AppShellVisitedTabs from '@/layouts/AppShellVisitedTabs.vue';
 import AppShellGlobalContextMenu from '@/layouts/AppShellGlobalContextMenu.vue';
-import { checkInAppUpdate } from '@/composables/useInAppUpdater';
 import { usePrefersColorSchemeDark } from '@/composables/usePrefersColorSchemeDark';
 import { isTrayFlyoutPayload } from '@/constants/tray-menu';
 import {
@@ -18,7 +17,6 @@ import { shellWindowControlKey, type ShellWindowControl } from '@/shell/shell-wi
 import { useSettingsStore, flushAppSettingsToDisk } from '@/stores/settings';
 import { useVisitedPagesStore } from '@/stores/visited-pages';
 import { appLog } from '@/utils/appLog';
-import { appSnackbar } from '@/utils/appSnackbar';
 import { isTauriRuntime } from '@/utils/isTauriRuntime';
 import { openSettingsWindow } from '@/utils/openSettingsWindow';
 import { openTrayMenuWindow } from '@/utils/openTrayMenuWindow';
@@ -170,33 +168,6 @@ let unlistenTrayOpenSettings: UnlistenFn | undefined;
 let unlistenTrayRequestExit: UnlistenFn | undefined;
 let removeWebViewKeyboardGuards: (() => void) | undefined;
 
-function scheduleStartupInAppUpdateHint() {
-  if (!settings.autoCheckUpdates) return;
-  window.setTimeout(() => {
-    void (async () => {
-      const pre = await checkInAppUpdate();
-      if (pre.kind !== 'available') return;
-      const version = pre.version;
-      appSnackbar.show({
-        id: 'startup-in-app-update',
-        text: t('settings.updates.snackUpdateAvailable', { version }),
-        timeout: 10_000,
-        color: 'surface-variant',
-        multiLine: true,
-        elevation: 6,
-        actions: [
-          {
-            label: t('settings.updates.snackOpenUpdates'),
-            run: () => {
-              openSettingsUi('updates');
-            },
-          },
-        ],
-      });
-    })();
-  }, 5000);
-}
-
 async function syncTrayMenuLabels() {
   if (!isTauriRuntime()) return;
   try {
@@ -264,7 +235,6 @@ onMounted(async () => {
     });
   }
   await syncTrayMenuLabels();
-  scheduleStartupInAppUpdateHint();
 });
 
 watch(

@@ -94,7 +94,6 @@ type PersistedSettings = {
   /** 顶栏关闭键行为 */
   closeBehavior: CloseBehavior;
   defaultDryRun: boolean;
-  autoCheckUpdates: boolean;
   updateChannel: UpdateChannel;
   uiLanguage: UiLanguage;
   themeColorPreset: ThemeColorPresetId;
@@ -180,7 +179,6 @@ export const useSettingsStore = defineStore('settings', () => {
   const defaultDryRun = ref(true);
   /** 仅内存；CurseForge Key 不写入持久化 */
   const curseForgeApiKey = ref('');
-  const autoCheckUpdates = ref(true);
   const updateChannel = ref<UpdateChannel>('stable');
   const uiLanguage = ref<UiLanguage>('system');
   const themeColorPreset = ref<ThemeColorPresetId>(DEFAULT_THEME_COLOR_PRESET_ID);
@@ -200,7 +198,6 @@ export const useSettingsStore = defineStore('settings', () => {
     confirmBeforeClose.value = snap.confirmBeforeClose !== false;
     closeBehavior.value = initialCloseBehavior(snap);
     defaultDryRun.value = snap.defaultDryRun ?? true;
-    autoCheckUpdates.value = snap.autoCheckUpdates ?? true;
     updateChannel.value = snap.updateChannel ?? 'stable';
     uiLanguage.value = normalizePersistedUiLanguage(snap.uiLanguage);
     themeColorPreset.value =
@@ -242,7 +239,6 @@ export const useSettingsStore = defineStore('settings', () => {
       confirmBeforeClose: confirmBeforeClose.value,
       closeBehavior: closeBehavior.value,
       defaultDryRun: defaultDryRun.value,
-      autoCheckUpdates: autoCheckUpdates.value,
       updateChannel: updateChannel.value,
       uiLanguage: uiLanguage.value,
       themeColorPreset: themeColorPreset.value,
@@ -309,7 +305,6 @@ export const useSettingsStore = defineStore('settings', () => {
       confirmBeforeClose,
       closeBehavior,
       defaultDryRun,
-      autoCheckUpdates,
       updateChannel,
       uiLanguage,
       themeColorPreset,
@@ -334,7 +329,6 @@ export const useSettingsStore = defineStore('settings', () => {
     closeBehavior,
     defaultDryRun,
     curseForgeApiKey,
-    autoCheckUpdates,
     updateChannel,
     uiLanguage,
     themeColorPreset,

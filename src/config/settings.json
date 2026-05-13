@@ -3,7 +3,6 @@
   "confirmBeforeClose": true,
   "closeBehavior": "quit",
   "defaultDryRun": true,
-  "autoCheckUpdates": true,
   "updateChannel": "stable",
   "uiLanguage": "system",
   "themeColorPreset": "forest",

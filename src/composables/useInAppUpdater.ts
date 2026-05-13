@@ -3,7 +3,11 @@ import { isTauriRuntime } from '@/utils/isTauriRuntime';
 
 export type InAppUpdateCheckResult =
   | { kind: 'none' }
-  | { kind: 'available'; version: string; body?: string }
+  | {
+      kind: 'available';
+      version: string;
+      /** 与 GitHub `tag_name` 一致，用于匹配内置 CHANGELOG */ tagName: string;
+    }
   | { kind: 'unsupported' }
   | { kind: 'unsupportedPlatform'; releasesPageUrl: string }
   | { kind: 'error'; message: string };
@@ -30,7 +34,9 @@ export async function checkInAppUpdate(): Promise<InAppUpdateCheckResult> {
     }
     if (j.error) return { kind: 'error', message: j.error };
     if (!j.hasUpdate) return { kind: 'none' };
-    return { kind: 'available', version: j.latestVersion ?? '', body: undefined };
+    const version = (j.latestVersion ?? '').trim();
+    const tagName = (j.tagName ?? '').trim() || (version ? `v${version}` : '');
+    return { kind: 'available', version, tagName };
   } catch (e) {
     return { kind: 'error', message: e instanceof Error ? e.message : String(e) };
   }

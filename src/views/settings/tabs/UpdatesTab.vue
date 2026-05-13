@@ -26,6 +26,11 @@ const channelOptions = computed((): { label: string; value: UpdateChannel }[] =>
   { label: t('settings.updates.channelBeta'), value: 'beta' },
 ]);
 
+/** 仅使用内置 CHANGELOG 与 `tag_name` 对齐的正文，不回退 GitHub Release 正文。 */
+function releaseNotesBody(rel: GitHubRelease): string {
+  return findChangelogBodyForTag(changelogPublished.value, rel.tag_name)?.trim() ?? '';
+}
+
 const releaseNotesHtmlMap = computed((): Record<number, string> => {
   const m: Record<number, string> = {};
   for (const rel of filteredReleases.value) {
@@ -35,7 +40,19 @@ const releaseNotesHtmlMap = computed((): Record<number, string> => {
   return m;
 });
 
-const inAppBusy = ref(false);
+const checkingUpdate = ref(false);
+const downloadingUpdate = ref(false);
+const updateConfirmOpen = ref(false);
+const updatePendingVersion = ref('');
+const updatePendingTag = ref('');
+
+const updateConfirmNotesHtml = computed(() => {
+  const tag = updatePendingTag.value.trim();
+  if (!tag) return '';
+  const body = findChangelogBodyForTag(changelogPublished.value, tag);
+  if (!body?.trim()) return '';
+  return renderMarkdownToSafeHtml(body);
+});
 
 function formatPublishedAt(iso: string | null): string {
   if (!iso) return '—';
@@ -55,76 +72,86 @@ function versionBadge(release: GitHubRelease): { text: string; color: string } |
   return { text: t('settings.updates.badgeUnknown'), color: 'default' };
 }
 
-/** 内置 CHANGELOG 优先，否则 GitHub Release 正文 */
-function releaseNotesBody(rel: GitHubRelease): string {
-  const fromLog = findChangelogBodyForTag(changelogPublished.value, rel.tag_name);
-  if (fromLog) return fromLog;
-  return (rel.body ?? '').trim();
-}
-
 function openChangelogOnGithub() {
   void openExternal(`${REPO_URL}/blob/main/CHANGELOG.md`);
 }
 
-async function runInAppUpdate() {
-  inAppBusy.value = true;
-  const pre = await checkInAppUpdate();
-  if (pre.kind === 'none') {
-    inAppBusy.value = false;
-    appSnackbar.show({ text: t('settings.updates.inAppNoUpdate'), timeout: 5200, rounded: 'md' });
-    return;
-  }
-  if (pre.kind === 'unsupportedPlatform') {
-    inAppBusy.value = false;
-    appSnackbar.show({
-      text: t('settings.updates.inAppUnsupportedPlatform'),
-      timeout: 7200,
-      rounded: 'md',
-      color: 'surface-variant',
-      actions: [
-        {
-          label: t('settings.updates.openReleasesPage'),
-          run: () => {
-            void openExternal(pre.releasesPageUrl);
+async function checkForUpdatesOnly() {
+  checkingUpdate.value = true;
+  try {
+    const pre = await checkInAppUpdate();
+    if (pre.kind === 'none') {
+      appSnackbar.show({ text: t('settings.updates.inAppNoUpdate'), timeout: 5200, rounded: 'md' });
+      return;
+    }
+    if (pre.kind === 'unsupportedPlatform') {
+      appSnackbar.show({
+        text: t('settings.updates.inAppUnsupportedPlatform'),
+        timeout: 7200,
+        rounded: 'md',
+        color: 'surface-variant',
+        actions: [
+          {
+            label: t('settings.updates.openReleasesPage'),
+            run: () => {
+              void openExternal(pre.releasesPageUrl);
+            },
           },
-        },
-      ],
-    });
-    return;
+        ],
+      });
+      return;
+    }
+    if (pre.kind === 'error' || pre.kind === 'unsupported') {
+      const msg =
+        pre.kind === 'error' ? pre.message : t('settings.updates.inAppUnsupported');
+      appSnackbar.show({
+        text: t('settings.updates.inAppError', { msg }),
+        timeout: 5200,
+        rounded: 'md',
+        color: 'error',
+      });
+      return;
+    }
+    updatePendingVersion.value = pre.version;
+    updatePendingTag.value = pre.tagName;
+    updateConfirmOpen.value = true;
+  } finally {
+    checkingUpdate.value = false;
   }
-  if (pre.kind === 'error' || pre.kind === 'unsupported') {
-    inAppBusy.value = false;
-    const msg =
-      pre.kind === 'error'
-        ? pre.message
-        : t('settings.updates.inAppUnsupported');
-    appSnackbar.show({
-      text: t('settings.updates.inAppError', { msg }),
-      timeout: 5200,
-      rounded: 'md',
-      color: 'error',
-    });
-    return;
-  }
+}
 
-  const r = await downloadAndInstallAppUpdate();
-  inAppBusy.value = false;
-  if (!r.ok) {
-    const msg = r.message === 'NO_UPDATE' ? t('settings.updates.inAppNoUpdate') : r.message;
+function cancelPendingUpdate() {
+  updateConfirmOpen.value = false;
+  updatePendingVersion.value = '';
+  updatePendingTag.value = '';
+}
+
+async function confirmDownloadAndInstallUpdate() {
+  updateConfirmOpen.value = false;
+  downloadingUpdate.value = true;
+  try {
+    const r = await downloadAndInstallAppUpdate();
+    if (!r.ok) {
+      const msg = r.message === 'NO_UPDATE' ? t('settings.updates.inAppNoUpdate') : r.message;
+      appSnackbar.show({
+        text: t('settings.updates.inAppError', { msg }),
+        timeout: 5200,
+        rounded: 'md',
+        color: 'error',
+      });
+      return;
+    }
     appSnackbar.show({
-      text: t('settings.updates.inAppError', { msg }),
+      text: t('settings.updates.inAppDone'),
       timeout: 5200,
       rounded: 'md',
-      color: 'error',
+      color: 'success',
     });
-    return;
+  } finally {
+    downloadingUpdate.value = false;
+    updatePendingVersion.value = '';
+    updatePendingTag.value = '';
   }
-  appSnackbar.show({
-    text: t('settings.updates.inAppDone'),
-    timeout: 5200,
-    rounded: 'md',
-    color: 'success',
-  });
 }
 
 onMounted(() => {
@@ -136,28 +163,6 @@ onMounted(() => {
   <div class="d-flex flex-column gap-4">
     <AppGlassSectionCard>
       <div class="d-flex flex-column gap-5">
-        <div>
-          <div class="text-body-1 font-weight-medium mb-2">{{ t('settings.updates.checkTitle') }}</div>
-          <div class="flex flex-wrap gap-2">
-            <v-btn
-              min-width="96"
-              :variant="settings.autoCheckUpdates ? 'flat' : 'tonal'"
-              :color="settings.autoCheckUpdates ? 'primary' : 'surface-variant'"
-              @click="settings.autoCheckUpdates = true"
-            >
-              {{ t('common.on') }}
-            </v-btn>
-            <v-btn
-              min-width="96"
-              :variant="!settings.autoCheckUpdates ? 'flat' : 'tonal'"
-              :color="!settings.autoCheckUpdates ? 'primary' : 'surface-variant'"
-              @click="settings.autoCheckUpdates = false"
-            >
-              {{ t('common.off') }}
-            </v-btn>
-          </div>
-        </div>
-
         <div>
           <div class="text-body-1 font-weight-medium mb-2">{{ t('settings.updates.channelLabel') }}</div>
           <div class="flex flex-wrap gap-2">
@@ -177,25 +182,25 @@ onMounted(() => {
         <v-divider class="border-opacity-25" />
 
         <div>
-          <div class="d-flex align-center gap-2 mb-2">
+          <div class="d-flex align-center gap-2 mb-3">
             <v-icon icon="mdi-download-circle-outline" color="primary" size="22" />
             <span class="text-body-1 font-weight-medium">{{ t('settings.updates.inAppTitle') }}</span>
           </div>
-          <p class="text-body-2 text-medium-emphasis mb-4">{{ t('settings.updates.inAppHint') }}</p>
           <v-btn
             color="primary"
             variant="flat"
             size="large"
             rounded="md"
             class="mb-2"
-            :loading="inAppBusy"
-            prepend-icon="mdi-update"
-            @click="runInAppUpdate()"
+            :loading="checkingUpdate"
+            :disabled="downloadingUpdate"
+            prepend-icon="mdi-cloud-download-outline"
+            @click="checkForUpdatesOnly"
           >
-            {{ t('settings.updates.inAppApply') }}
+            {{ t('settings.updates.inAppCheckButton') }}
           </v-btn>
           <v-progress-linear
-            v-if="inAppBusy"
+            v-if="downloadingUpdate"
             class="mt-2 rounded"
             height="6"
             color="primary"
@@ -208,15 +213,9 @@ onMounted(() => {
     <AppGlassSectionCard body-padding="none">
       <template #head>
         <div class="d-flex flex-wrap align-start gap-3 pa-4 pb-2">
-          <v-avatar color="primary" variant="tonal" size="48" rounded="md" class="shrink-0">
-            <v-icon icon="mdi-rocket-launch-outline" size="28" />
-          </v-avatar>
-          <div class="grow min-width-0 ps-2">
+          <div class="grow min-width-0">
             <div class="text-h6 font-weight-semibold">
               {{ t('settings.updates.releasesTitle') }}
-            </div>
-            <div class="text-body-2 text-medium-emphasis text-wrap">
-              {{ t('settings.updates.releasesListHint') }}
             </div>
           </div>
           <div class="d-flex flex-wrap justify-end gap-1 updates-releases-actions">
@@ -239,8 +238,6 @@ onMounted(() => {
       </template>
 
       <div class="px-4 pb-4 pt-0">
-        <p class="text-caption text-medium-emphasis mb-3">{{ t('settings.about.changelogHint') }}</p>
-
         <v-progress-linear v-if="loading" class="mb-3" indeterminate color="primary" rounded height="4" />
 
         <v-alert v-if="error" type="warning" variant="tonal" density="comfortable" rounded="md" class="text-body-2">
@@ -279,9 +276,6 @@ onMounted(() => {
                   <div class="grow min-width-0">
                     <div class="font-weight-semibold text-body-1 text-truncate">
                       {{ rel.tag_name }}
-                      <span v-if="rel.name" class="text-medium-emphasis font-weight-regular text-body-2">
-                        · {{ rel.name }}
-                      </span>
                     </div>
                     <div class="text-caption text-medium-emphasis">
                       {{ formatPublishedAt(rel.published_at) }}
@@ -321,6 +315,41 @@ onMounted(() => {
         </v-sheet>
       </div>
     </AppGlassSectionCard>
+
+    <v-dialog v-model="updateConfirmOpen" max-width="520" scrollable>
+      <v-card rounded="lg">
+        <v-card-title class="text-h6 font-weight-semibold pe-8">
+          {{ t('settings.updates.inAppConfirmTitle') }}
+        </v-card-title>
+        <v-card-text>
+          <p class="text-body-2 mb-3">
+            {{ t('settings.updates.inAppConfirmIntro', { version: updatePendingVersion }) }}
+          </p>
+          <div
+            v-if="updateConfirmNotesHtml"
+            class="update-confirm-notes markdown-body text-body-2 rounded-md pa-3"
+            v-html="updateConfirmNotesHtml"
+          />
+          <p v-else class="text-caption text-medium-emphasis mb-0">
+            {{ t('settings.about.changelogEmpty') }}
+          </p>
+        </v-card-text>
+        <v-card-actions class="px-4 pb-4">
+          <v-spacer />
+          <v-btn variant="text" :disabled="downloadingUpdate" @click="cancelPendingUpdate">
+            {{ t('common.cancel') }}
+          </v-btn>
+          <v-btn
+            color="primary"
+            variant="flat"
+            :loading="downloadingUpdate"
+            @click="confirmDownloadAndInstallUpdate"
+          >
+            {{ t('settings.updates.inAppConfirmOk') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -452,5 +481,20 @@ onMounted(() => {
 .release-notes-md :deep(th) {
   background: rgba(var(--v-theme-on-surface), 0.06);
   font-weight: 600;
+}
+
+.update-confirm-notes {
+  max-height: 240px;
+  overflow-y: auto;
+  background: rgba(var(--v-theme-on-surface), 0.04);
+}
+
+.update-confirm-notes :deep(a) {
+  color: rgb(var(--v-theme-primary));
+  text-decoration: none;
+}
+
+.update-confirm-notes :deep(a:hover) {
+  text-decoration: underline;
 }
 </style>

@@ -85,17 +85,17 @@ const showSettingsHeader = computed(() => {
 
   <!-- 主窗嵌入：仅使用 .app-shell-main-scroll 单滚动条，与其它页面一致 -->
   <div v-else class="settings-layout-embedded w-100 min-w-0">
-    <template v-if="showSettingsHeader">
-      <h1
-        v-if="currentTab"
-        class="text-h5 font-weight-bold d-flex align-center gap-3 px-4 mb-5"
-      >
-        <v-icon :icon="sectionIcon" color="primary" size="28" />
-        {{ heading }}
-      </h1>
-    </template>
-
     <div class="mx-auto max-w-2xl w-100 min-w-0 px-4 pb-8">
+      <template v-if="showSettingsHeader">
+        <h1
+          v-if="currentTab"
+          class="text-h5 font-weight-bold d-flex align-center gap-3 mt-2 mb-3"
+        >
+          <v-icon :icon="sectionIcon" color="primary" size="28" />
+          {{ heading }}
+        </h1>
+      </template>
+
       <router-view v-slot="{ Component }">
         <keep-alive :include="visitedPages.settingsLeafKeepAliveNames">
           <component :is="Component" />
