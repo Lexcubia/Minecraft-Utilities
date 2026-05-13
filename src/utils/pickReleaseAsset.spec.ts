@@ -23,7 +23,7 @@ describe('pickPreferredInstallAsset (macOS)', () => {
     vi.unstubAllGlobals();
   });
 
-  it('prefers minecraft-utilities-macos zip over windows zip', () => {
+  it('prefers canonical mac zip over windows zip when no dmg', () => {
     const assets = [
       asset('minecraft-utilities-win-x86_64-v0.1.0.zip'),
       asset('minecraft-utilities-macos-x86_64-v0.1.0.zip'),
@@ -33,13 +33,23 @@ describe('pickPreferredInstallAsset (macOS)', () => {
     );
   });
 
-  it('prefers mac zip over legacy dmg when both exist', () => {
+  it('prefers minecraft-utilities-macos dmg over windows zip', () => {
+    const assets = [
+      asset('minecraft-utilities-win-x86_64-v0.1.0.zip'),
+      asset('minecraft-utilities-macos-x86_64-v0.1.0.dmg'),
+    ];
+    expect(pickPreferredInstallAsset(assets)?.name).toBe(
+      'minecraft-utilities-macos-x86_64-v0.1.0.dmg',
+    );
+  });
+
+  it('prefers canonical mac dmg over mac zip when both exist', () => {
     const assets = [
       asset('minecraft-utilities-macos-x86_64-v0.1.0.dmg'),
       asset('minecraft-utilities-macos-x86_64-v0.1.0.zip'),
     ];
     expect(pickPreferredInstallAsset(assets)?.name).toBe(
-      'minecraft-utilities-macos-x86_64-v0.1.0.zip',
+      'minecraft-utilities-macos-x86_64-v0.1.0.dmg',
     );
   });
 

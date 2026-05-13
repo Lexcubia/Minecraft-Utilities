@@ -26,7 +26,7 @@
 2. 在 **GitHub 判定为「Latest」的那一个 Release** 上，上传一个资源文件，**文件名必须恰好为** **`latest.json`**（与 URL 最后一段一致）。
 3. 上传的安装包、`.sig` 等资源的 **下载 URL** 必须写进 `latest.json` 的 `platforms.*.url` 中；通常使用：  
    `https://github.com/Lexcubia/Minecraft-Utilities/releases/download/<Tag>/<资源文件名>`  
-   例如 Tag 为 `v0.1.0`、常见免安装包文件名为 `minecraft-utilities-win-x86_64-v0.1.0.zip`（当前主线以 zip/tar.gz 分发六款平台包，不产出 NSIS/MSI/DMG 等安装包）。
+   例如 Tag 为 `v0.1.0`、常见文件名为 `minecraft-utilities-win-x86_64-v0.1.0.zip` 或 `minecraft-utilities-macos-aarch64-v0.1.0.dmg`（主线为 Windows zip、Linux tar.gz、macOS dmg 共六款；不产出 NSIS/MSI 等安装器）。
 
 **不要**把 `latest.json` 只放在仓库源码树里而不挂到 Release 上——`releases/latest/download/` 读的是 **Release 资源**，不是仓库里的路径。
 

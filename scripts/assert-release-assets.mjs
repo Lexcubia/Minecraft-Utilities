@@ -1,5 +1,5 @@
 /**
- * CI 用：校验 `upload/`（单矩阵 job）或 `release-files/`（合并后）中的免安装归档数量与命名。
+ * CI 用：校验 `upload/`（单矩阵 job）或 `release-files/`（合并后）中的发行资产数量与命名（zip / tar.gz / dmg）。
  *
  *   node scripts/assert-release-assets.mjs matrix [upload]
  *   node scripts/assert-release-assets.mjs publish [release-files]
@@ -24,7 +24,8 @@ function listReleaseArchives(d) {
       if (ent.isDirectory()) walk(full);
       else if (ent.isFile()) {
         const lower = ent.name.toLowerCase();
-        if (lower.endsWith('.zip') || lower.endsWith('.tar.gz')) out.push(full);
+        if (lower.endsWith('.zip') || lower.endsWith('.tar.gz') || lower.endsWith('.dmg'))
+          out.push(full);
       }
     }
   }
@@ -40,8 +41,8 @@ function expectedPublishBasenames(ctx) {
     `${mainBinaryName}-linux-aarch64-v${version}.tar.gz`,
     `${mainBinaryName}-win-x86_64-v${version}.zip`,
     `${mainBinaryName}-win-aarch64-v${version}.zip`,
-    `${mainBinaryName}-macos-aarch64-v${version}.zip`,
-    `${mainBinaryName}-macos-x86_64-v${version}.zip`,
+    `${mainBinaryName}-macos-aarch64-v${version}.dmg`,
+    `${mainBinaryName}-macos-x86_64-v${version}.dmg`,
   ];
 }
 

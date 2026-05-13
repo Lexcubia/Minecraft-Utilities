@@ -1,11 +1,11 @@
 # 在 `main` 上合并后：若 package.json 版本尚无 git 标签，且 CHANGELOG 中该版本小节含 `<!-- release:publish -->`，
 # 则执行多平台 Tauri 打包并创建/更新 GitHub Release。
-# 产物（共 6 个压缩包，与 `mainBinaryName` / 版本号一致）：
+# 产物（共 6 个，与 `mainBinaryName` / 版本号一致）：
 #   minecraft-utilities-linux-{x86_64|aarch64}-v{x.x.x}.tar.gz  ×2
 #   minecraft-utilities-win-{x86_64|aarch64}-v{x.x.x}.zip       ×2
-#   minecraft-utilities-macos-{aarch64|x86_64}-v{x.x.x}.zip     ×2（内嵌 .app，由 `ditto` 打包）
-# 均写入 `build/desktop/`；Rust 在 `build/cargo-target/`（见 `scripts/build-artifacts.mjs`）。
-# `tauri.conf.json` 中 `bundle.active: false`，默认不生成 NSIS/MSI/DMG/deb 等安装包；仅 mac 矩阵显式 `--bundles app` 再 zip。
+#   minecraft-utilities-macos-{aarch64|x86_64}-v{x.x.x}.dmg     ×2（Tauri `--bundles dmg`）
+# Linux / Windows 免安装包在 `build/desktop/`；mac DMG 由 Tauri 写入 `build/cargo-target/release/bundle/dmg/` 再拷贝到 `upload/`。
+# `tauri.conf.json` 中 `bundle.active: false`，默认不生成 NSIS/MSI 等；mac 矩阵显式 `--bundles dmg`。
 # Windows 应用内更新：下载对应架构 zip 并解压到临时目录后打开资源管理器。
 #
 # 分支策略：请在 GitHub 仓库设置中为 `main` 开启「禁止直接推送」，仅允许经 PR 合并写入。
@@ -106,13 +106,13 @@ jobs:
             mac_cpu: ''
           - id: macos-aarch64
             os: macos-latest
-            pack: mac-zip
+            pack: mac-dmg
             target_arch: ''
             mac_cpu: aarch64
           # macos-13 已于 2025-12-04 退役；Intel/x86_64 使用官方替代标签（见 GitHub Changelog）。
           - id: macos-x86_64
             os: macos-15-intel
-            pack: mac-zip
+            pack: mac-dmg
             target_arch: ''
             mac_cpu: x86_64
 
@@ -173,25 +173,25 @@ jobs:
         if: matrix.pack == 'win-zip'
         run: node scripts/pack-windows-portable.mjs
 
-      - name: Tauri build (macOS app bundle only)
-        if: matrix.pack == 'mac-zip'
-        run: pnpm exec tauri build --ci --bundles app
-
-      - name: Pack macOS app zip
-        if: matrix.pack == 'mac-zip'
-        env:
-          MAC_CPU: ${{ matrix.mac_cpu }}
-        run: node scripts/pack-macos-app-zip.mjs
+      - name: Tauri build (macOS dmg)
+        if: matrix.pack == 'mac-dmg'
+        run: pnpm exec tauri build --ci --bundles dmg
 
       - name: Collect release assets into upload/
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p upload
+          VERSION="$(jq -r .version package.json)"
+          if [ "${{ matrix.pack }}" = "mac-dmg" ]; then
+            DMG="$(find build/cargo-target/release/bundle/dmg -name '*.dmg' | head -n 1)"
+            test -n "$DMG"
+            cp -f "$DMG" "upload/minecraft-utilities-macos-${{ matrix.mac_cpu }}-v${VERSION}.dmg"
+          fi
           if [ "${{ matrix.pack }}" = "linux-tar" ]; then
             find build/desktop -type f -name '*.tar.gz' -exec cp -f {} upload/ \;
           fi
-          if [ "${{ matrix.pack }}" = "win-zip" ] || [ "${{ matrix.pack }}" = "mac-zip" ]; then
+          if [ "${{ matrix.pack }}" = "win-zip" ]; then
             find build/desktop -type f -name '*.zip' -exec cp -f {} upload/ \;
           fi
           ls -la upload
@@ -262,12 +262,12 @@ jobs:
           VERSION="$(jq -r .version package.json)"
           TAG="v${VERSION}"
           SHA="${{ github.sha }}"
-          # Bash 3.2–compatible (no mapfile)；仅上传统一命名的 zip / tar.gz（共 6 个平台包）。
+          # Bash 3.2–compatible (no mapfile)；上传统一命名的 zip / tar.gz / dmg（共 6 个平台包）。
           assets=()
           while IFS= read -r f; do
             [ -n "$f" ] && assets+=("$f")
           done < <(find release-files -type f \( \
-            -name '*.zip' -o -name '*.tar.gz' \
+            -name '*.zip' -o -name '*.tar.gz' -o -name '*.dmg' \
           \) ! -name 'latest.fragment.*.json' | sort -u)
           if [ "${#assets[@]}" -eq 0 ]; then
             echo 'No bundle files under release-files; failing.'

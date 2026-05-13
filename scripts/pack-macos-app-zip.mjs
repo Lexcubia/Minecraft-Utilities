@@ -1,7 +1,7 @@
 /**
- * 将 `tauri build --bundles app` 生成的 `.app` 打成 zip，写入 `build/desktop/`（与 `scripts/build-artifacts.mjs` 一致）。
- * 共享上下文见 `scripts/lib/load-desktop-pack-context.mjs`。
- * 使用系统 `ditto` 保留扩展属性与签名；仅 macOS 上执行。
+ * 可选：将 `tauri build --bundles app` 生成的 `.app` 打成 zip，写入 `build/desktop/`。
+ * 主线 GitHub Release 使用 **DMG**（见 `desktop-release.yml`）；本脚本供本机或 fork 需要 zip 分发时使用。
+ * 共享上下文见 `scripts/lib/load-desktop-pack-context.mjs`；使用系统 `ditto`；仅 macOS。
  * 架构由环境变量 `MAC_CPU`（`aarch64` | `x86_64`）指定；未设置时按 `process.arch` 推断。
  */
 import { execFileSync } from 'node:child_process';

@@ -6,8 +6,8 @@
  * | Web 前端 bundle | `build/web/` | Vite `outDir`，与 `src-tauri/tauri.conf.json` 的 `build.frontendDist` 一致 |
  * | Rust 编译目录 | `build/cargo-target/` | 由 `src-tauri/.cargo/config.toml` 的 `build.target-dir` 指定 |
  * | 可执行文件 / DLL | `build/cargo-target/release/` | Cargo release 输出 |
- * | Tauri `bundle/`（按需） | `build/cargo-target/release/bundle/` | `bundle.active: false` 时不默认生成安装包；CI 仅在 mac 使用 `--bundles app` 生成 `.app` |
- * | 免安装桌面包（zip / tar.gz） | `build/desktop/` | `pack-*` 与 `assert-release-assets.mjs`；上下文见 `scripts/lib/load-desktop-pack-context.mjs` |
+ * | Tauri `bundle/`（按需） | `build/cargo-target/release/bundle/` | `bundle.active: false` 时不默认生成安装包；CI 在 mac 使用 **`--bundles dmg`** |
+ * | 免安装 / 便携包 | `build/desktop/` | Windows zip、Linux tar.gz（`pack-*`）；mac DMG 由 Tauri 写入 `bundle/dmg/` 后由工作流复制到 `upload/` |
  */
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

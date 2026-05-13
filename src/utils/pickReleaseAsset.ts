@@ -1,5 +1,6 @@
 import {
   releaseLinuxTarGzPattern,
+  releaseMacosDmgPattern,
   releaseMacosZipPattern,
   releaseWinZipPattern,
 } from '@/constants/desktopReleaseAssets';
@@ -26,8 +27,8 @@ function findByExtensions(
 }
 
 /**
- * 为当前平台挑选最合适的发布产物（zip / tar.gz）；无匹配时退回第一个带下载地址的资源。
- * macOS 主线仅分发 `minecraft-utilities-macos-*.zip`（内嵌 .app），不再使用 .dmg。
+ * 为当前平台挑选最合适的发布产物（zip / tar.gz / dmg）；无匹配时退回第一个带下载地址的资源。
+ * macOS 主线优先 `minecraft-utilities-macos-*.dmg`，旧版 zip 仅作兜底。
  */
 export function pickPreferredInstallAsset(
   assets: GitHubReleaseAsset[],
@@ -40,6 +41,11 @@ export function pickPreferredInstallAsset(
       assets.find((a) => releaseWinZipPattern.test(a.name)) ?? findByExtensions(assets, ['.zip']);
   } else if (platform === 'macos') {
     picked =
+      assets.find((a) => releaseMacosDmgPattern.test(a.name)) ??
+      assets.find((a) => {
+        const n = a.name.toLowerCase();
+        return n.endsWith('.dmg') && (n.includes('macos') || n.includes('darwin'));
+      }) ??
       assets.find((a) => releaseMacosZipPattern.test(a.name)) ??
       assets.find((a) => {
         const n = a.name.toLowerCase();
