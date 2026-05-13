@@ -1,37 +1,53 @@
-import { check, type DownloadEvent } from '@tauri-apps/plugin-updater';
+import { invoke } from '@tauri-apps/api/core';
 import { isTauriRuntime } from '@/utils/isTauriRuntime';
 
 export type InAppUpdateCheckResult =
   | { kind: 'none' }
   | { kind: 'available'; version: string; body?: string }
   | { kind: 'unsupported' }
+  | { kind: 'unsupportedPlatform'; releasesPageUrl: string }
   | { kind: 'error'; message: string };
 
-/** 仅查询是否有 Tauri 增量更新（不下载）。 */
+type WindowsReleaseCheckJson = {
+  supported: boolean;
+  error?: string;
+  hasUpdate?: boolean;
+  latestVersion?: string;
+  tagName?: string;
+  setupDownloadUrl?: string;
+  setupFileName?: string;
+  releasesPageUrl: string;
+};
+
+/** 仅查询是否有新版本（Windows：对比 GitHub Latest Release 与当前应用版本）。 */
 export async function checkInAppUpdate(): Promise<InAppUpdateCheckResult> {
   if (!isTauriRuntime()) return { kind: 'unsupported' };
   try {
-    const update = await check();
-    if (!update) return { kind: 'none' };
-    return { kind: 'available', version: update.version, body: update.body };
+    const raw = await invoke<string>('check_windows_release_update');
+    const j = JSON.parse(raw) as WindowsReleaseCheckJson;
+    if (!j.supported) {
+      return { kind: 'unsupportedPlatform', releasesPageUrl: j.releasesPageUrl };
+    }
+    if (j.error) return { kind: 'error', message: j.error };
+    if (!j.hasUpdate) return { kind: 'none' };
+    return { kind: 'available', version: j.latestVersion ?? '', body: undefined };
   } catch (e) {
     return { kind: 'error', message: e instanceof Error ? e.message : String(e) };
   }
 }
 
-/** 检查并下载、安装（由系统/安装器完成后续步骤）。 */
-export async function downloadAndInstallAppUpdate(
-  onProgress?: (e: DownloadEvent) => void,
-): Promise<{ ok: true } | { ok: false; message: string }> {
+/** Windows：下载 Latest Release 中的 NSIS 安装包并静默启动；其他系统不支持。 */
+export async function downloadAndInstallAppUpdate(): Promise<
+  { ok: true } | { ok: false; message: string }
+> {
   if (!isTauriRuntime()) {
     return { ok: false, message: 'Not in Tauri desktop runtime.' };
   }
   try {
-    const update = await check();
-    if (!update) return { ok: false, message: 'NO_UPDATE' };
-    await update.downloadAndInstall(onProgress);
+    await invoke('run_windows_release_update_setup');
     return { ok: true };
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : String(e) };
+    const msg = e instanceof Error ? e.message : String(e);
+    return { ok: false, message: msg };
   }
 }

@@ -1,7 +1,6 @@
 # 在 `main` 上合并后：若 package.json 版本尚无 git 标签，且 CHANGELOG 中该版本小节含 `<!-- release:publish -->`，
 # 则执行多平台 Tauri 打包并创建/更新 GitHub Release（产物文件名不含空格，见 tauri.conf.json `productName`）。
-# 应用内更新：需仓库 Actions Secret `TAURI_SIGNING_PRIVATE_KEY`（可选 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`），
-# 与 `tauri.conf.json` 的 `plugins.updater.pubkey` 成对；发版会上传 `latest.json` 与 `.sig`。详见 docs/zh-cn/REPO_SETUP.md。
+# Windows 应用内更新：客户端从 GitHub `releases/latest` 拉取 NSIS `*_x64-setup.exe` 并静默运行，无需 `latest.json` / minisign。
 #
 # 分支策略：请在 GitHub 仓库设置中为 `main` 开启「禁止直接推送」，仅允许经 PR 合并写入。
 
@@ -81,14 +80,11 @@ jobs:
         include:
           - os: ubuntu-latest
             bundles: deb,appimage
-            updater_target: linux
           - os: windows-latest
             bundles: nsis,msi
-            updater_target: windows
           - os: macos-latest
-            # DMG 仅用于分发；应用内更新元数据与 .app.tar.gz 在 bundle/macos/，须同时打 app 包（见 Tauri updater 文档）。
+            # DMG 用于分发；与 app 同打以便 macOS 用户安装。
             bundles: dmg,app
-            updater_target: darwin
 
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
@@ -127,43 +123,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Require TAURI_SIGNING_PRIVATE_KEY (GitHub updater)
-        shell: bash
-        env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-        run: |
-          set -euo pipefail
-          if [ -z "${TAURI_SIGNING_PRIVATE_KEY}" ]; then
-            echo '::error title=Missing Actions secret::desktop-release 需要仓库 Secret TAURI_SIGNING_PRIVATE_KEY（minisign 私钥全文）。未配置时不会生成 bundle 内的 latest.json，发布阶段合并 updater 也会失败。说明见 docs/zh-cn/REPO_SETUP.md。'
-            exit 1
-          fi
-
       - name: Tauri build (${{ matrix.os }})
-        env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: pnpm exec tauri build --ci --bundles ${{ matrix.bundles }}
-
-      # v1Compatible 产物常为 .nsis.zip/.msi.zip + .sig，未必生成 latest.json；与 pubkey 无关。
-      - name: Ensure updater latest.json in bundle (v1Compatible fallback)
-        run: node scripts/synthesize-updater-latest-fragment.mjs --bundle src-tauri/target/release/bundle --target ${{ matrix.updater_target }}
-
-      - name: Assert updater latest.json exists in bundle
-        shell: bash
-        run: |
-          set -euo pipefail
-          # macOS runners use Bash 3.2 (no mapfile); use read -d '' + process substitution.
-          found=0
-          while IFS= read -r -d '' f; do
-            printf 'OK: %s\n' "$f"
-            found=1
-          done < <(find src-tauri/target/release/bundle -name latest.json -type f -print0 2>/dev/null || true)
-          if [ "$found" -eq 0 ]; then
-            echo '::error::构建完成后在 src-tauri/target/release/bundle 下未找到 latest.json（应用内更新元数据）。请确认 TAURI_SIGNING_PRIVATE_KEY 与 pubkey 成对；macOS 需同时构建 app。若使用 createUpdaterArtifacts "v1Compatible"，Tauri 可能只生成 zip/tar.gz 与 .sig，已由 scripts/synthesize-updater-latest-fragment.mjs 在 CI 中补写 latest.json。'
-            echo 'Bundle tree (max depth 5):'
-            find src-tauri/target/release/bundle -type f -maxdepth 5 -print 2>/dev/null || true
-            exit 1
-          fi
 
       - name: Pack Windows portable (zip)
         if: matrix.os == 'windows-latest'
@@ -172,8 +133,6 @@ jobs:
 
       - name: Stage bundle files
         shell: bash
-        env:
-          FRAGMENT_SUFFIX: ${{ matrix.os }}
         run: |
           mkdir -p upload
           if [ -d src-tauri/target/release/bundle ]; then
@@ -184,13 +143,6 @@ jobs:
               -name '*.AppImage' -o -name '*.deb' -o -name '*.app.tar.gz' -o \
               -name '*.zip' \
             \) -print0)
-            while IFS= read -r -d '' f; do
-              cp -f "$f" "upload/$(basename "$f")"
-            done < <(find src-tauri/target/release/bundle -type f -name '*.sig' -print0)
-            while IFS= read -r -d '' f; do
-              safe="${FRAGMENT_SUFFIX//\//-}"
-              cp -f "$f" "upload/latest.fragment.${safe}.json"
-            done < <(find src-tauri/target/release/bundle -name latest.json -print0)
           fi
           if [ -d artifacts/portable ]; then
             while IFS= read -r -d '' f; do
@@ -251,18 +203,6 @@ jobs:
           print(f"version={ver}")
           PY
 
-      - name: Merge Tauri updater latest.json
-        run: |
-          set -euo pipefail
-          VERSION="$(jq -r .version package.json)"
-          TAG="v${VERSION}"
-          node scripts/merge-github-updater-latest.mjs \
-            --root release-files \
-            --tag "${TAG}" \
-            --repo "${{ github.repository }}" \
-            --notes-file release_notes.md \
-            --out release-files/latest.json
-
       - name: Create or update GitHub Release
         shell: bash
         env:
@@ -280,8 +220,7 @@ jobs:
           done < <(find release-files -type f \( \
             -name '*.exe' -o -name '*.msi' -o -name '*.dmg' -o \
             -name '*.AppImage' -o -name '*.deb' -o -name '*.zip' -o \
-            -name '*.app.tar.gz' -o \
-            -name '*.sig' -o -name 'latest.json' \
+            -name '*.app.tar.gz' \
           \) ! -name 'latest.fragment.*.json' | sort -u)
           if [ "${#assets[@]}" -eq 0 ]; then
             echo 'No bundle files under release-files; failing.'

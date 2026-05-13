@@ -36,8 +36,6 @@ const releaseNotesHtmlMap = computed((): Record<number, string> => {
 });
 
 const inAppBusy = ref(false);
-const inAppProgress = ref(0);
-const inAppProgressIndeterminate = ref(false);
 
 function formatPublishedAt(iso: string | null): string {
   if (!iso) return '—';
@@ -70,18 +68,32 @@ function openChangelogOnGithub() {
 
 async function runInAppUpdate() {
   inAppBusy.value = true;
-  inAppProgress.value = 0;
-  inAppProgressIndeterminate.value = true;
   const pre = await checkInAppUpdate();
   if (pre.kind === 'none') {
     inAppBusy.value = false;
-    inAppProgressIndeterminate.value = false;
     appSnackbar.show({ text: t('settings.updates.inAppNoUpdate'), timeout: 5200, rounded: 'md' });
+    return;
+  }
+  if (pre.kind === 'unsupportedPlatform') {
+    inAppBusy.value = false;
+    appSnackbar.show({
+      text: t('settings.updates.inAppUnsupportedPlatform'),
+      timeout: 7200,
+      rounded: 'md',
+      color: 'surface-variant',
+      actions: [
+        {
+          label: t('settings.updates.openReleasesPage'),
+          run: () => {
+            void openExternal(pre.releasesPageUrl);
+          },
+        },
+      ],
+    });
     return;
   }
   if (pre.kind === 'error' || pre.kind === 'unsupported') {
     inAppBusy.value = false;
-    inAppProgressIndeterminate.value = false;
     const msg =
       pre.kind === 'error'
         ? pre.message
@@ -95,24 +107,8 @@ async function runInAppUpdate() {
     return;
   }
 
-  let total = 0;
-  let current = 0;
-  const r = await downloadAndInstallAppUpdate((ev) => {
-    if (ev.event === 'Started') {
-      inAppProgressIndeterminate.value = false;
-      total = ev.data.contentLength ?? 0;
-      current = 0;
-      inAppProgress.value = 0;
-    } else if (ev.event === 'Progress') {
-      current += ev.data.chunkLength;
-      if (total > 0) inAppProgress.value = Math.min(100, Math.round((current / total) * 100));
-      else inAppProgress.value = Math.min(99, inAppProgress.value + 1);
-    } else if (ev.event === 'Finished') {
-      inAppProgress.value = 100;
-    }
-  });
+  const r = await downloadAndInstallAppUpdate();
   inAppBusy.value = false;
-  inAppProgressIndeterminate.value = false;
   if (!r.ok) {
     const msg = r.message === 'NO_UPDATE' ? t('settings.updates.inAppNoUpdate') : r.message;
     appSnackbar.show({
@@ -199,18 +195,11 @@ onMounted(() => {
             {{ t('settings.updates.inAppApply') }}
           </v-btn>
           <v-progress-linear
-            v-if="inAppBusy && inAppProgressIndeterminate"
+            v-if="inAppBusy"
             class="mt-2 rounded"
             height="6"
             color="primary"
             indeterminate
-          />
-          <v-progress-linear
-            v-else-if="inAppBusy"
-            class="mt-2 rounded"
-            height="6"
-            color="primary"
-            :model-value="inAppProgress"
           />
         </div>
       </div>
