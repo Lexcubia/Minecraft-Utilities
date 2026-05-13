@@ -20,7 +20,12 @@ export async function loadUserDataPaths(): Promise<UserDataPaths | null> {
   if (paths.value) return paths.value;
   const { invoke } = await import('@tauri-apps/api/core');
   const raw = await invoke<string>('user_data_get_paths');
-  paths.value = JSON.parse(raw) as UserDataPaths;
+  try {
+    paths.value = JSON.parse(raw) as UserDataPaths;
+  } catch {
+    console.warn('[useUserDataPaths] invalid JSON from user_data_get_paths');
+    paths.value = null;
+  }
   return paths.value;
 }
 

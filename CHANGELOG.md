@@ -6,9 +6,17 @@
 
 ## Unreleased
 
+## [0.3.2] - 2026-05-15
+
+<!-- release:publish -->
+
+### Bug fixes
+
+- **启动白屏**：`bootstrap` 中先 **`app.use(pinia)`** 再执行 Tauri 用户数据与设置合并；对用户数据初始化、**`user_data_get_paths`** 返回 JSON、磁盘 **`locales/*.json`** 合并增加容错，失败时回退到内置默认设置并继续 **`mount`**；磁盘文案仅在为**普通对象**（非数组等）时才 **`mergeLocaleMessage`**。
+
 ### Changes
 
-- **设置默认文件**：`configs/settings.json` 以仓库 **`src/config/settings.json`** 为完整默认（非空 JSON）；Rust 在磁盘缺失/空白/`{}` 时写入该默认；前端启动时再与磁盘合并，避免打包结果中空白配置导致白屏。
+- **设置默认文件**：`configs/settings.json` 以仓库 **`src/config/settings.json`** 为完整默认（非空 JSON）；Rust 在磁盘缺失/空白/`{}` 时写入该默认；前端启动时再与磁盘合并，避免空白配置导致界面异常。
 
 ## [0.3.1] - 2026-05-14
 

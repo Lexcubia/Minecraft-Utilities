@@ -47,8 +47,10 @@ export async function mergeDiskLocalesIntoI18n(): Promise<void> {
     const raw = await invoke<string | null>('user_data_read_locale', { id: l.id });
     if (!raw?.trim()) continue;
     try {
-      const extra = JSON.parse(raw) as Record<string, unknown>;
-      i18n.global.mergeLocaleMessage(l.id, extra);
+      const extra = JSON.parse(raw) as unknown;
+      if (extra !== null && typeof extra === 'object' && !Array.isArray(extra)) {
+        i18n.global.mergeLocaleMessage(l.id, extra as Record<string, unknown>);
+      }
     } catch {
       /* invalid locale JSON */
     }
