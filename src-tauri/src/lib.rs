@@ -23,7 +23,10 @@ fn greet(name: &str) -> String {
 /// 列出存档 `playerdata` 中的玩家 UUID；名称由 `usercache.json` 映射（调用 Python CLI）。
 #[cfg(desktop)]
 #[tauri::command]
-fn world_uuid_list_players(world_dir: String, usercache_path: Option<String>) -> Result<String, String> {
+fn world_uuid_list_players(
+    world_dir: String,
+    usercache_path: Option<String>,
+) -> Result<String, String> {
     let mut args: Vec<String> = vec!["world-players".into(), world_dir];
     if let Some(uc) = usercache_path {
         let u = uc.trim();
@@ -60,7 +63,11 @@ fn path_is_file(path: String) -> bool {
 /// 按 JSON 映射批量执行 UUID 迁移（调用 Python CLI）。
 #[cfg(desktop)]
 #[tauri::command]
-fn world_uuid_migrate_batch(world_dir: String, pairs_json: String, dry_run: bool) -> Result<String, String> {
+fn world_uuid_migrate_batch(
+    world_dir: String,
+    pairs_json: String,
+    dry_run: bool,
+) -> Result<String, String> {
     let dir = std::env::temp_dir();
     let fname = format!(
         "mu-uuid-pairs-{}-{}.json",
@@ -82,7 +89,12 @@ fn world_uuid_migrate_batch(world_dir: String, pairs_json: String, dry_run: bool
             "--dry-run",
         ])
     } else {
-        python_cli::run_python_cli(&["uuid-migrate-batch", &world_dir, "--pairs-file", path_s.as_ref()])
+        python_cli::run_python_cli(&[
+            "uuid-migrate-batch",
+            &world_dir,
+            "--pairs-file",
+            path_s.as_ref(),
+        ])
     };
     let _ = std::fs::remove_file(&path);
     result

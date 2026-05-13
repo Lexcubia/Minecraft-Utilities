@@ -58,7 +58,13 @@ fn show_main_window<R: Runtime>(app: &AppHandle<R>) {
 
 #[cfg(target_os = "linux")]
 fn create_tray_linux<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
-    let open_main = MenuItem::with_id(app, MENU_ID_OPEN_MAIN, "Open main window", true, None::<&str>)?;
+    let open_main = MenuItem::with_id(
+        app,
+        MENU_ID_OPEN_MAIN,
+        "Open main window",
+        true,
+        None::<&str>,
+    )?;
     let sep = PredefinedMenuItem::separator(app)?;
     let settings_item = MenuItem::with_id(app, MENU_ID_SETTINGS, "Settings", true, None::<&str>)?;
     let close_item = MenuItem::with_id(app, MENU_ID_CLOSE, "Close", true, None::<&str>)?;
@@ -120,7 +126,7 @@ fn create_tray_non_linux<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
             } = event
             {
                 match button {
-                    MouseButton::Left => show_main_window(&app),
+                    MouseButton::Left => show_main_window(app),
                     MouseButton::Right => {
                         if let Some(w) = app.get_webview_window("main") {
                             let _ = w.show();
@@ -178,16 +184,25 @@ pub struct TrayMenuLabelsPayload {
 pub fn sync_tray_menu_labels(app: AppHandle, payload: TrayMenuLabelsPayload) -> Result<(), String> {
     #[cfg(target_os = "linux")]
     {
-        let open_item =
-            MenuItem::with_id(&app, MENU_ID_OPEN_MAIN, &payload.open_main, true, None::<&str>)
-                .map_err(|e| e.to_string())?;
+        let open_item = MenuItem::with_id(
+            &app,
+            MENU_ID_OPEN_MAIN,
+            &payload.open_main,
+            true,
+            None::<&str>,
+        )
+        .map_err(|e| e.to_string())?;
         let sep = PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?;
-        let settings_item =
-            MenuItem::with_id(&app, MENU_ID_SETTINGS, &payload.settings, true, None::<&str>)
-                .map_err(|e| e.to_string())?;
-        let close_item =
-            MenuItem::with_id(&app, MENU_ID_CLOSE, &payload.close, true, None::<&str>)
-                .map_err(|e| e.to_string())?;
+        let settings_item = MenuItem::with_id(
+            &app,
+            MENU_ID_SETTINGS,
+            &payload.settings,
+            true,
+            None::<&str>,
+        )
+        .map_err(|e| e.to_string())?;
+        let close_item = MenuItem::with_id(&app, MENU_ID_CLOSE, &payload.close, true, None::<&str>)
+            .map_err(|e| e.to_string())?;
         let menu = Menu::with_items(&app, &[&open_item, &sep, &settings_item, &close_item])
             .map_err(|e| e.to_string())?;
         let tray = app

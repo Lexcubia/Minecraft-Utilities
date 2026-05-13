@@ -20,6 +20,8 @@ on:
       - 'pnpm-lock.yaml'
       - 'prettier.config.js'
       - 'lint-staged.config.js'
+      - 'scripts/**'
+      - 'src-tauri/**'
       - 'python/**'
       - 'pyproject.toml'
       - 'tests/**'
@@ -41,6 +43,8 @@ on:
       - 'pnpm-lock.yaml'
       - 'prettier.config.js'
       - 'lint-staged.config.js'
+      - 'scripts/**'
+      - 'src-tauri/**'
       - 'python/**'
       - 'pyproject.toml'
       - 'tests/**'
@@ -89,3 +93,41 @@ jobs:
         run: ruff check python tests
       - name: Ruff format
         run: ruff format --check python tests
+
+  rust:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Linux dependencies (Tauri link)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libssl-dev \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libfuse2 \
+            patchelf
+
+      - name: Install Rust stable (fmt + clippy)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            src-tauri -> build/cargo-target
+          key: check-rust
+
+      - name: Cargo fmt
+        working-directory: src-tauri
+        run: cargo fmt --all -- --check
+
+      - name: Cargo clippy
+        working-directory: src-tauri
+        run: cargo clippy --all-targets -- -D warnings

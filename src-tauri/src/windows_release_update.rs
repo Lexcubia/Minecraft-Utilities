@@ -14,14 +14,13 @@ const DIST_BASE: &str = "minecraft-utilities";
 
 #[cfg(target_os = "windows")]
 fn github_user_agent() -> String {
-    format!(
-        concat!(
-            env!("CARGO_PKG_NAME"),
-            "/",
-            env!("CARGO_PKG_VERSION"),
-            " (windows-release-update)"
-        )
+    concat!(
+        env!("CARGO_PKG_NAME"),
+        "/",
+        env!("CARGO_PKG_VERSION"),
+        " (windows-release-update)"
     )
+    .to_string()
 }
 
 fn releases_page_url() -> String {

@@ -12,6 +12,13 @@ export default {
           `prettier --write ${files.map(shellQuote).join(' ')}`,
         ]
       : [],
+  'scripts/**/*.mjs': (files) =>
+    files.length
+      ? [
+          `eslint --fix ${files.map(shellQuote).join(' ')}`,
+          `prettier --write ${files.map(shellQuote).join(' ')}`,
+        ]
+      : [],
   'src/**/*.{vue,js}': (files) =>
     files.length ? `eslint --fix ${files.map(shellQuote).join(' ')}` : [],
   'src/**/*.css': (files) =>

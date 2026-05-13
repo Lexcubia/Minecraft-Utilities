@@ -6,7 +6,7 @@ use serde::Serialize;
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use tauri::Manager;
 
@@ -22,7 +22,7 @@ fn application_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     app.path().executable_dir().map_err(|e| e.to_string())
 }
 
-fn app_dir_data_usable(app_dir: &PathBuf) -> bool {
+fn app_dir_data_usable(app_dir: &Path) -> bool {
     let logs = app_dir.join(LOG_SUBDIR);
     if fs::create_dir_all(&logs).is_err() {
         return false;
