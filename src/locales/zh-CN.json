@@ -1,0 +1,287 @@
+{
+  "app": {
+    "navBrandShort": "MC Utils"
+  },
+  "meta": {
+    "description": "Minecraft Utilities: practical tools for Minecraft players (Tauri 2 + Python)"
+  },
+  "common": {
+    "on": "开启",
+    "off": "关闭",
+    "close": "关闭",
+    "cancel": "取消"
+  },
+  "snackbar": {
+    "queueRegionAria": "应用消息",
+    "pendingCount": "还有 {n} 条待显示",
+    "queueFoldExpand": "还有 {n} 条排队，点击展开",
+    "queueFoldCollapse": "收起队列"
+  },
+  "window": {
+    "exitConfirmTitle": "退出 Minecraft Utilities",
+    "exitConfirmMessage": "确定要退出应用吗？内存中未持久化的内容将丢失。",
+    "exitConfirmOk": "退出",
+    "exitConfirmCancel": "取消",
+    "exitConfirmDontRemind": "不再提醒"
+  },
+  "tray": {
+    "menuTitle": "菜单",
+    "menuOpenMain": "打开主面板",
+    "menuSettings": "设置",
+    "menuClose": "退出",
+    "tooltip": "Minecraft Utilities",
+    "flyoutAria": "托盘菜单"
+  },
+  "nav": {
+    "home": "首页",
+    "toolsSection": "工具",
+    "toolsUuidMigrate": "UUID 迁移",
+    "settings": "设置",
+    "settingsHeader": "设置",
+    "back": "返回",
+    "openMenu": "打开菜单",
+    "collapseDrawer": "收起侧栏",
+    "expandDrawer": "展开侧栏",
+    "expandDrawerText": "展开侧栏文字",
+    "railOnly": "仅显示图标",
+    "themeSwitchToLight": "切换为浅色主题",
+    "themeSwitchToDark": "切换为深色主题",
+    "languageMenu": "切换界面语言",
+    "ariaBreadcrumb": "页面路径",
+    "windowMinimize": "最小化窗口",
+    "windowMaximize": "最大化窗口",
+    "windowRestore": "还原窗口",
+    "windowClose": "关闭窗口",
+    "visitedTabMenu": {
+      "ariaLabel": "访问页菜单",
+      "closeThis": "关闭",
+      "closeOthers": "关闭其他",
+      "closeAll": "关闭全部",
+      "closeLeft": "关闭左侧",
+      "closeRight": "关闭右侧"
+    },
+    "contextMenu": {
+      "ariaLabel": "上下文菜单",
+      "cut": "剪切",
+      "copy": "复制",
+      "paste": "粘贴",
+      "selectAll": "全选"
+    }
+  },
+  "welcome": {
+    "heroTagline": "Minecraft Utilities · 桌面端开发中",
+    "introBody": "Minecraft Utilities 面向 Minecraft 玩家提供多款本机实用能力（桌面 Tauri 2 + Python）。当前主线围绕常见启动器下、采用 .minecraft/versions/ 版本隔离的整合包实例：通过官方 zip / mrpack 生成变更计划，默认先预览（dry-run）再应用。详见文档与路线图。",
+    "versionLabel": "当前版本 {version}",
+    "quickTitle": "快速入口",
+    "openDocs": "中文文档",
+    "openRepo": "GitHub 仓库"
+  },
+  "settings": {
+    "sections": {
+      "appearance": "外观",
+      "general": "通用",
+      "updates": "更新",
+      "logs": "日志",
+      "about": "关于"
+    },
+    "appearance": {
+      "themeTitle": "主题",
+      "themeLight": "浅色",
+      "themeDark": "深色",
+      "themeSystem": "系统",
+      "fontTitle": "字体",
+      "fontPreset": {
+        "minecraft": "方块像素",
+        "system": "系统默认",
+        "readable": "清晰无衬线（系统）",
+        "notoSc": "Noto 黑体（简体）",
+        "modern": "现代几何（DM Sans）",
+        "soft": "圆润（Nunito Sans）",
+        "serif": "衬线阅读",
+        "mono": "等宽界面"
+      },
+      "layoutTitle": "布局",
+      "layoutDrawerTitle": "侧栏",
+      "layoutVisitedTabsTitle": "访问标签",
+      "layoutVisitedTabsSwitch": "显示访问标签栏",
+      "drawerLocation": {
+        "start": "左侧",
+        "end": "右侧"
+      },
+      "colorTitle": "颜色",
+      "customColorButton": "自定义",
+      "customColorMenuTitle": "自定义主题色",
+      "customColorMenuSubtitle": "主色与次色将用于界面强调与渐变",
+      "customColorMenuPreview": "渐变预览",
+      "customColorLight": "浅色模式",
+      "customColorDark": "深色模式",
+      "customColorPrimary": "主色",
+      "customColorSecondary": "次色",
+      "gradient": {
+        "gradient-sunrise": "朝霞",
+        "gradient-ocean": "深海",
+        "gradient-aurora": "极光",
+        "gradient-slate": "岩灰"
+      },
+      "backgroundTitle": "背景",
+      "customBackgroundPick": "选择系统图片…",
+      "customBackgroundClear": "清除自定义图片",
+      "customBackgroundActive": "当前自定义",
+      "customBackgroundSessionOnly": "本地预览图，未持久化",
+      "appBackground": {
+        "none": "默认",
+        "mist": "薄雾",
+        "sunset": "暮光",
+        "aurora": "极光",
+        "blocks": "方块网格"
+      },
+      "accent": {
+        "forest": "森林绿",
+        "ocean": "海洋蓝",
+        "violet": "紫罗兰",
+        "amber": "琥珀橙",
+        "rose": "玫红",
+        "cyan": "青绿"
+      }
+    },
+    "general": {
+      "cardTitle": "通用",
+      "languageTitle": "语言",
+      "language": {
+        "opts": {
+          "system": "系统",
+          "zh-CN": "简体中文",
+          "en": "English"
+        }
+      },
+      "dryRunTitle": "默认使用 dry-run",
+      "closeBehaviorTitle": "关闭行为",
+      "closeBehaviorTray": "最小化到系统托盘",
+      "closeBehaviorQuit": "退出应用",
+      "curseKeyLabel": "CurseForge API Key",
+      "curseKeyPlaceholder": "留空表示未配置；请勿将 Key 提交到版本库"
+    },
+    "updates": {
+      "cardTitle": "更新",
+      "checkTitle": "启动时检查更新",
+      "channelLabel": "更新渠道",
+      "channelStable": "稳定版",
+      "channelBeta": "测试版",
+      "inAppTitle": "应用内升级",
+      "inAppHint": "仅 Windows：从 GitHub 最新正式版下载与本机架构一致的免安装 zip，解压到临时目录并打开资源管理器。请先退出本应用，用解压出的文件覆盖安装目录后重新启动。macOS / Linux 请从下方 Release 下载对应架构的 .dmg 或 .tar.gz。",
+      "inAppApply": "检查并安装更新",
+      "inAppNoUpdate": "当前已是最新版本。",
+      "inAppError": "更新失败：{msg}",
+      "inAppDone": "已解压并在资源管理器中打开临时目录。请先退出本应用，将新文件覆盖到安装目录后再启动。",
+      "inAppUnsupported": "应用内升级仅在桌面端可用。",
+      "inAppUnsupportedPlatform": "自动下载安装仅在 Windows 提供。请从 GitHub Releases 下载 macOS / Linux 安装包。",
+      "openReleasesPage": "打开 Releases",
+      "snackUpdateAvailable": "发现新版本 {version}。",
+      "snackOpenUpdates": "打开更新",
+      "releasesTitle": "GitHub 发布版本",
+      "releasesListHint": "Windows 可使用上方「应用内升级」获取免安装 zip，或在列表中选择与本机架构一致的 zip；macOS / Linux 请选择对应架构的 .dmg 或 .tar.gz。",
+      "refresh": "刷新列表",
+      "empty": "暂无符合条件的 Release（可尝试切换到「测试版」渠道或稍后重试）。",
+      "releaseNotesHeading": "更新记录",
+      "badgeCurrent": "当前",
+      "badgeNewer": "可升级",
+      "badgeOlder": "可降级",
+      "badgeUnknown": "版本对比未知",
+      "prerelease": "预发布"
+    },
+    "logs": {
+      "cardTitle": "运行日志",
+      "hint": "按模块记录本会话内的操作；关闭应用后清空。本页可筛选、查看详情与复制。",
+      "hintDisk": "桌面版会将会话日志追加写入「{path}」；单文件超过约 4MB 时自动轮转，旧内容保存为 app.log.prev。",
+      "filterModule": "模块",
+      "clearModuleFilter": "清除筛选",
+      "filterLevel": "级别",
+      "levelAll": "全部",
+      "levels": {
+        "debug": "调试",
+        "info": "信息",
+        "warn": "警告",
+        "error": "错误"
+      },
+      "modules": {
+        "app": "应用",
+        "filesystem": "文件系统",
+        "uuid_migrate": "UUID 迁移",
+        "network": "网络",
+        "tray": "托盘"
+      },
+      "search": "搜索消息或详情",
+      "copyVisible": "复制当前列表",
+      "clearAll": "清空日志",
+      "showing": "显示 {n} / 共 {total} 条",
+      "empty": "暂无记录",
+      "detail": "详情",
+      "detailTitle": "日志详情",
+      "copyOk": "已复制到剪贴板",
+      "copyEmpty": "没有可复制的内容",
+      "copyFail": "复制失败（权限或浏览器限制）"
+    },
+    "about": {
+      "cardTitle": "关于",
+      "fieldName": "名称",
+      "fieldVersion": "版本",
+      "fieldDescription": "说明",
+      "repo": "源代码",
+      "issues": "问题反馈",
+      "docsZh": "中文文档",
+      "changelogTitle": "版本更迭",
+      "changelogHint": "以下为应用内置的 CHANGELOG 摘要；完整历史以仓库文件为准。",
+      "changelogFull": "在 GitHub 查看完整 CHANGELOG",
+      "changelogEmpty": "（本节无正文）"
+    }
+  },
+  "tools": {
+    "uuidMigrate": {
+      "navTitle": "UUID 迁移",
+      "pageBannersAria": "本页说明",
+      "title": "存档 UUID 迁移",
+      "intro": "列表来自所选存档的 playerdata；名称来自 usercache.json。未开启版本隔离时用 .minecraft 根目录；开启后用所选版本目录 .minecraft/versions/ 下的 usercache。需 Python 3.11+ 与 pip install -e . 或 MINECRAFT_UTILITIES_PYTHONPATH。",
+      "needDesktop": "此工具仅在桌面版中可用。",
+      "backupWarn": "执行前请完整备份存档；错误映射可能导致无法进入世界。",
+      "sectionSetup": "路径与存档",
+      "sectionPlayers": "玩家列表",
+      "currentWorldChip": "存档：{name}",
+      "modeLabel": "环境",
+      "modeClient": "客户端",
+      "modeServer": "服务端",
+      "pickMinecraft": "选择 .minecraft 目录",
+      "pickMinecraftTitle": "选择 .minecraft",
+      "clientIsolated": "版本隔离",
+      "pickServer": "选择服务器根目录",
+      "pickServerTitle": "选择服务器根目录",
+      "selectVersion": "游戏版本",
+      "selectSave": "存档",
+      "selectServerWorld": "存档",
+      "usercachePathLabel": "usercache.json",
+      "usercacheOk": "文件存在",
+      "usercacheMissing": "未找到文件",
+      "reload": "重新加载玩家",
+      "tableTitle": "玩家与 UUID 映射",
+      "nameUnknown": "未知名称",
+      "playerCount": "共 {n} 位玩家",
+      "loadingPlayers": "正在读取玩家数据…",
+      "waitOrEmpty": "暂无玩家条目。",
+      "colTo": "替换为",
+      "toPlaceholder": "留空跳过",
+      "dryRun": "预览",
+      "apply": "执行替换",
+      "mappingCount": "将替换 {n} 条映射",
+      "logTitle": "操作输出",
+      "logScopeHint": "仅显示迁移引擎（预览/执行）的文本输出；路径选择与列表加载等见「设置 → 日志」。",
+      "logPickClient": "已选择客户端目录",
+      "logPickServer": "已选择服务器目录",
+      "logLoadedPlayers": "玩家列表已载入（{n} 条）",
+      "logLoadPlayersFailed": "载入玩家列表失败",
+      "logMigrateDone": "迁移引擎完成（{mode}）",
+      "logMigrateFailed": "迁移引擎调用失败",
+      "errNoWorld": "请先完成存档选择。",
+      "errNoPlayers": "未在 playerdata 中发现 .dat 玩家文件。",
+      "errNoMappings": "请至少填写一行有效的「替换为」UUID，且须与当前 UUID 不同。"
+    }
+  }
+}

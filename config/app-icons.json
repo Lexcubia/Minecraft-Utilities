@@ -1,0 +1,18 @@
+{
+  "brandLogoSvg": {
+    "webPath": "/app-logo.svg",
+    "viteIndexPlaceholder": "__APP_LOGO_WEB_PATH__",
+    "outputsRelativeToRepoRoot": ["public/app-logo.svg", "docs/img/logo.svg"],
+    "readmeHeroSrc": "docs/img/logo.svg"
+  },
+  "tauriBundleIcons": {
+    "pathsRelativeToSrcTauriDir": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "trayPngRelativeToSrcTauriDir": "icons/32x32.png"
+  }
+}

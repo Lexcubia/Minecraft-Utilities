@@ -1,0 +1,11 @@
+{
+  "version": "0.1.0",
+  "notes": "",
+  "pub_date": "2026-05-15T00:00:00Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "PASTE_MINISIGN_SIG_LINE_IF_USING_TAURI_UPDATER",
+      "url": "https://github.com/Lexcubia/Minecraft-Utilities/releases/download/v0.1.0/minecraft-utilities-win-x86_64-v0.1.0.zip"
+    }
+  }
+}

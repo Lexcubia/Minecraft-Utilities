@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "github.vscode-github-actions",
+    "charliermarsh.ruff",
+    "ms-python.python",
+    "vue.volar",
+    "tauri-apps.tauri-vscode",
+    "rust-lang.rust-analyzer",
+    "esbenp.prettier-vscode",
+    "davidanson.vscode-markdownlint"
+  ]
+}

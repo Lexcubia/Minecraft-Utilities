@@ -1,0 +1,287 @@
+{
+  "app": {
+    "navBrandShort": "MC Utils"
+  },
+  "meta": {
+    "description": "Minecraft Utilities: practical tools for Minecraft players (Tauri 2 + Python)"
+  },
+  "common": {
+    "on": "On",
+    "off": "Off",
+    "close": "Close",
+    "cancel": "Cancel"
+  },
+  "snackbar": {
+    "queueRegionAria": "App messages",
+    "pendingCount": "{n} more in queue",
+    "queueFoldExpand": "{n} more queued — tap to expand",
+    "queueFoldCollapse": "Collapse queue"
+  },
+  "window": {
+    "exitConfirmTitle": "Exit Minecraft Utilities",
+    "exitConfirmMessage": "Are you sure you want to quit? Unsaved changes in memory may be lost.",
+    "exitConfirmOk": "Quit",
+    "exitConfirmCancel": "Cancel",
+    "exitConfirmDontRemind": "Don't ask again"
+  },
+  "tray": {
+    "menuTitle": "Menu",
+    "menuOpenMain": "Open main window",
+    "menuSettings": "Settings",
+    "menuClose": "Quit",
+    "tooltip": "Minecraft Utilities",
+    "flyoutAria": "Tray menu"
+  },
+  "nav": {
+    "home": "Home",
+    "toolsSection": "Tools",
+    "toolsUuidMigrate": "UUID migrate",
+    "settings": "Settings",
+    "settingsHeader": "Settings",
+    "back": "Back",
+    "openMenu": "Open menu",
+    "collapseDrawer": "Collapse sidebar",
+    "expandDrawer": "Expand sidebar",
+    "expandDrawerText": "Show sidebar labels",
+    "railOnly": "Icons only",
+    "themeSwitchToLight": "Switch to light theme",
+    "themeSwitchToDark": "Switch to dark theme",
+    "languageMenu": "Change interface language",
+    "ariaBreadcrumb": "Breadcrumb",
+    "windowMinimize": "Minimize window",
+    "windowMaximize": "Maximize window",
+    "windowRestore": "Restore window",
+    "windowClose": "Close window",
+    "visitedTabMenu": {
+      "ariaLabel": "Visited page menu",
+      "closeThis": "Close",
+      "closeOthers": "Close others",
+      "closeAll": "Close all",
+      "closeLeft": "Close to the left",
+      "closeRight": "Close to the right"
+    },
+    "contextMenu": {
+      "ariaLabel": "Context menu",
+      "cut": "Cut",
+      "copy": "Copy",
+      "paste": "Paste",
+      "selectAll": "Select all"
+    }
+  },
+  "welcome": {
+    "heroTagline": "Small focused utilities for Minecraft players · desktop app in development",
+    "introBody": "Minecraft Utilities is a local-first toolkit for Minecraft players (Tauri 2 + Python). The first track targets instances under common launchers with .minecraft/versions/ isolation: build a change plan from official zip / mrpack, preview with dry-run by default, then apply. See docs and roadmap.",
+    "versionLabel": "Version {version}",
+    "quickTitle": "Quick access",
+    "openDocs": "Chinese documentation",
+    "openRepo": "GitHub repository"
+  },
+  "settings": {
+    "sections": {
+      "appearance": "Appearance",
+      "general": "General",
+      "updates": "Updates",
+      "logs": "Logs",
+      "about": "About"
+    },
+    "appearance": {
+      "themeTitle": "Theme",
+      "themeLight": "Light",
+      "themeDark": "Dark",
+      "themeSystem": "System",
+      "fontTitle": "Font",
+      "fontPreset": {
+        "minecraft": "Block pixel",
+        "system": "System UI",
+        "readable": "Clear sans (system)",
+        "notoSc": "Noto Sans SC",
+        "modern": "Modern (DM Sans)",
+        "soft": "Rounded (Nunito Sans)",
+        "serif": "Serif reading",
+        "mono": "Monospace UI"
+      },
+      "layoutTitle": "Layout",
+      "layoutDrawerTitle": "Sidebar",
+      "layoutVisitedTabsTitle": "Visited tabs",
+      "layoutVisitedTabsSwitch": "Show visited tab bar",
+      "drawerLocation": {
+        "start": "Left",
+        "end": "Right"
+      },
+      "colorTitle": "Color",
+      "customColorButton": "Custom",
+      "customColorMenuTitle": "Custom accent",
+      "customColorMenuSubtitle": "Primary and secondary drive accents and gradients",
+      "customColorMenuPreview": "Gradient preview",
+      "customColorLight": "Light theme",
+      "customColorDark": "Dark theme",
+      "customColorPrimary": "Primary",
+      "customColorSecondary": "Secondary",
+      "gradient": {
+        "gradient-sunrise": "Sunrise",
+        "gradient-ocean": "Ocean",
+        "gradient-aurora": "Aurora",
+        "gradient-slate": "Slate"
+      },
+      "backgroundTitle": "Background",
+      "customBackgroundPick": "Choose image…",
+      "customBackgroundClear": "Remove custom image",
+      "customBackgroundActive": "Custom image",
+      "customBackgroundSessionOnly": "Session preview (not persisted)",
+      "appBackground": {
+        "none": "Default",
+        "mist": "Mist",
+        "sunset": "Sunset",
+        "aurora": "Aurora",
+        "blocks": "Block grid"
+      },
+      "accent": {
+        "forest": "Forest",
+        "ocean": "Ocean",
+        "violet": "Violet",
+        "amber": "Amber",
+        "rose": "Rose",
+        "cyan": "Cyan"
+      }
+    },
+    "general": {
+      "cardTitle": "General",
+      "languageTitle": "Language",
+      "language": {
+        "opts": {
+          "system": "System",
+          "zh-CN": "简体中文",
+          "en": "English"
+        }
+      },
+      "dryRunTitle": "Default to dry-run",
+      "closeBehaviorTitle": "Close behavior",
+      "closeBehaviorTray": "Hide to system tray",
+      "closeBehaviorQuit": "Quit application",
+      "curseKeyLabel": "CurseForge API key",
+      "curseKeyPlaceholder": "Leave empty if unset; never commit keys to the repo"
+    },
+    "updates": {
+      "cardTitle": "Updates",
+      "checkTitle": "Check for updates on startup",
+      "channelLabel": "Update channel",
+      "channelStable": "Stable",
+      "channelBeta": "Beta",
+      "inAppTitle": "In-app update",
+      "inAppHint": "Windows only: downloads the portable zip for your CPU from the latest GitHub release, extracts it to a temporary folder, and opens File Explorer. Quit this app, copy the new files over your install folder, then relaunch. On macOS / Linux, download the matching .dmg or .tar.gz from Releases below.",
+      "inAppApply": "Check and install update",
+      "inAppNoUpdate": "You are on the latest version.",
+      "inAppError": "Update failed: {msg}",
+      "inAppDone": "Extract finished and a folder was opened. Quit this app, replace files in your install directory with the new ones, then relaunch.",
+      "inAppUnsupported": "In-app updates are only available in the desktop app.",
+      "inAppUnsupportedPlatform": "Automatic download and install is Windows-only. Download macOS / Linux builds from GitHub Releases.",
+      "openReleasesPage": "Open Releases",
+      "snackUpdateAvailable": "New version {version} is available.",
+      "snackOpenUpdates": "Open Updates",
+      "releasesTitle": "GitHub releases",
+      "releasesListHint": "On Windows you can use in-app update above for the portable zip, or pick the matching zip from the list; macOS / Linux use the .dmg or .tar.gz asset for your architecture.",
+      "refresh": "Refresh",
+      "empty": "No matching releases (try the Beta channel or try again later).",
+      "releaseNotesHeading": "Release notes",
+      "badgeCurrent": "Current",
+      "badgeNewer": "Upgrade",
+      "badgeOlder": "Downgrade",
+      "badgeUnknown": "Unknown compare",
+      "prerelease": "Pre-release"
+    },
+    "logs": {
+      "cardTitle": "Session logs",
+      "hint": "Per-module records for this session; cleared when you quit. Filter, open details, or copy entries here.",
+      "hintDisk": "The desktop app also appends session logs to “{path}”. When the file grows past about 4 MB it rotates; the previous file is saved as app.log.prev.",
+      "filterModule": "Module",
+      "clearModuleFilter": "Clear filter",
+      "filterLevel": "Level",
+      "levelAll": "All",
+      "levels": {
+        "debug": "Debug",
+        "info": "Info",
+        "warn": "Warning",
+        "error": "Error"
+      },
+      "modules": {
+        "app": "App",
+        "filesystem": "Filesystem",
+        "uuid_migrate": "UUID migrate",
+        "network": "Network",
+        "tray": "Tray"
+      },
+      "search": "Search message or detail",
+      "copyVisible": "Copy visible list",
+      "clearAll": "Clear all",
+      "showing": "Showing {n} of {total}",
+      "empty": "No entries",
+      "detail": "Detail",
+      "detailTitle": "Log detail",
+      "copyOk": "Copied to clipboard",
+      "copyEmpty": "Nothing to copy",
+      "copyFail": "Copy failed (permissions)"
+    },
+    "about": {
+      "cardTitle": "About",
+      "fieldName": "Name",
+      "fieldVersion": "Version",
+      "fieldDescription": "Description",
+      "repo": "Source code",
+      "issues": "Report issue",
+      "docsZh": "Chinese docs",
+      "changelogTitle": "Changelog",
+      "changelogHint": "Built-in CHANGELOG excerpt; see the repository file for the full history.",
+      "changelogFull": "View full CHANGELOG on GitHub",
+      "changelogEmpty": "(No notes in this section)"
+    }
+  },
+  "tools": {
+    "uuidMigrate": {
+      "navTitle": "UUID migrate",
+      "pageBannersAria": "Notices for this page",
+      "title": "World UUID migration",
+      "intro": "Players come from the world’s playerdata; names from usercache.json at .minecraft root when not isolated, or under .minecraft/versions/<version>/ when isolated. Requires Python 3.11+ with pip install -e . or MINECRAFT_UTILITIES_PYTHONPATH.",
+      "needDesktop": "This tool is only available in the desktop app.",
+      "backupWarn": "Back up the world before applying; wrong mappings can break the save.",
+      "sectionSetup": "Paths & world",
+      "sectionPlayers": "Players",
+      "currentWorldChip": "Save: {name}",
+      "modeLabel": "Environment",
+      "modeClient": "Client",
+      "modeServer": "Server",
+      "pickMinecraft": "Choose .minecraft folder",
+      "pickMinecraftTitle": "Choose .minecraft",
+      "clientIsolated": "Per-version saves",
+      "pickServer": "Choose server root",
+      "pickServerTitle": "Choose server root",
+      "selectVersion": "Version",
+      "selectSave": "Save",
+      "selectServerWorld": "World",
+      "usercachePathLabel": "usercache.json",
+      "usercacheOk": "Found",
+      "usercacheMissing": "Missing",
+      "reload": "Reload players",
+      "tableTitle": "Players and UUID mapping",
+      "nameUnknown": "Unknown name",
+      "playerCount": "{n} player(s)",
+      "loadingPlayers": "Loading player data…",
+      "waitOrEmpty": "No player entries.",
+      "colTo": "Replace with",
+      "toPlaceholder": "Leave empty to skip",
+      "dryRun": "Preview",
+      "apply": "Apply changes",
+      "mappingCount": "{n} mapping(s) will run",
+      "logTitle": "Output",
+      "logScopeHint": "Shows engine text from Preview/Apply only. Path picks and list loads are under Settings → Logs.",
+      "logPickClient": "Client folder selected",
+      "logPickServer": "Server root selected",
+      "logLoadedPlayers": "Player list loaded ({n})",
+      "logLoadPlayersFailed": "Failed to load player list",
+      "logMigrateDone": "Migration engine finished ({mode})",
+      "logMigrateFailed": "Migration engine call failed",
+      "errNoWorld": "Finish choosing the world first.",
+      "errNoPlayers": "No player .dat files found under playerdata.",
+      "errNoMappings": "Enter at least one valid new UUID that differs from the current one."
+    }
+  }
+}

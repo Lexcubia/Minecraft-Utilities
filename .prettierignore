@@ -1,0 +1,7 @@
+.venv
+venv
+node_modules
+dist-web
+src-tauri/gen
+pnpm-lock.yaml
+**/__pycache__

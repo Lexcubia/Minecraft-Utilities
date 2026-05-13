@@ -1,0 +1,54 @@
+/* 渐变预设或自定义主题：主题里 primary/secondary 为两端色；此处把常见「主色底」控件改为两端渐变 */
+
+.v-application.app-accent-gradient .v-btn.bg-primary.v-btn--variant-flat,
+.v-application.app-accent-gradient .v-btn.bg-primary.v-btn--variant-elevated {
+  background-color: transparent !important;
+  background-image: var(--app-gradient-primary-secondary-135) !important;
+  color: rgb(var(--v-theme-on-primary)) !important;
+}
+
+.v-application.app-accent-gradient .v-btn.text-primary.v-btn--variant-tonal {
+  background-color: transparent !important;
+  background-image: linear-gradient(
+    135deg,
+    color-mix(in srgb, rgb(var(--v-theme-primary)) 40%, rgb(var(--v-theme-surface))),
+    color-mix(in srgb, rgb(var(--v-theme-secondary)) 40%, rgb(var(--v-theme-surface)))
+  ) !important;
+  color: rgb(var(--v-theme-primary)) !important;
+}
+
+.v-application.app-accent-gradient .v-chip.bg-primary.v-chip--variant-flat,
+.v-application.app-accent-gradient .v-chip.bg-primary.v-chip--variant-elevated,
+.v-application.app-accent-gradient .v-chip.bg-primary {
+  background-color: transparent !important;
+  background-image: var(--app-gradient-primary-secondary-135) !important;
+  color: rgb(var(--v-theme-on-primary)) !important;
+}
+
+.v-application.app-accent-gradient .v-chip.text-primary.v-chip--variant-tonal {
+  background-color: transparent !important;
+  background-image: linear-gradient(
+    135deg,
+    color-mix(in srgb, rgb(var(--v-theme-primary)) 40%, rgb(var(--v-theme-surface))),
+    color-mix(in srgb, rgb(var(--v-theme-secondary)) 40%, rgb(var(--v-theme-surface)))
+  ) !important;
+  color: rgb(var(--v-theme-primary)) !important;
+}
+
+.v-application.app-accent-gradient .v-avatar.text-primary.v-avatar--variant-tonal {
+  background-color: transparent !important;
+  background-image: linear-gradient(
+    135deg,
+    color-mix(in srgb, rgb(var(--v-theme-primary)) 40%, rgb(var(--v-theme-surface))),
+    color-mix(in srgb, rgb(var(--v-theme-secondary)) 40%, rgb(var(--v-theme-surface)))
+  ) !important;
+  color: rgb(var(--v-theme-primary)) !important;
+}
+
+.v-application.app-accent-gradient .v-progress-linear__determinate {
+  background: linear-gradient(
+    90deg,
+    rgb(var(--v-theme-primary)),
+    rgb(var(--v-theme-secondary))
+  ) !important;
+}

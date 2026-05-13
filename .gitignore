@@ -1,0 +1,41 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Node / pnpm
+node_modules/
+.pnpm-store/
+
+# Vite / Tauri 前端产物（与 Python dist/ 分离）
+dist-web/
+
+# Tauri / Rust
+src-tauri/target/
+# Tauri 增量更新私钥（勿提交；CI 使用 GitHub Secret `TAURI_SIGNING_PRIVATE_KEY`）
+src-tauri/tauri-updater.key
+
+# IDE
+.idea/
+*.code-workspace
+.history/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
+
+# Vite 本地
+*.local
+
+# Logs
+*.log
