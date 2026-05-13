@@ -9,6 +9,7 @@ import '@/styles/app-context-menu-surface.css';
 import '@/styles/shell-glass.css';
 import '@/styles/accent-gradient.css';
 import { i18n, mergeDiskLocalesIntoI18n } from '@/i18n';
+import { mergeDiskAppSettingsJson } from '@/config/mergeDiskAppSettings';
 import { loadUserDataPaths } from '@/composables/useUserDataPaths';
 import { SETTINGS_STORAGE_KEY } from '@/constants/settings-persist';
 import { useSettingsStore } from '@/stores/settings';
@@ -43,6 +44,7 @@ async function bootstrap() {
         /* ignore */
       }
     }
+    diskJson = mergeDiskAppSettingsJson(diskJson);
     useSettingsStore().hydrateFromRemoteJson(diskJson);
     await loadUserDataPaths();
   } else {

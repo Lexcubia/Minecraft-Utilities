@@ -6,6 +6,10 @@
 
 ## Unreleased
 
+### Changes
+
+- **设置默认文件**：`configs/settings.json` 以仓库 **`src/config/settings.json`** 为完整默认（非空 JSON）；Rust 在磁盘缺失/空白/`{}` 时写入该默认；前端启动时再与磁盘合并，避免打包结果中空白配置导致白屏。
+
 ## [0.3.1] - 2026-05-14
 
 <!-- release:publish -->

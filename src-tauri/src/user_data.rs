@@ -4,6 +4,7 @@
 //! 若曾使用旧布局（`user/`、根目录 `settings.json`、目录名 **`config`** / **`log`**）或数据仍在 **`app_local_data_dir`**，启动时会迁移 / 复制到当前数据根。
 
 use serde::Serialize;
+use serde_json::Value;
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -17,6 +18,9 @@ const SETTINGS_FILE: &str = "settings.json";
 const LOG_SUBDIR: &str = "logs";
 const APP_LOG_FILE: &str = "app.log";
 const APP_LOG_MAX_BYTES: u64 = 4 * 1024 * 1024;
+
+/// 与仓库 `src/config/settings.json` 一致，编译进二进制，作磁盘缺省/占位时的默认全文。
+const EMBEDDED_APP_SETTINGS_JSON: &str = include_str!("../../src/config/settings.json");
 
 fn legacy_app_data_root(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     app.path().app_local_data_dir().map_err(|e| e.to_string())
@@ -67,6 +71,39 @@ fn settings_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
 
 fn log_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     Ok(data_root(app)?.join(LOG_SUBDIR))
+}
+
+fn embedded_default_settings_trimmed() -> &'static str {
+    EMBEDDED_APP_SETTINGS_JSON.trim()
+}
+
+/// 空白、`{}` 或 JSON 空对象：视为未配置，应写入内置默认。
+fn is_settings_placeholder_json(text: &str) -> bool {
+    let t = text.trim();
+    if t.is_empty() || t == "{}" {
+        return true;
+    }
+    match serde_json::from_str::<Value>(t) {
+        Ok(Value::Object(o)) => o.is_empty(),
+        Err(_) => false,
+        Ok(_) => false,
+    }
+}
+
+fn ensure_settings_file_has_defaults(app: &tauri::AppHandle) -> Result<(), String> {
+    let sp = settings_path(app)?;
+    let body = embedded_default_settings_trimmed();
+    if let Some(parent) = sp.parent() {
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    if !sp.exists() {
+        return fs::write(&sp, body).map_err(|e| e.to_string());
+    }
+    let cur = fs::read_to_string(&sp).unwrap_or_default();
+    if is_settings_placeholder_json(&cur) {
+        fs::write(&sp, body).map_err(|e| e.to_string())?;
+    }
+    Ok(())
 }
 
 /// 将旧版 `…/user/*` 提升到该 `base` 根下。
@@ -226,10 +263,7 @@ pub fn user_data_init_defaults(app: tauri::AppHandle) -> Result<(), String> {
     seed_from_template(&app, "configs/README.txt", Path::new("configs/README.txt"))?;
     seed_from_template(&app, "configs/settings.json", Path::new("configs/settings.json"))?;
 
-    let sp = settings_path(&app)?;
-    if !sp.exists() {
-        fs::write(&sp, "{}\n").map_err(|e| e.to_string())?;
-    }
+    ensure_settings_file_has_defaults(&app)?;
 
     Ok(())
 }
@@ -266,10 +300,16 @@ pub fn user_data_get_paths(app: tauri::AppHandle) -> Result<String, String> {
 #[tauri::command]
 pub fn user_data_read_settings(app: tauri::AppHandle) -> Result<String, String> {
     let p = settings_path(&app)?;
+    let default_body = embedded_default_settings_trimmed().to_string();
     if !p.exists() {
-        return Ok("{}".into());
+        return Ok(default_body);
     }
-    fs::read_to_string(&p).map_err(|e| e.to_string())
+    let s = fs::read_to_string(&p).map_err(|e| e.to_string())?;
+    if is_settings_placeholder_json(&s) {
+        let _ = fs::write(&p, &default_body);
+        return Ok(default_body);
+    }
+    Ok(s)
 }
 
 #[tauri::command]

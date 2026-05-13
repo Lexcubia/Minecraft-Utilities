@@ -1,1 +1,19 @@
-{}
+{
+  "colorScheme": "system",
+  "confirmBeforeClose": true,
+  "closeBehavior": "quit",
+  "defaultDryRun": true,
+  "autoCheckUpdates": true,
+  "updateChannel": "stable",
+  "uiLanguage": "system",
+  "themeColorPreset": "forest",
+  "customThemeColors": {
+    "light": { "primary": "#2e7d32", "secondary": "#558b2f" },
+    "dark": { "primary": "#81c784", "secondary": "#aed581" }
+  },
+  "drawerLocation": "start",
+  "showVisitedTabBar": true,
+  "appBackgroundPreset": "none",
+  "customAppBackgroundPath": "",
+  "uiFontPreset": "minecraft"
+}
