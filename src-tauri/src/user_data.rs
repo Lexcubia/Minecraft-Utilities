@@ -145,7 +145,7 @@ fn copy_tree_merge_skip_existing(src: &Path, dst: &Path) -> Result<(), String> {
 
 /// 当数据根在应用目录且尚无 `configs/settings.json` 时，从旧版 `app_local_data_dir` 复制已有数据。
 fn try_copy_legacy_app_data_into_primary(primary: &Path, legacy: &Path) -> Result<(), String> {
-    if primary.as_path() == legacy.as_path() {
+    if primary == legacy {
         return Ok(());
     }
     if primary.join(CONFIG_SUBDIR).join(SETTINGS_FILE).is_file() {
@@ -203,7 +203,7 @@ pub fn user_data_init_defaults(app: tauri::AppHandle) -> Result<(), String> {
     let legacy = legacy_app_data_root(&app)?;
     let primary = data_root(&app)?;
 
-    if primary.as_path() != legacy.as_path() {
+    if primary != legacy {
         migrate_from_user_subdir(&legacy)?;
         migrate_legacy_user_layout(&legacy)?;
         migrate_data_subdir_names(&legacy)?;
