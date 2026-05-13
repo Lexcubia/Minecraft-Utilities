@@ -2,14 +2,10 @@ import { isTauriRuntime } from '@/utils/isTauriRuntime';
 import { shallowRef } from 'vue';
 
 export type UserDataPaths = {
-  /** 持久化根目录：默认可执行文件所在目录（其下 `configs/settings.json` 等）；不可写时为本机 `app_local_data_dir()` */
+  /** 持久化根目录：默认可执行文件所在目录（其下 `logs/`）；不可写时为本机 `app_local_data_dir()` */
   dataRoot: string;
-  localesDir: string;
-  assetsDir: string;
-  configDir: string;
   logDir: string;
   appLogPath: string;
-  settingsPath: string;
 };
 
 const paths = shallowRef<UserDataPaths | null>(null);

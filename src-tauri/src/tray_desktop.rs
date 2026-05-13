@@ -90,6 +90,7 @@ fn create_tray_linux<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     Ok(())
 }
 
+#[cfg(not(target_os = "linux"))]
 fn tray_icon_bounds_physical(rect: tauri::Rect) -> (f64, f64, f64, f64) {
     let (x, y) = match rect.position {
         Position::Physical(p) => (p.x as f64, p.y as f64),
@@ -167,11 +168,8 @@ pub fn exit_app(app: AppHandle) {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TrayMenuLabelsPayload {
-    #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
     pub open_main: String,
-    #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
     pub settings: String,
-    #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
     pub close: String,
     pub tooltip: String,
 }
@@ -205,7 +203,13 @@ pub fn sync_tray_menu_labels(app: AppHandle, payload: TrayMenuLabelsPayload) -> 
         let tray = app
             .tray_by_id(TRAY_ID)
             .ok_or_else(|| "tray icon not initialized".to_string())?;
-        let TrayMenuLabelsPayload { tooltip, .. } = payload;
+        let TrayMenuLabelsPayload {
+            open_main,
+            settings,
+            close,
+            tooltip,
+        } = payload;
+        let _ = (open_main, settings, close);
         tray.set_tooltip(Some(tooltip)).map_err(|e| e.to_string())
     }
 }

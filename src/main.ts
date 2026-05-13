@@ -8,7 +8,7 @@ import '@/styles/app-shell-scroll.css';
 import '@/styles/app-context-menu-surface.css';
 import '@/styles/shell-glass.css';
 import '@/styles/accent-gradient.css';
-import { i18n, mergeDiskLocalesIntoI18n } from '@/i18n';
+import { i18n } from '@/i18n';
 import { mergeDiskAppSettingsJson } from '@/config/mergeDiskAppSettings';
 import { loadUserDataPaths } from '@/composables/useUserDataPaths';
 import { SETTINGS_STORAGE_KEY } from '@/constants/settings-persist';
@@ -31,23 +31,11 @@ async function bootstrap() {
     if (isTauriShell()) {
       const { invoke } = await import('@tauri-apps/api/core');
       await invoke('user_data_init_defaults');
-      let diskJson = await invoke<string>('user_data_read_settings');
       const ls =
         typeof localStorage !== 'undefined' ? localStorage.getItem(SETTINGS_STORAGE_KEY) : null;
-      if (ls) {
-        try {
-          const parsed = JSON.parse(diskJson.trim() || '{}') as Record<string, unknown>;
-          const isEmpty = Object.keys(parsed).length === 0;
-          if (isEmpty) {
-            await invoke('user_data_write_settings', { json: ls });
-            diskJson = ls;
-          }
-        } catch {
-          /* ignore */
-        }
-      }
-      diskJson = mergeDiskAppSettingsJson(diskJson);
-      useSettingsStore().hydrateFromRemoteJson(diskJson);
+      const base = ls?.trim() ? ls : '{}';
+      const merged = mergeDiskAppSettingsJson(base);
+      useSettingsStore().hydrateFromRemoteJson(merged);
       await loadUserDataPaths();
     } else {
       useSettingsStore().hydrateFromDisk();
@@ -64,13 +52,6 @@ async function bootstrap() {
   }
 
   app.use(i18n);
-  if (isTauriShell()) {
-    try {
-      await mergeDiskLocalesIntoI18n();
-    } catch (e) {
-      console.error('[bootstrap] locale merge failed', e);
-    }
-  }
   app.use(router);
   app.use(vuetify);
   app.mount('#app');

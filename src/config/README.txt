@@ -1,7 +1,5 @@
-Minecraft Utilities — 应用目录下的配置（configs）
+Minecraft Utilities — 源码内 `settings.json`
 
-settings.json：界面与外观等持久化设置（应用启动时读取、变更后写回）；**仓库内 `src/config/settings.json` 为内置默认全文**，打包进安装资源并与二进制 `include_str!` 一致，磁盘缺省或占位时自动写入。
-便携 / 解压运行：数据默认写在**与主程序 .exe 同目录**下的 configs、logs、locales、assets；若该目录不可写（如安装到 Program Files），则自动改写到本机应用数据目录。
+供前端合并默认界面选项；运行时设置保存在 WebView 的 localStorage，不由本目录写磁盘。
 
-可将其它本机配置类文件放在此目录下自行管理；请勿随意删除不了解用途的文件。
-
+便携 / 解压运行：应用仅在数据根下维护 `logs/`（含 `app.log`）；若与主程序同目录不可写，则数据根回退到本机应用数据目录。

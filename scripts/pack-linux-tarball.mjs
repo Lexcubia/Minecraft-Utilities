@@ -68,7 +68,7 @@ fs.writeFileSync(
     `${mainBinaryName} ${version} (Linux ${targetArch} portable)`,
     '',
     '解压后可直接运行同名二进制；需本机已安装 WebKitGTK 等发行版依赖（与 Tauri 官方文档一致）。',
-    '持久化数据默认写在「与二进制同目录」下的 configs、logs、locales、assets；主配置为 configs/settings.json。',
+    '持久化：与二进制同目录下写入 logs（含 app.log 留档）；界面设置仅保存在应用本地存储（localStorage）。',
     '',
   ].join('\n'),
   'utf8',
