@@ -1,3 +1,8 @@
+import {
+  releaseLinuxTarGzPattern,
+  releaseMacosZipPattern,
+  releaseWinZipPattern,
+} from '@/constants/desktopReleaseAssets';
 import type { GitHubReleaseAsset } from '@/types/github-release';
 
 function detectPlatform(): 'windows' | 'macos' | 'linux' | 'unknown' {
@@ -21,7 +26,7 @@ function findByExtensions(
 }
 
 /**
- * 为当前平台挑选最合适的发布产物（zip / dmg / tar.gz）；无匹配时退回第一个带下载地址的资源。
+ * 为当前平台挑选最合适的发布产物（zip / tar.gz）；无匹配时退回第一个带下载地址的资源。
  */
 export function pickPreferredInstallAsset(
   assets: GitHubReleaseAsset[],
@@ -31,17 +36,16 @@ export function pickPreferredInstallAsset(
   let picked: GitHubReleaseAsset | undefined;
   if (platform === 'windows') {
     picked =
-      assets.find((a) => /^minecraft-utilities-win-.+\.zip$/i.test(a.name)) ??
-      findByExtensions(assets, ['.zip']);
+      assets.find((a) => releaseWinZipPattern.test(a.name)) ?? findByExtensions(assets, ['.zip']);
   } else if (platform === 'macos') {
     picked =
-      assets.find((a) => /^minecraft-utilities-macos-.+\.dmg$/i.test(a.name)) ??
+      assets.find((a) => releaseMacosZipPattern.test(a.name)) ??
       findByExtensions(assets, ['.dmg']) ??
       findByExtensions(assets, ['.app.tar.gz']) ??
       findByExtensions(assets, ['.tar.gz']);
   } else if (platform === 'linux') {
     picked =
-      assets.find((a) => /^minecraft-utilities-linux-.+\.tar\.gz$/i.test(a.name)) ??
+      assets.find((a) => releaseLinuxTarGzPattern.test(a.name)) ??
       findByExtensions(assets, ['.tar.gz']) ??
       findByExtensions(assets, ['.appimage']) ??
       findByExtensions(assets, ['.deb']) ??

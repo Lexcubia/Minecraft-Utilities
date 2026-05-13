@@ -26,7 +26,7 @@
 2. 在 **GitHub 判定为「Latest」的那一个 Release** 上，上传一个资源文件，**文件名必须恰好为** **`latest.json`**（与 URL 最后一段一致）。
 3. 上传的安装包、`.sig` 等资源的 **下载 URL** 必须写进 `latest.json` 的 `platforms.*.url` 中；通常使用：  
    `https://github.com/Lexcubia/Minecraft-Utilities/releases/download/<Tag>/<资源文件名>`  
-   例如 Tag 为 `v0.1.0`、常见免安装包文件名为 `minecraft-utilities-win-x86_64-v0.1.0.zip`（当前主线以 zip/dmg/tar.gz 分发，不依赖 NSIS 安装包）。
+   例如 Tag 为 `v0.1.0`、常见免安装包文件名为 `minecraft-utilities-win-x86_64-v0.1.0.zip`（当前主线以 zip/tar.gz 分发六款平台包，不产出 NSIS/MSI/DMG 等安装包）。
 
 **不要**把 `latest.json` 只放在仓库源码树里而不挂到 Release 上——`releases/latest/download/` 读的是 **Release 资源**，不是仓库里的路径。
 
@@ -35,7 +35,7 @@
 ## 手动：如何得到可用的内容
 
 1. 在本机配置 **`TAURI_SIGNING_PRIVATE_KEY`**（与 `pubkey` 成对），执行 **`pnpm exec tauri build`**（需已开启 `bundle.createUpdaterArtifacts`）。
-2. 在 **`src-tauri/target/release/bundle/`** 下查找构建生成的 **`latest.json`** 与 **`*.sig`**；或参考工作流里 **`scripts/merge-github-updater-latest.mjs`** 的合并方式（多平台）。
+2. 在 **`build/cargo-target/release/bundle/`** 下查找构建生成的 **`latest.json`** 与 **`*.sig`**（Cargo `target-dir` 见 `src-tauri/.cargo/config.toml`）；或参考工作流里 **`scripts/merge-github-updater-latest.mjs`** 的合并方式（多平台）。
 3. **`signature`** 字段：填写与安装包同名的 **`.sig` 文件全文**（一般为**单行**，与 Tauri 生成的一致），不是路径。
 4. 将填好的 JSON **另存为文件名 `latest.json`**，上传到上述 Latest Release。
 

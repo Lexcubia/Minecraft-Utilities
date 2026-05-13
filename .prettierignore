@@ -1,7 +1,9 @@
 .venv
 venv
 node_modules
-dist-web
+build/web
+build/cargo-target
+build/desktop
 src-tauri/gen
 pnpm-lock.yaml
 **/__pycache__

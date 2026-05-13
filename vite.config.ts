@@ -38,9 +38,9 @@ export default defineConfig(async () => ({
     vuetify({ autoImport: true }),
     tailwindcss(),
   ],
-  // 与仓库根 Python/hatch 的 dist/ 区分，避免产物目录冲突
+  // 与 Python `dist/` 区分；与 `scripts/build-artifacts.mjs`、`tauri.conf.json` 的 frontendDist 一致
   build: {
-    outDir: 'dist-web',
+    outDir: 'build/web',
   },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`

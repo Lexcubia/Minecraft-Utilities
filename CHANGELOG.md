@@ -6,6 +6,10 @@
 
 ## Unreleased
 
+### Changes
+
+- **桌面发行物**：关闭 Tauri 默认安装包矩阵（`bundle.active: false`）；GitHub Release 仅保留六款免安装压缩包（Linux `tar.gz` ×2、Windows `zip` ×2、macOS `zip`×2 内含 `.app`），缩短 CI 打包时间；`pnpm tauri:build` 改为默认 `--no-bundle`。
+
 ## [0.1.0] - 2026-05-15
 
 <!-- release:publish -->

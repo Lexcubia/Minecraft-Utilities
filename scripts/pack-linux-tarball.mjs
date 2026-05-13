@@ -1,28 +1,21 @@
 /**
- * 将 `src-tauri/target/release` 下的 Linux 主二进制打成免安装 tar.gz（仅 Linux）。
+ * 从 Cargo release 目录下的 Linux 主二进制打成免安装 tar.gz（仅 Linux）。
  * 产物：`minecraft-utilities-linux-<x86_64|aarch64>-v<semver>.tar.gz`
  * 架构由环境变量 `TARGET_ARCH`（`x86_64` | `aarch64`）指定；未设置时按 `uname -m` 推断。
+ * 路径约定见 `scripts/build-artifacts.mjs`；共享入口 `scripts/lib/load-desktop-pack-context.mjs`。
  */
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const root = path.resolve(__dirname, '..');
+import { loadDesktopPackContext } from './lib/load-desktop-pack-context.mjs';
+
+const { root, mainBinaryName, version, artifacts } = loadDesktopPackContext();
 
 if (process.platform !== 'linux') {
   process.stderr.write('pack-linux-tarball: skip (not Linux).\n');
   process.exit(0);
 }
-
-const tauriConf = JSON.parse(
-  fs.readFileSync(path.join(root, 'src-tauri', 'tauri.conf.json'), 'utf8'),
-);
-const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
-
-const mainBinaryName = tauriConf.mainBinaryName;
-const version = pkg.version;
 
 let targetArch = process.env.TARGET_ARCH?.trim();
 if (!targetArch) {
@@ -41,7 +34,7 @@ if (targetArch !== 'x86_64' && targetArch !== 'aarch64') {
   );
 }
 
-const releaseDir = path.join(root, 'src-tauri', 'target', 'release');
+const releaseDir = artifacts.tauriRelease();
 const binName = mainBinaryName;
 const binPath = path.join(releaseDir, binName);
 
@@ -49,8 +42,8 @@ if (!fs.existsSync(binPath)) {
   throw new Error(`Missing ${binPath}; run tauri build --no-bundle first.`);
 }
 
-const outDir = path.join(root, 'artifacts', 'linux');
-const stageName = `${mainBinaryName}-${version}-${targetArch}`;
+const outDir = artifacts.desktopPackages();
+const stageName = `${mainBinaryName}-linux-${targetArch}-v${version}`;
 const stageDir = path.join(outDir, '_stage', stageName);
 const tarName = `${mainBinaryName}-linux-${targetArch}-v${version}.tar.gz`;
 const tarPath = path.join(outDir, tarName);

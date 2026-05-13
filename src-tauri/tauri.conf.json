@@ -8,7 +8,7 @@
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "pnpm build",
-    "frontendDist": "../dist-web"
+    "frontendDist": "../build/web"
   },
   "app": {
     "windows": [
@@ -31,8 +31,7 @@
     }
   },
   "bundle": {
-    "active": true,
-    "targets": "all",
+    "active": false,
     "createUpdaterArtifacts": false,
     "icon": [
       "icons/32x32.png",
