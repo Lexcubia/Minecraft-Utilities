@@ -1,0 +1,22 @@
+[[permission]]
+identifier = "allow-app-shell"
+description = "Allow invoke of desktop shell commands (user data, tray, Python bridge, etc.)."
+commands.allow = [
+  "greet",
+  "fetch_github_releases",
+  "world_uuid_list_players",
+  "world_uuid_migrate_batch",
+  "list_subdirs",
+  "list_server_world_dirs",
+  "path_is_file",
+  "user_data_init_defaults",
+  "user_data_get_paths",
+  "user_data_read_app_settings",
+  "user_data_write_app_settings",
+  "user_data_append_log_line",
+  "check_windows_release_update",
+  "run_windows_release_update_setup",
+  "exit_app",
+  "sync_tray_menu_labels",
+  "focus_main_window",
+]

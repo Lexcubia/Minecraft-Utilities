@@ -15,7 +15,7 @@ import {
 } from '@/constants/ui-languages';
 import { settingsUiModeKey, type SettingsUiMode } from '@/shell/settings-ui-mode';
 import { shellWindowControlKey, type ShellWindowControl } from '@/shell/shell-window-context';
-import { useSettingsStore } from '@/stores/settings';
+import { useSettingsStore, flushAppSettingsToDisk } from '@/stores/settings';
 import { useVisitedPagesStore } from '@/stores/visited-pages';
 import { appLog } from '@/utils/appLog';
 import { appSnackbar } from '@/utils/appSnackbar';
@@ -125,6 +125,7 @@ async function requestAppExit() {
     if (dontRemind) settings.confirmBeforeClose = false;
     if (!confirmed) return;
   }
+  await flushAppSettingsToDisk();
   await invoke('exit_app');
 }
 
@@ -132,11 +133,13 @@ async function requestAppExit() {
 async function onCloseButton() {
   if (!isTauriRuntime()) return;
   if (isSettingsStandaloneWindow) {
+    await flushAppSettingsToDisk();
     await getCurrentWindow().hide();
     return;
   }
   const w = getCurrentWindow();
   if (settings.closeBehavior === 'tray') {
+    await flushAppSettingsToDisk();
     await w.hide();
     return;
   }
@@ -145,6 +148,7 @@ async function onCloseButton() {
     if (dontRemind) settings.confirmBeforeClose = false;
     if (!confirmed) return;
   }
+  await flushAppSettingsToDisk();
   await invoke('exit_app');
 }
 
@@ -162,7 +166,6 @@ provide(shellWindowControlKey, shellWindowApi);
 
 let unlistenCloseRequested: UnlistenFn | undefined;
 let unlistenTrayFlyoutOpen: UnlistenFn | undefined;
-let unlistenTrayShowMain: UnlistenFn | undefined;
 let unlistenTrayOpenSettings: UnlistenFn | undefined;
 let unlistenTrayRequestExit: UnlistenFn | undefined;
 let removeWebViewKeyboardGuards: (() => void) | undefined;
@@ -223,19 +226,27 @@ onMounted(async () => {
     async (event: CloseRequestedEvent) => {
       if (isSettingsStandaloneWindow) {
         event.preventDefault();
+        await flushAppSettingsToDisk();
         await getCurrentWindow().hide();
         return;
       }
       if (settings.closeBehavior === 'tray') {
         event.preventDefault();
+        await flushAppSettingsToDisk();
         await getCurrentWindow().hide();
         return;
       }
-      if (!settings.confirmBeforeClose) return;
+      if (!settings.confirmBeforeClose) {
+        await flushAppSettingsToDisk();
+        return;
+      }
       event.preventDefault();
       const { confirmed, dontRemind } = await showExitConfirmDialog();
       if (dontRemind) settings.confirmBeforeClose = false;
-      if (confirmed) await invoke('exit_app');
+      if (confirmed) {
+        await flushAppSettingsToDisk();
+        await invoke('exit_app');
+      }
     },
   );
   unlistenTrayOpenSettings = await listen('tray-open-settings', () => {
@@ -250,10 +261,6 @@ onMounted(async () => {
       const raw = ev.payload;
       if (!isTrayFlyoutPayload(raw)) return;
       void openTrayMenuWindow(raw);
-    });
-    unlistenTrayShowMain = await listen('tray-show-main', async () => {
-      await getCurrentWindow().show();
-      await getCurrentWindow().setFocus();
     });
   }
   await syncTrayMenuLabels();
@@ -271,7 +278,6 @@ onUnmounted(() => {
   removeWebViewKeyboardGuards?.();
   unlistenCloseRequested?.();
   unlistenTrayFlyoutOpen?.();
-  unlistenTrayShowMain?.();
   unlistenTrayOpenSettings?.();
   unlistenTrayRequestExit?.();
 });

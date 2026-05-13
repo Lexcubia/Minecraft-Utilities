@@ -121,6 +121,23 @@ function load(): Partial<PersistedSettings> {
 }
 
 let broadcastTimer: ReturnType<typeof setTimeout> | undefined;
+let persistDiskTimer: ReturnType<typeof setTimeout> | undefined;
+
+function schedulePersistDisk(json: string) {
+  if (!isTauriRuntime()) return;
+  clearTimeout(persistDiskTimer);
+  persistDiskTimer = setTimeout(() => {
+    persistDiskTimer = undefined;
+    void (async () => {
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        await invoke('user_data_write_app_settings', { json });
+      } catch (e) {
+        console.warn('[settings] write app-settings to disk failed', e);
+      }
+    })();
+  }, 120);
+}
 
 function scheduleBroadcastPersisted(json: string) {
   if (!isTauriRuntime()) return;
@@ -139,6 +156,7 @@ function save(state: PersistedSettings): void {
   const json = JSON.stringify(state);
   localStorage.setItem(SETTINGS_STORAGE_KEY, json);
   scheduleBroadcastPersisted(json);
+  schedulePersistDisk(json);
 }
 
 export const useSettingsStore = defineStore('settings', () => {
@@ -240,6 +258,7 @@ export const useSettingsStore = defineStore('settings', () => {
         const persisted = JSON.stringify(collectPersistedPayload());
         localStorage.setItem(SETTINGS_STORAGE_KEY, persisted);
         scheduleBroadcastPersisted(persisted);
+        schedulePersistDisk(persisted);
       }
     } catch {
       /* 忽略损坏的 payload */
@@ -321,3 +340,18 @@ export const useSettingsStore = defineStore('settings', () => {
     hydrateFromRemoteJson,
   };
 });
+
+/** 取消防抖并立即将 `localStorage` 中的设置写入磁盘（退出或隐藏窗口前调用）。 */
+export async function flushAppSettingsToDisk(): Promise<void> {
+  if (!isTauriRuntime() || typeof localStorage === 'undefined') return;
+  clearTimeout(persistDiskTimer);
+  persistDiskTimer = undefined;
+  const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+  if (!raw?.trim()) return;
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('user_data_write_app_settings', { json: raw });
+  } catch (e) {
+    console.warn('[settings] flush app-settings to disk failed', e);
+  }
+}

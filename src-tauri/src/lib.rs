@@ -127,7 +127,16 @@ fn fetch_github_releases() -> Result<String, String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            tray_desktop::show_main_window(app);
+        }));
+    }
+
+    builder = builder
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init());
 
@@ -144,11 +153,14 @@ pub fn run() {
                 path_is_file,
                 user_data::user_data_init_defaults,
                 user_data::user_data_get_paths,
+                user_data::user_data_read_app_settings,
+                user_data::user_data_write_app_settings,
                 user_data::user_data_append_log_line,
                 windows_release_update::check_windows_release_update,
                 windows_release_update::run_windows_release_update_setup,
                 tray_desktop::exit_app,
                 tray_desktop::sync_tray_menu_labels,
+                tray_desktop::focus_main_window,
             ])
             .setup(|app| {
                 tray_desktop::create_tray(app.handle())?;

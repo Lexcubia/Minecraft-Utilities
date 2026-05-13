@@ -10,6 +10,7 @@ import '@/styles/shell-glass.css';
 import '@/styles/accent-gradient.css';
 import { i18n } from '@/i18n';
 import { mergeDiskAppSettingsJson } from '@/config/mergeDiskAppSettings';
+import { resolveSettingsBootstrapJson } from '@/config/resolveSettingsBootstrapJson';
 import { loadUserDataPaths } from '@/composables/useUserDataPaths';
 import { SETTINGS_STORAGE_KEY } from '@/constants/settings-persist';
 import { useSettingsStore } from '@/stores/settings';
@@ -31,11 +32,26 @@ async function bootstrap() {
     if (isTauriShell()) {
       const { invoke } = await import('@tauri-apps/api/core');
       await invoke('user_data_init_defaults');
+      let fileJson: string | null = null;
+      try {
+        fileJson = await invoke<string>('user_data_read_app_settings');
+      } catch (e) {
+        console.warn('[bootstrap] read app-settings from disk failed', e);
+      }
       const ls =
         typeof localStorage !== 'undefined' ? localStorage.getItem(SETTINGS_STORAGE_KEY) : null;
-      const base = ls?.trim() ? ls : '{}';
+      const base = resolveSettingsBootstrapJson(fileJson, ls);
       const merged = mergeDiskAppSettingsJson(base);
       useSettingsStore().hydrateFromRemoteJson(merged);
+      const persisted =
+        typeof localStorage !== 'undefined' ? localStorage.getItem(SETTINGS_STORAGE_KEY) : null;
+      if (persisted?.trim()) {
+        try {
+          await invoke('user_data_write_app_settings', { json: persisted });
+        } catch (e) {
+          console.warn('[bootstrap] sync app-settings to disk failed', e);
+        }
+      }
       await loadUserDataPaths();
     } else {
       useSettingsStore().hydrateFromDisk();

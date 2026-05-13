@@ -3,6 +3,7 @@ import AppGlassCard from '@/components/ui/AppGlassCard.vue';
 import { TRAY_MENU_WEBVIEW_LABEL } from '@/constants/tray-menu';
 import { isTauriRuntime } from '@/utils/isTauriRuntime';
 import { emitTo } from '@tauri-apps/api/event';
+import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow, type CloseRequestedEvent } from '@tauri-apps/api/window';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { onMounted, onUnmounted } from 'vue';
@@ -25,7 +26,7 @@ async function notifyMain(event: string) {
 
 async function onOpenMain() {
   await hideSelf();
-  await notifyMain('tray-show-main');
+  await invoke('focus_main_window');
 }
 
 async function onOpenSettings() {

@@ -6,6 +6,8 @@ export type UserDataPaths = {
   dataRoot: string;
   logDir: string;
   appLogPath: string;
+  /** `configs/app-settings.json`（与前端设置 store 同步） */
+  appSettingsPath: string;
 };
 
 const paths = shallowRef<UserDataPaths | null>(null);

@@ -8,7 +8,7 @@
 
 ### Changes
 
-- **桌面发行物**：关闭 Tauri 默认安装包矩阵（`bundle.active: false`）；GitHub Release 保留六款平台包（Linux `tar.gz` ×2、Windows `zip` ×2、macOS **`dmg` ×2**）；默认 `pnpm tauri:build` 为 `--no-bundle`，发版矩阵在 mac 上显式打 DMG。
+- **桌面发行物**：关闭 Tauri 默认安装包矩阵（`bundle.active: false`）；GitHub Release 保留六款平台包（Linux `tar.gz` ×2、Windows `zip` ×2、macOS **`dmg` ×2**）；本地默认 **`pnpm desktop:build`** 为 `--no-bundle`，发版矩阵在 mac 上显式打 DMG；**`package.json`** 中桌面相关脚本统一为 **`desktop:*`**（见 **AGENTS.md**）。
 
 ## [0.1.0] - 2026-05-15
 
