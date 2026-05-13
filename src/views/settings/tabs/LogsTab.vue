@@ -182,7 +182,7 @@ onMounted(() => {
             rounded="md"
             clearable
             prepend-inner-icon="mdi-magnify"
-            class="flex-grow-1"
+            class="grow"
           />
         </div>
 

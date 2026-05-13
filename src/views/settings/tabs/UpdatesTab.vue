@@ -208,10 +208,10 @@ onMounted(() => {
     <AppGlassSectionCard body-padding="none">
       <template #head>
         <div class="d-flex flex-wrap align-start gap-3 pa-4 pb-2">
-          <v-avatar color="primary" variant="tonal" size="48" rounded="md" class="flex-shrink-0">
+          <v-avatar color="primary" variant="tonal" size="48" rounded="md" class="shrink-0">
             <v-icon icon="mdi-rocket-launch-outline" size="28" />
           </v-avatar>
-          <div class="flex-grow-1 min-width-0 ps-2">
+          <div class="grow min-width-0 ps-2">
             <div class="text-h6 font-weight-semibold">
               {{ t('settings.updates.releasesTitle') }}
             </div>
@@ -272,11 +272,11 @@ onMounted(() => {
               elevation="0"
             >
               <v-expansion-panel-title class="release-panel-title px-4 py-4">
-                <div class="d-flex flex-wrap align-center gap-3 flex-grow-1 min-width-0">
-                  <v-avatar color="primary" size="42" variant="tonal" rounded="md" class="flex-shrink-0">
+                <div class="d-flex flex-wrap align-center gap-3 grow min-width-0">
+                  <v-avatar color="primary" size="42" variant="tonal" rounded="md" class="shrink-0">
                     <v-icon icon="mdi-tag-outline" size="22" />
                   </v-avatar>
-                  <div class="flex-grow-1 min-width-0">
+                  <div class="grow min-width-0">
                     <div class="font-weight-semibold text-body-1 text-truncate">
                       {{ rel.tag_name }}
                       <span v-if="rel.name" class="text-medium-emphasis font-weight-regular text-body-2">
@@ -293,7 +293,7 @@ onMounted(() => {
                     size="small"
                     :color="versionBadge(rel)!.color"
                     variant="flat"
-                    class="text-caption flex-shrink-0"
+                    class="text-caption shrink-0"
                     label
                     @click.stop
                   >
