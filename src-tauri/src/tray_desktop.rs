@@ -8,8 +8,11 @@ use serde::Deserialize;
 use tauri::{
     image::Image,
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Emitter, Manager, Position, Runtime, Size,
+    AppHandle, Emitter, Manager, Runtime,
 };
+
+#[cfg(not(target_os = "linux"))]
+use tauri::{Position, Size};
 
 #[cfg(target_os = "linux")]
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
@@ -23,6 +26,7 @@ const MENU_ID_SETTINGS: &str = "mc_tray_settings";
 #[cfg(target_os = "linux")]
 const MENU_ID_CLOSE: &str = "mc_tray_close";
 
+#[cfg(not(target_os = "linux"))]
 #[derive(Clone, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct TrayFlyoutOpenPayload {
@@ -95,7 +99,7 @@ fn create_tray_linux<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
                 ..
             } = event
             {
-                show_main_window(&tray.app_handle());
+                show_main_window(tray.app_handle());
             }
         })
         .build(app)?;

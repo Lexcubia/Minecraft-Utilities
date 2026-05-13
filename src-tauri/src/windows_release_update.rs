@@ -84,7 +84,7 @@ pub fn check_windows_release_update() -> Result<String, String> {
             setup_file_name: None,
             releases_page_url: releases_page_url(),
         };
-        return serde_json::to_string(&r).map_err(|e| e.to_string());
+        serde_json::to_string(&r).map_err(|e| e.to_string())
     }
     #[cfg(target_os = "windows")]
     check_windows_release_update_inner()
@@ -223,7 +223,7 @@ fn check_windows_release_update_inner() -> Result<String, String> {
 pub fn run_windows_release_update_setup() -> Result<(), String> {
     #[cfg(not(target_os = "windows"))]
     {
-        return Err("Automatic update is only supported on Windows.".into());
+        Err("Automatic update is only supported on Windows.".into())
     }
     #[cfg(target_os = "windows")]
     run_windows_release_update_setup_inner()
