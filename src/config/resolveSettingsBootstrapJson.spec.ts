@@ -6,9 +6,9 @@ import {
 } from './resolveSettingsBootstrapJson';
 
 describe('resolveSettingsBootstrapJson', () => {
-  it('shallow-merges localStorage over disk when both have keys', () => {
+  it('prefers disk payload when both disk and localStorage have keys', () => {
     expect(resolveSettingsBootstrapJson('{"colorScheme":"dark"}', '{"colorScheme":"light"}')).toBe(
-      '{"colorScheme":"light"}',
+      '{"colorScheme":"dark"}',
     );
   });
 

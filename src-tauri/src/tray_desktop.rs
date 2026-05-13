@@ -11,9 +11,6 @@ use tauri::{
     AppHandle, Emitter, Manager, Position, Runtime, Size,
 };
 
-/// 与前端 `SETTINGS_DISK_RESYNC_EVENT`（`src/constants/settings-persist.ts`）一致。
-pub const SETTINGS_DISK_RESYNC_EVENT: &str = "mu-app-settings-disk-resync";
-
 #[cfg(target_os = "linux")]
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 
@@ -57,10 +54,9 @@ pub fn show_main_window<R: Runtime>(app: &AppHandle<R>) {
         let _ = w.show();
         let _ = w.set_focus();
     }
-    let _ = app.emit(SETTINGS_DISK_RESYNC_EVENT, ());
 }
 
-/// 托盘 / 单实例 / 前端：统一恢复主窗并广播「从磁盘重读设置」。
+/// 托盘 / 单实例 / 前端：统一恢复主窗（设置由各 Webview 的 `settings-persist-broadcast` 同步，避免与异步写盘竞态）。
 #[tauri::command]
 pub fn focus_main_window(app: AppHandle) -> Result<(), String> {
     show_main_window(&app);

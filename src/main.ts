@@ -42,15 +42,14 @@ async function bootstrap() {
         typeof localStorage !== 'undefined' ? localStorage.getItem(SETTINGS_STORAGE_KEY) : null;
       const base = resolveSettingsBootstrapJson(fileJson, ls);
       const merged = mergeDiskAppSettingsJson(base);
-      useSettingsStore().hydrateFromRemoteJson(merged);
-      const persisted =
-        typeof localStorage !== 'undefined' ? localStorage.getItem(SETTINGS_STORAGE_KEY) : null;
-      if (persisted?.trim()) {
-        try {
-          await invoke('user_data_write_app_settings', { json: persisted });
-        } catch (e) {
-          console.warn('[bootstrap] sync app-settings to disk failed', e);
-        }
+      const settings = useSettingsStore();
+      settings.hydrateFromRemoteJson(merged);
+      try {
+        await invoke('user_data_write_app_settings', {
+          json: settings.serializePersistedPayload(),
+        });
+      } catch (e) {
+        console.warn('[bootstrap] sync settings.json to disk failed', e);
       }
       await loadUserDataPaths();
     } else {

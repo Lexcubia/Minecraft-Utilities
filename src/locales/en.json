@@ -192,17 +192,9 @@
     "logs": {
       "cardTitle": "Session logs",
       "hint": "Per-module records for this session; cleared when you quit. Filter, open details, or copy entries here.",
-      "hintDisk": "The desktop app also appends session logs to “{path}”. When the file grows past about 4 MB it rotates; the previous file is saved as app.log.prev.",
       "filterModule": "Module",
       "clearModuleFilter": "Clear filter",
       "filterLevel": "Level",
-      "levelAll": "All",
-      "levels": {
-        "debug": "Debug",
-        "info": "Info",
-        "warn": "Warning",
-        "error": "Error"
-      },
       "modules": {
         "app": "App",
         "filesystem": "Filesystem",

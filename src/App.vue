@@ -15,18 +15,13 @@ import {
   APP_LOG_SNAPSHOT_EVENT,
   APP_LOG_SYNC_REQUEST_EVENT,
 } from '@/constants/app-log-sync';
-import {
-  SETTINGS_DISK_RESYNC_EVENT,
-  SETTINGS_PERSIST_BROADCAST_EVENT,
-  SETTINGS_STORAGE_KEY,
-} from '@/constants/settings-persist';
+import { SETTINGS_PERSIST_BROADCAST_EVENT, SETTINGS_STORAGE_KEY } from '@/constants/settings-persist';
 import {
   CUSTOM_THEME_PRESET_ID,
   usesAccentControlGradient,
 } from '@/constants/theme-color-presets';
 import { DEFAULT_UI_FONT_PRESET_ID, isUiFontPresetId } from '@/constants/ui-font-presets';
 import { applyVuetifyThemeColors } from '@/utils/applyVuetifyThemeColors';
-import { pullAppSettingsFromDisk } from '@/config/pullAppSettingsFromDisk';
 import { appLog } from '@/utils/appLog';
 import { isTauriRuntime } from '@/utils/isTauriRuntime';
 import { useAppLogStore, type AppLogEntry } from '@/stores/app-log';
@@ -46,27 +41,17 @@ const router = useRouter();
 
 let unlistenSettingsNavigate: UnlistenFn | undefined;
 let unlistenSettingsPersistBroadcast: UnlistenFn | undefined;
-let unlistenSettingsDiskResync: UnlistenFn | undefined;
 let unlistenAppLogBroadcast: UnlistenFn | undefined;
 let unlistenAppLogSnapshot: UnlistenFn | undefined;
 let unlistenAppLogClear: UnlistenFn | undefined;
 let unlistenAppLogSyncRequest: UnlistenFn | undefined;
 
-let visWasHiddenForDisk = document.visibilityState === 'hidden';
-function onVisibilityDiskResyncForSettings(): void {
-  if (isTauriRuntime() && WebviewWindow.getCurrent().label === TRAY_MENU_WEBVIEW_LABEL) return;
-  const vs = document.visibilityState;
-  if (vs === 'hidden') visWasHiddenForDisk = true;
-  if (vs === 'visible' && visWasHiddenForDisk) {
-    visWasHiddenForDisk = false;
-    void pullAppSettingsFromDisk();
-  }
-}
-
 function onStoragePersist(e: StorageEvent) {
+  if (isTauriRuntime()) return;
   if (e.storageArea !== localStorage) return;
   if (e.key !== SETTINGS_STORAGE_KEY) return;
-  void pullAppSettingsFromDisk();
+  if (typeof e.newValue !== 'string' || !e.newValue.trim()) return;
+  settings.hydrateFromRemoteJson(e.newValue);
 }
 
 const resolvedDark = computed(() => {
@@ -147,7 +132,6 @@ function onSystemLanguageChange() {
 onMounted(async () => {
   window.addEventListener('languagechange', onSystemLanguageChange);
   window.addEventListener('storage', onStoragePersist);
-  document.addEventListener('visibilitychange', onVisibilityDiskResyncForSettings);
 
   const logStore = useAppLogStore();
 
@@ -158,12 +142,6 @@ onMounted(async () => {
         settings.hydrateFromRemoteJson(ev.payload.json);
       },
     );
-
-    if (!isTrayMenuWebview.value) {
-      unlistenSettingsDiskResync = await listen(SETTINGS_DISK_RESYNC_EVENT, () => {
-        void pullAppSettingsFromDisk();
-      });
-    }
 
     unlistenAppLogBroadcast = await listen<AppLogEntry>(APP_LOG_BROADCAST_EVENT, (ev) => {
       logStore.ingestBroadcast(ev.payload);
@@ -202,10 +180,8 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener('languagechange', onSystemLanguageChange);
   window.removeEventListener('storage', onStoragePersist);
-  document.removeEventListener('visibilitychange', onVisibilityDiskResyncForSettings);
   unlistenSettingsNavigate?.();
   unlistenSettingsPersistBroadcast?.();
-  unlistenSettingsDiskResync?.();
   unlistenAppLogBroadcast?.();
   unlistenAppLogSnapshot?.();
   unlistenAppLogClear?.();

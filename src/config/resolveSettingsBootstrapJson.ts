@@ -18,7 +18,7 @@ function isNonEmptySettingsObjectJson(raw: string): boolean {
 
 /**
  * 决定启动时用于 `mergeDiskAppSettingsJson` 的原始 JSON。
- * 磁盘与 localStorage 均有效时做浅合并（**localStorage 覆盖磁盘同名字段**），避免防抖写盘未完成时磁盘仍为上一次的旧数据。
+ * Tauri 下以磁盘文件为唯一真源：仅当磁盘为空/损坏时，才回退到 localStorage（历史版本迁移）。
  */
 export function resolveSettingsBootstrapJson(
   fileContent: string | null | undefined,
@@ -28,14 +28,11 @@ export function resolveSettingsBootstrapJson(
   const ls = tryParseObject(localStorageContent);
   const dk = disk ? Object.keys(disk).length : 0;
   const lk = ls ? Object.keys(ls).length : 0;
-  if (lk > 0 && ls) {
-    if (dk > 0 && disk) {
-      return JSON.stringify({ ...disk, ...ls });
-    }
-    return JSON.stringify(ls);
-  }
   if (dk > 0 && disk) {
     return JSON.stringify(disk);
+  }
+  if (lk > 0 && ls) {
+    return JSON.stringify(ls);
   }
   return '{}';
 }
