@@ -8,8 +8,11 @@ use serde::Deserialize;
 use tauri::{
     image::Image,
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Emitter, Manager, Position, Runtime, Size,
+    AppHandle, Emitter, Manager, Runtime,
 };
+
+#[cfg(not(target_os = "linux"))]
+use tauri::{Position, Size};
 
 #[cfg(target_os = "linux")]
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
@@ -23,6 +26,7 @@ const MENU_ID_SETTINGS: &str = "mc_tray_settings";
 #[cfg(target_os = "linux")]
 const MENU_ID_CLOSE: &str = "mc_tray_close";
 
+#[cfg(not(target_os = "linux"))]
 #[derive(Clone, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct TrayFlyoutOpenPayload {
@@ -48,7 +52,7 @@ fn emit_tray<R: Runtime>(app: &AppHandle<R>, event: &str) {
     }
 }
 
-fn show_main_window<R: Runtime>(app: &AppHandle<R>) {
+pub fn show_main_window<R: Runtime>(app: &AppHandle<R>) {
     if let Some(w) = app.get_webview_window("main") {
         let _ = w.unminimize();
         let _ = w.show();
@@ -56,9 +60,22 @@ fn show_main_window<R: Runtime>(app: &AppHandle<R>) {
     }
 }
 
+/// 托盘 / 单实例 / 前端：统一恢复主窗（设置由各 Webview 的 `settings-persist-broadcast` 同步，避免与异步写盘竞态）。
+#[tauri::command]
+pub fn focus_main_window(app: AppHandle) -> Result<(), String> {
+    show_main_window(&app);
+    Ok(())
+}
+
 #[cfg(target_os = "linux")]
 fn create_tray_linux<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
-    let open_main = MenuItem::with_id(app, MENU_ID_OPEN_MAIN, "Open main window", true, None::<&str>)?;
+    let open_main = MenuItem::with_id(
+        app,
+        MENU_ID_OPEN_MAIN,
+        "Open main window",
+        true,
+        None::<&str>,
+    )?;
     let sep = PredefinedMenuItem::separator(app)?;
     let settings_item = MenuItem::with_id(app, MENU_ID_SETTINGS, "Settings", true, None::<&str>)?;
     let close_item = MenuItem::with_id(app, MENU_ID_CLOSE, "Close", true, None::<&str>)?;
@@ -82,7 +99,7 @@ fn create_tray_linux<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
                 ..
             } = event
             {
-                show_main_window(&tray.app_handle());
+                show_main_window(tray.app_handle());
             }
         })
         .build(app)?;
@@ -120,7 +137,7 @@ fn create_tray_non_linux<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
             } = event
             {
                 match button {
-                    MouseButton::Left => show_main_window(&app),
+                    MouseButton::Left => show_main_window(app),
                     MouseButton::Right => {
                         if let Some(w) = app.get_webview_window("main") {
                             let _ = w.show();
@@ -178,16 +195,25 @@ pub struct TrayMenuLabelsPayload {
 pub fn sync_tray_menu_labels(app: AppHandle, payload: TrayMenuLabelsPayload) -> Result<(), String> {
     #[cfg(target_os = "linux")]
     {
-        let open_item =
-            MenuItem::with_id(&app, MENU_ID_OPEN_MAIN, &payload.open_main, true, None::<&str>)
-                .map_err(|e| e.to_string())?;
+        let open_item = MenuItem::with_id(
+            &app,
+            MENU_ID_OPEN_MAIN,
+            &payload.open_main,
+            true,
+            None::<&str>,
+        )
+        .map_err(|e| e.to_string())?;
         let sep = PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?;
-        let settings_item =
-            MenuItem::with_id(&app, MENU_ID_SETTINGS, &payload.settings, true, None::<&str>)
-                .map_err(|e| e.to_string())?;
-        let close_item =
-            MenuItem::with_id(&app, MENU_ID_CLOSE, &payload.close, true, None::<&str>)
-                .map_err(|e| e.to_string())?;
+        let settings_item = MenuItem::with_id(
+            &app,
+            MENU_ID_SETTINGS,
+            &payload.settings,
+            true,
+            None::<&str>,
+        )
+        .map_err(|e| e.to_string())?;
+        let close_item = MenuItem::with_id(&app, MENU_ID_CLOSE, &payload.close, true, None::<&str>)
+            .map_err(|e| e.to_string())?;
         let menu = Menu::with_items(&app, &[&open_item, &sep, &settings_item, &close_item])
             .map_err(|e| e.to_string())?;
         let tray = app

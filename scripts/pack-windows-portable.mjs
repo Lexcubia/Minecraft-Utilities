@@ -1,35 +1,28 @@
 /**
- * 从 `src-tauri/target/release` 收集主程序 exe 与同目录 DLL，打成免安装 zip（仅 Windows）。
- * 在 `pnpm exec tauri build`（含或不含 bundle）之后运行；CI 在 Windows 矩阵内于 Tauri build 后调用。
+ * 从 Cargo release 目录收集主程序 exe 与同目录 DLL，打成免安装 zip（仅 Windows）。
+ * 在 `pnpm exec tauri build --ci --no-bundle` 之后运行；CI 在 Windows 矩阵内于 Tauri build 后调用。
+ * 路径约定见 `scripts/build-artifacts.mjs`；打包脚本共享入口见 `scripts/lib/load-desktop-pack-context.mjs`。
  */
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const root = path.resolve(__dirname, '..');
+import { loadDesktopPackContext } from './lib/load-desktop-pack-context.mjs';
+
+const { root, mainBinaryName, version, artifacts } = loadDesktopPackContext();
 
 if (process.platform !== 'win32') {
   process.stderr.write('pack-windows-portable: skip (not Windows).\n');
   process.exit(0);
 }
 
-const tauriConf = JSON.parse(
-  fs.readFileSync(path.join(root, 'src-tauri', 'tauri.conf.json'), 'utf8'),
-);
-const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
-
-const mainBinaryName = tauriConf.mainBinaryName;
-const version = pkg.version;
-
-/** 与 GitHub Release 资产命名一致：`{name}-win-x86_64-v{x.x.x}.zip` / `win-aarch64` */
+/** 与 GitHub Release 资产命名一致：`{name}-win-x86_64-v{x.x.x}.zip` */
 function winCpuArchLabel() {
   if (process.arch === 'arm64') return 'aarch64';
   return 'x86_64';
 }
 
-const releaseDir = path.join(root, 'src-tauri', 'target', 'release');
+const releaseDir = artifacts.tauriRelease();
 const exeName = `${mainBinaryName}.exe`;
 const exePath = path.join(releaseDir, exeName);
 
@@ -38,7 +31,7 @@ if (!fs.existsSync(exePath)) {
 }
 
 const cpu = winCpuArchLabel();
-const outDir = path.join(root, 'artifacts', 'portable');
+const outDir = artifacts.desktopPackages();
 const stageName = `${mainBinaryName}-win-${cpu}-v${version}`;
 const stageDir = path.join(outDir, '_stage', stageName);
 const zipName = `${mainBinaryName}-win-${cpu}-v${version}.zip`;
@@ -71,7 +64,7 @@ fs.writeFileSync(
     `${mainBinaryName} ${version} (Windows ${cpu} portable zip)`,
     '',
     '解压后双击运行 .exe 即可，无需安装程序。',
-    '持久化：与可执行文件同目录下写入 logs（含 app.log 留档）；界面设置仅保存在应用本地存储（localStorage）。',
+    '持久化：与可执行文件同目录下写入 logs（含 app.log 与会话归档）；界面设置保存在 settings.json。',
     '需本机已安装 Microsoft Edge WebView2 Runtime（多数 Windows 10/11 已自带）。',
     '',
     '若杀毒软件误报，请将本目录加入信任或向厂商误报。',

@@ -3,7 +3,7 @@
     "navBrandShort": "MC Utils"
   },
   "meta": {
-    "description": "Minecraft Utilities: practical tools for Minecraft players (Tauri 2 + Python)"
+    "description": "Minecraft Utilities：本机 Minecraft 实用工具"
   },
   "common": {
     "on": "开启",
@@ -19,7 +19,7 @@
   },
   "window": {
     "exitConfirmTitle": "退出 Minecraft Utilities",
-    "exitConfirmMessage": "确定要退出应用吗？内存中未持久化的内容将丢失。",
+    "exitConfirmMessage": "确定退出？未保存内容将丢失。",
     "exitConfirmOk": "退出",
     "exitConfirmCancel": "取消",
     "exitConfirmDontRemind": "不再提醒"
@@ -70,7 +70,7 @@
   },
   "welcome": {
     "heroTagline": "Minecraft Utilities · 桌面端开发中",
-    "introBody": "Minecraft Utilities 面向 Minecraft 玩家提供多款本机实用能力（桌面 Tauri 2 + Python）。当前主线围绕常见启动器下、采用 .minecraft/versions/ 版本隔离的整合包实例：通过官方 zip / mrpack 生成变更计划，默认先预览（dry-run）再应用。详见文档与路线图。",
+    "introBody": "本机 Minecraft 实用工具（Tauri + Python）。主线：整合包变更预览与应用，详见文档。",
     "versionLabel": "当前版本 {version}",
     "quickTitle": "快速入口",
     "openDocs": "中文文档",
@@ -159,30 +159,28 @@
       "closeBehaviorTray": "最小化到系统托盘",
       "closeBehaviorQuit": "退出应用",
       "curseKeyLabel": "CurseForge API Key",
-      "curseKeyPlaceholder": "留空表示未配置；请勿将 Key 提交到版本库"
+      "curseKeyPlaceholder": "留空未配置；勿提交 Key"
     },
     "updates": {
       "cardTitle": "更新",
-      "checkTitle": "启动时检查更新",
       "channelLabel": "更新渠道",
       "channelStable": "稳定版",
       "channelBeta": "测试版",
-      "inAppTitle": "应用内升级",
-      "inAppHint": "仅 Windows：从 GitHub 最新正式版下载与本机架构一致的免安装 zip，解压到临时目录并打开资源管理器。请先退出本应用，用解压出的文件覆盖安装目录后重新启动。macOS / Linux 请从下方 Release 下载对应架构的 .dmg 或 .tar.gz。",
-      "inAppApply": "检查并安装更新",
+      "inAppTitle": "升级",
+      "inAppCheckButton": "检查更新",
+      "inAppConfirmTitle": "发现新版本",
+      "inAppConfirmIntro": "发现 {version}，是否下载？",
+      "inAppConfirmOk": "下载并打开",
       "inAppNoUpdate": "当前已是最新版本。",
       "inAppError": "更新失败：{msg}",
-      "inAppDone": "已解压并在资源管理器中打开临时目录。请先退出本应用，将新文件覆盖到安装目录后再启动。",
-      "inAppUnsupported": "应用内升级仅在桌面端可用。",
-      "inAppUnsupportedPlatform": "自动下载安装仅在 Windows 提供。请从 GitHub Releases 下载 macOS / Linux 安装包。",
+      "inAppDone": "已打开临时目录；退出应用后覆盖安装目录并重启。",
+      "inAppUnsupported": "升级仅在桌面端可用。",
+      "inAppUnsupportedPlatform": "仅 Windows 支持自动下载；其他系统请从下方列表获取安装包。",
       "openReleasesPage": "打开 Releases",
-      "snackUpdateAvailable": "发现新版本 {version}。",
-      "snackOpenUpdates": "打开更新",
-      "releasesTitle": "GitHub 发布版本",
-      "releasesListHint": "Windows 可使用上方「应用内升级」获取免安装 zip，或在列表中选择与本机架构一致的 zip；macOS / Linux 请选择对应架构的 .dmg 或 .tar.gz。",
+      "releasesTitle": "更新记录",
       "refresh": "刷新列表",
-      "empty": "暂无符合条件的 Release（可尝试切换到「测试版」渠道或稍后重试）。",
-      "releaseNotesHeading": "更新记录",
+      "empty": "无匹配 Release；可换渠道或稍后刷新。",
+      "releaseNotesHeading": "变更说明",
       "badgeCurrent": "当前",
       "badgeNewer": "可升级",
       "badgeOlder": "可降级",
@@ -191,18 +189,10 @@
     },
     "logs": {
       "cardTitle": "运行日志",
-      "hint": "按模块记录本会话内的操作；关闭应用后清空。本页可筛选、查看详情与复制。",
-      "hintDisk": "桌面版会将会话日志追加写入「{path}」；单文件超过约 4MB 时自动轮转，旧内容保存为 app.log.prev。",
+      "hint": "本会话日志，退出清空。",
       "filterModule": "模块",
       "clearModuleFilter": "清除筛选",
       "filterLevel": "级别",
-      "levelAll": "全部",
-      "levels": {
-        "debug": "调试",
-        "info": "信息",
-        "warn": "警告",
-        "error": "错误"
-      },
       "modules": {
         "app": "应用",
         "filesystem": "文件系统",
@@ -230,7 +220,7 @@
       "issues": "问题反馈",
       "docsZh": "中文文档",
       "changelogTitle": "版本更迭",
-      "changelogHint": "以下为应用内置的 CHANGELOG 摘要；完整历史以仓库文件为准。",
+      "changelogHint": "内置 CHANGELOG 摘要；完整见仓库。",
       "changelogFull": "在 GitHub 查看完整 CHANGELOG",
       "changelogEmpty": "（本节无正文）"
     }
@@ -240,9 +230,9 @@
       "navTitle": "UUID 迁移",
       "pageBannersAria": "本页说明",
       "title": "存档 UUID 迁移",
-      "intro": "列表来自所选存档的 playerdata；名称来自 usercache.json。未开启版本隔离时用 .minecraft 根目录；开启后用所选版本目录 .minecraft/versions/ 下的 usercache。需 Python 3.11+ 与 pip install -e . 或 MINECRAFT_UTILITIES_PYTHONPATH。",
+      "intro": "数据来自存档 playerdata 与 usercache。需 Python 3.11+。",
       "needDesktop": "此工具仅在桌面版中可用。",
-      "backupWarn": "执行前请完整备份存档；错误映射可能导致无法进入世界。",
+      "backupWarn": "执行前请备份存档。",
       "sectionSetup": "路径与存档",
       "sectionPlayers": "玩家列表",
       "currentWorldChip": "存档：{name}",
@@ -272,7 +262,7 @@
       "apply": "执行替换",
       "mappingCount": "将替换 {n} 条映射",
       "logTitle": "操作输出",
-      "logScopeHint": "仅显示迁移引擎（预览/执行）的文本输出；路径选择与列表加载等见「设置 → 日志」。",
+      "logScopeHint": "仅迁移引擎输出；其余见设置 → 日志。",
       "logPickClient": "已选择客户端目录",
       "logPickServer": "已选择服务器目录",
       "logLoadedPlayers": "玩家列表已载入（{n} 条）",

@@ -15,10 +15,7 @@ import {
   APP_LOG_SNAPSHOT_EVENT,
   APP_LOG_SYNC_REQUEST_EVENT,
 } from '@/constants/app-log-sync';
-import {
-  SETTINGS_PERSIST_BROADCAST_EVENT,
-  SETTINGS_STORAGE_KEY,
-} from '@/constants/settings-persist';
+import { SETTINGS_PERSIST_BROADCAST_EVENT, SETTINGS_STORAGE_KEY } from '@/constants/settings-persist';
 import {
   CUSTOM_THEME_PRESET_ID,
   usesAccentControlGradient,
@@ -50,9 +47,11 @@ let unlistenAppLogClear: UnlistenFn | undefined;
 let unlistenAppLogSyncRequest: UnlistenFn | undefined;
 
 function onStoragePersist(e: StorageEvent) {
+  if (isTauriRuntime()) return;
   if (e.storageArea !== localStorage) return;
   if (e.key !== SETTINGS_STORAGE_KEY) return;
-  settings.hydrateFromDisk();
+  if (typeof e.newValue !== 'string' || !e.newValue.trim()) return;
+  settings.hydrateFromRemoteJson(e.newValue);
 }
 
 const resolvedDark = computed(() => {

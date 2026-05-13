@@ -4,6 +4,7 @@
   "description": "Capability for the main window",
   "windows": ["main", "settings", "tray-menu"],
   "permissions": [
+    "allow-app-shell",
     "core:default",
     "core:webview:allow-create-webview-window",
     "core:webview:allow-webview-show",

@@ -6,6 +6,20 @@
 
 ## Unreleased
 
+## [0.1.1] - 2026-05-14
+
+<!-- release:publish -->
+
+### Changes
+
+- **设置持久化**：跨窗口/多实例同步与落盘策略；JSON 读写与合并容错改进。
+- **应用内更新**：先检查、确认后再下载的流程；移除过度自动检查相关选项。
+- **用户数据目录**：本机侧重日志目录落盘；其余设置由前端持久化承载。
+- **发行与构建**：统一 **`build/`** 产物目录与 Windows 免安装打包；macOS **DMG** 与 Release 资产校验；多架构安装包选择逻辑与命名约定对齐。
+- **桌面发行物**：关闭 Tauri 默认安装包矩阵（`bundle.active: false`）；GitHub Release 保留六款平台包（Linux `tar.gz` ×2、Windows `zip` ×2、macOS **DMG** ×2）；本地默认 **`pnpm desktop:build`** 为 `--no-bundle`；**`package.json`** 中桌面脚本统一为 **`desktop:*`**（见 **AGENTS.md**）。
+- **CI**：扩展 check/test 路径触发范围；`src-tauri` 纳入 **Rust fmt / Clippy**。
+- **界面与文案**：设置嵌入页标题与正文 **`max-w-2xl`** 列对齐；更新页与部分中英文案精简（含「升级」「更新记录」等区域）。
+
 ## [0.1.0] - 2026-05-15
 
 <!-- release:publish -->

@@ -75,6 +75,8 @@ flowchart TB
 src/                     # Vue 前端（Vite 约定）
 src-tauri/               # Rust 壳（Tauri / Cargo 约定）
 python/modpack_updater/  # Python 引擎包（若采用 Python）
+scripts/                 # 根目录 Node 工具脚本（打包、版本同步、CI 校验等）
+build/                   # 本机构建产物根（Vite/Cargo/免安装包；见 AGENTS.md，勿提交）
 tests/
 docs/                    # 产品、架构、路线图
 docs/zh-cn/developers/   # 中文开发者索引

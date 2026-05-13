@@ -42,7 +42,7 @@
 
 未配置私钥时，`tauri build` 在开启 **`bundle.createUpdaterArtifacts`** 的情况下会失败。若 **Fork** 仓库发版，请把 `tauri.conf.json` 中 **`plugins.updater.endpoints`** 的 GitHub URL 改成你的 **`用户名或组织/仓库名`**，与 `github.repository` 一致。
 
-本机执行 **`pnpm exec tauri build`**（或 `pnpm tauri:build`）做完整桌面包时，同样需要导出上述环境变量；仅日常 **`tauri dev`** 不受影响。
+本机执行 **`pnpm desktop:build`**（`tauri build --ci --no-bundle`，不生成安装包）或发版矩阵中的显式 **`--bundles dmg`**（mac）等命令时，若需生成 **updater 签名产物**，同样需要导出上述环境变量；仅日常 **`pnpm desktop:dev`** / **`pnpm tauri dev`** 不受影响。
 
 ## 手动重跑
 

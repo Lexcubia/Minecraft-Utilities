@@ -94,7 +94,6 @@ type PersistedSettings = {
   /** 顶栏关闭键行为 */
   closeBehavior: CloseBehavior;
   defaultDryRun: boolean;
-  autoCheckUpdates: boolean;
   updateChannel: UpdateChannel;
   uiLanguage: UiLanguage;
   themeColorPreset: ThemeColorPresetId;
@@ -120,25 +119,57 @@ function load(): Partial<PersistedSettings> {
   }
 }
 
-let broadcastTimer: ReturnType<typeof setTimeout> | undefined;
+let persistDiskInFlight = false;
+let persistDiskQueuedJson: string | null = null;
+let persistDiskLastCommittedJson: string | null = null;
 
+async function flushPersistDiskQueue() {
+  if (!isTauriRuntime() || persistDiskInFlight) return;
+  persistDiskInFlight = true;
+  try {
+    while (persistDiskQueuedJson !== null) {
+      const json = persistDiskQueuedJson;
+      persistDiskQueuedJson = null;
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        await invoke('user_data_write_app_settings', { json });
+        persistDiskLastCommittedJson = json;
+      } catch (e) {
+        // 写盘失败时保留最新 payload，等待下一次变更或显式 flush 重试。
+        persistDiskQueuedJson = json;
+        console.warn('[settings] write app-settings to disk failed', e);
+        break;
+      }
+    }
+  } finally {
+    persistDiskInFlight = false;
+    if (persistDiskQueuedJson !== null) void flushPersistDiskQueue();
+  }
+}
+
+function schedulePersistDisk(json: string) {
+  if (!isTauriRuntime()) return;
+  if (json === persistDiskLastCommittedJson && persistDiskQueuedJson === null) return;
+  persistDiskQueuedJson = json;
+  void flushPersistDiskQueue();
+}
+
+/** 跨 Webview 同步：立即广播，避免与「从磁盘重读」等路径竞态导致 UI 回弹。 */
 function scheduleBroadcastPersisted(json: string) {
   if (!isTauriRuntime()) return;
-  clearTimeout(broadcastTimer);
-  broadcastTimer = setTimeout(() => {
-    broadcastTimer = undefined;
-    void (async () => {
-      const { emit } = await import('@tauri-apps/api/event');
-      await emit(SETTINGS_PERSIST_BROADCAST_EVENT, { json });
-    })();
-  }, 80);
+  void (async () => {
+    const { emit } = await import('@tauri-apps/api/event');
+    await emit(SETTINGS_PERSIST_BROADCAST_EVENT, { json });
+  })();
 }
 
 function save(state: PersistedSettings): void {
-  if (typeof localStorage === 'undefined') return;
   const json = JSON.stringify(state);
-  localStorage.setItem(SETTINGS_STORAGE_KEY, json);
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, json);
+  }
   scheduleBroadcastPersisted(json);
+  schedulePersistDisk(json);
 }
 
 export const useSettingsStore = defineStore('settings', () => {
@@ -148,7 +179,6 @@ export const useSettingsStore = defineStore('settings', () => {
   const defaultDryRun = ref(true);
   /** 仅内存；CurseForge Key 不写入持久化 */
   const curseForgeApiKey = ref('');
-  const autoCheckUpdates = ref(true);
   const updateChannel = ref<UpdateChannel>('stable');
   const uiLanguage = ref<UiLanguage>('system');
   const themeColorPreset = ref<ThemeColorPresetId>(DEFAULT_THEME_COLOR_PRESET_ID);
@@ -168,7 +198,6 @@ export const useSettingsStore = defineStore('settings', () => {
     confirmBeforeClose.value = snap.confirmBeforeClose !== false;
     closeBehavior.value = initialCloseBehavior(snap);
     defaultDryRun.value = snap.defaultDryRun ?? true;
-    autoCheckUpdates.value = snap.autoCheckUpdates ?? true;
     updateChannel.value = snap.updateChannel ?? 'stable';
     uiLanguage.value = normalizePersistedUiLanguage(snap.uiLanguage);
     themeColorPreset.value =
@@ -210,7 +239,6 @@ export const useSettingsStore = defineStore('settings', () => {
       confirmBeforeClose: confirmBeforeClose.value,
       closeBehavior: closeBehavior.value,
       defaultDryRun: defaultDryRun.value,
-      autoCheckUpdates: autoCheckUpdates.value,
       updateChannel: updateChannel.value,
       uiLanguage: uiLanguage.value,
       themeColorPreset: themeColorPreset.value,
@@ -223,6 +251,10 @@ export const useSettingsStore = defineStore('settings', () => {
     };
   }
 
+  function serializePersistedPayload(): string {
+    return JSON.stringify(collectPersistedPayload());
+  }
+
   function hydrateFromDisk() {
     applySnapshot(load());
   }
@@ -230,16 +262,10 @@ export const useSettingsStore = defineStore('settings', () => {
   function hydrateFromRemoteJson(json: string) {
     try {
       const parsed = JSON.parse(json) as Partial<PersistedSettings>;
-      applyingSnapshot = true;
-      try {
-        applySnapshotInner(parsed);
-      } finally {
-        applyingSnapshot = false;
-      }
+      applySnapshot(parsed);
       if (typeof localStorage !== 'undefined') {
         const persisted = JSON.stringify(collectPersistedPayload());
         localStorage.setItem(SETTINGS_STORAGE_KEY, persisted);
-        scheduleBroadcastPersisted(persisted);
       }
     } catch {
       /* 忽略损坏的 payload */
@@ -279,7 +305,6 @@ export const useSettingsStore = defineStore('settings', () => {
       confirmBeforeClose,
       closeBehavior,
       defaultDryRun,
-      autoCheckUpdates,
       updateChannel,
       uiLanguage,
       themeColorPreset,
@@ -294,7 +319,8 @@ export const useSettingsStore = defineStore('settings', () => {
       if (applyingSnapshot) return;
       save(collectPersistedPayload());
     },
-    { deep: true },
+    /** 与 `applySnapshot` / `hydrateFromRemoteJson` 同步：避免默认 `pre` 刷新时 `applyingSnapshot` 已复位而误触发 `save`→广播→回灌循环 */
+    { deep: true, flush: 'sync' },
   );
 
   return {
@@ -303,7 +329,6 @@ export const useSettingsStore = defineStore('settings', () => {
     closeBehavior,
     defaultDryRun,
     curseForgeApiKey,
-    autoCheckUpdates,
     updateChannel,
     uiLanguage,
     themeColorPreset,
@@ -319,5 +344,23 @@ export const useSettingsStore = defineStore('settings', () => {
     clearCustomAppBackground,
     hydrateFromDisk,
     hydrateFromRemoteJson,
+    serializePersistedPayload,
   };
 });
+
+/** 将当前 store 快照立即写入磁盘（退出或隐藏窗口前调用）。 */
+export async function flushAppSettingsToDisk(): Promise<void> {
+  if (!isTauriRuntime()) return;
+  const store = useSettingsStore();
+  const raw = store.serializePersistedPayload();
+  if (!raw.trim()) return;
+  persistDiskQueuedJson = raw;
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('user_data_write_app_settings', { json: raw });
+    persistDiskLastCommittedJson = raw;
+    persistDiskQueuedJson = null;
+  } catch (e) {
+    console.warn('[settings] flush app-settings to disk failed', e);
+  }
+}

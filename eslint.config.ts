@@ -8,7 +8,7 @@ export default tseslint.config(
   {
     ignores: [
       'dist/**',
-      'dist-web/**',
+      'build/**',
       'node_modules/**',
       'src-tauri/**',
       'coverage/**',

@@ -5,7 +5,6 @@ import AppShellNavigationDrawer from '@/layouts/AppShellNavigationDrawer.vue';
 import AppShellSettingsBar from '@/layouts/AppShellSettingsBar.vue';
 import AppShellVisitedTabs from '@/layouts/AppShellVisitedTabs.vue';
 import AppShellGlobalContextMenu from '@/layouts/AppShellGlobalContextMenu.vue';
-import { checkInAppUpdate } from '@/composables/useInAppUpdater';
 import { usePrefersColorSchemeDark } from '@/composables/usePrefersColorSchemeDark';
 import { isTrayFlyoutPayload } from '@/constants/tray-menu';
 import {
@@ -15,10 +14,9 @@ import {
 } from '@/constants/ui-languages';
 import { settingsUiModeKey, type SettingsUiMode } from '@/shell/settings-ui-mode';
 import { shellWindowControlKey, type ShellWindowControl } from '@/shell/shell-window-context';
-import { useSettingsStore } from '@/stores/settings';
+import { useSettingsStore, flushAppSettingsToDisk } from '@/stores/settings';
 import { useVisitedPagesStore } from '@/stores/visited-pages';
 import { appLog } from '@/utils/appLog';
-import { appSnackbar } from '@/utils/appSnackbar';
 import { isTauriRuntime } from '@/utils/isTauriRuntime';
 import { openSettingsWindow } from '@/utils/openSettingsWindow';
 import { openTrayMenuWindow } from '@/utils/openTrayMenuWindow';
@@ -125,6 +123,7 @@ async function requestAppExit() {
     if (dontRemind) settings.confirmBeforeClose = false;
     if (!confirmed) return;
   }
+  await flushAppSettingsToDisk();
   await invoke('exit_app');
 }
 
@@ -132,11 +131,13 @@ async function requestAppExit() {
 async function onCloseButton() {
   if (!isTauriRuntime()) return;
   if (isSettingsStandaloneWindow) {
+    await flushAppSettingsToDisk();
     await getCurrentWindow().hide();
     return;
   }
   const w = getCurrentWindow();
   if (settings.closeBehavior === 'tray') {
+    await flushAppSettingsToDisk();
     await w.hide();
     return;
   }
@@ -145,6 +146,7 @@ async function onCloseButton() {
     if (dontRemind) settings.confirmBeforeClose = false;
     if (!confirmed) return;
   }
+  await flushAppSettingsToDisk();
   await invoke('exit_app');
 }
 
@@ -162,37 +164,9 @@ provide(shellWindowControlKey, shellWindowApi);
 
 let unlistenCloseRequested: UnlistenFn | undefined;
 let unlistenTrayFlyoutOpen: UnlistenFn | undefined;
-let unlistenTrayShowMain: UnlistenFn | undefined;
 let unlistenTrayOpenSettings: UnlistenFn | undefined;
 let unlistenTrayRequestExit: UnlistenFn | undefined;
 let removeWebViewKeyboardGuards: (() => void) | undefined;
-
-function scheduleStartupInAppUpdateHint() {
-  if (!settings.autoCheckUpdates) return;
-  window.setTimeout(() => {
-    void (async () => {
-      const pre = await checkInAppUpdate();
-      if (pre.kind !== 'available') return;
-      const version = pre.version;
-      appSnackbar.show({
-        id: 'startup-in-app-update',
-        text: t('settings.updates.snackUpdateAvailable', { version }),
-        timeout: 10_000,
-        color: 'surface-variant',
-        multiLine: true,
-        elevation: 6,
-        actions: [
-          {
-            label: t('settings.updates.snackOpenUpdates'),
-            run: () => {
-              openSettingsUi('updates');
-            },
-          },
-        ],
-      });
-    })();
-  }, 5000);
-}
 
 async function syncTrayMenuLabels() {
   if (!isTauriRuntime()) return;
@@ -223,19 +197,27 @@ onMounted(async () => {
     async (event: CloseRequestedEvent) => {
       if (isSettingsStandaloneWindow) {
         event.preventDefault();
+        await flushAppSettingsToDisk();
         await getCurrentWindow().hide();
         return;
       }
       if (settings.closeBehavior === 'tray') {
         event.preventDefault();
+        await flushAppSettingsToDisk();
         await getCurrentWindow().hide();
         return;
       }
-      if (!settings.confirmBeforeClose) return;
+      if (!settings.confirmBeforeClose) {
+        await flushAppSettingsToDisk();
+        return;
+      }
       event.preventDefault();
       const { confirmed, dontRemind } = await showExitConfirmDialog();
       if (dontRemind) settings.confirmBeforeClose = false;
-      if (confirmed) await invoke('exit_app');
+      if (confirmed) {
+        await flushAppSettingsToDisk();
+        await invoke('exit_app');
+      }
     },
   );
   unlistenTrayOpenSettings = await listen('tray-open-settings', () => {
@@ -251,13 +233,8 @@ onMounted(async () => {
       if (!isTrayFlyoutPayload(raw)) return;
       void openTrayMenuWindow(raw);
     });
-    unlistenTrayShowMain = await listen('tray-show-main', async () => {
-      await getCurrentWindow().show();
-      await getCurrentWindow().setFocus();
-    });
   }
   await syncTrayMenuLabels();
-  scheduleStartupInAppUpdateHint();
 });
 
 watch(
@@ -271,7 +248,6 @@ onUnmounted(() => {
   removeWebViewKeyboardGuards?.();
   unlistenCloseRequested?.();
   unlistenTrayFlyoutOpen?.();
-  unlistenTrayShowMain?.();
   unlistenTrayOpenSettings?.();
   unlistenTrayRequestExit?.();
 });

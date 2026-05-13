@@ -7,16 +7,15 @@ __pycache__/
 .ruff_cache/
 *.egg-info/
 dist/
-build/
 
 # Node / pnpm
 node_modules/
 .pnpm-store/
 
-# Vite / Tauri 前端产物（与 Python dist/ 分离）
-dist-web/
+# 仓库根构建产物（Vite `build/web`、Cargo `build/cargo-target`、免安装 `build/desktop`）；见 `scripts/build-artifacts.mjs`
+/build/
 
-# Tauri / Rust
+# Tauri / Rust（未使用 `src-tauri/.cargo/config.toml` 时 Cargo 默认 target；保留忽略以免误提交）
 src-tauri/target/
 # Tauri 增量更新私钥（勿提交；CI 使用 GitHub Secret `TAURI_SIGNING_PRIVATE_KEY`）
 src-tauri/tauri-updater.key

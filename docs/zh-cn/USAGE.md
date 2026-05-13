@@ -60,7 +60,7 @@ minecraft-utilities uuid-migrate "C:\Minecraft\instances\YourInstance\saves\Your
 ```bash
 pnpm install
 pnpm dev                  # 仅 Vite 前端
-pnpm tauri dev            # 完整 Tauri（需本机安装 Rust）
+pnpm desktop:dev          # 完整 Tauri（等同 pnpm tauri dev；需本机安装 Rust）
 ```
 
 ### 质量检查
