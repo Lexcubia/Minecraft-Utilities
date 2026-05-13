@@ -27,6 +27,7 @@ function findByExtensions(
 
 /**
  * 为当前平台挑选最合适的发布产物（zip / tar.gz）；无匹配时退回第一个带下载地址的资源。
+ * macOS 主线仅分发 `minecraft-utilities-macos-*.zip`（内嵌 .app），不再使用 .dmg。
  */
 export function pickPreferredInstallAsset(
   assets: GitHubReleaseAsset[],
@@ -40,9 +41,10 @@ export function pickPreferredInstallAsset(
   } else if (platform === 'macos') {
     picked =
       assets.find((a) => releaseMacosZipPattern.test(a.name)) ??
-      findByExtensions(assets, ['.dmg']) ??
-      findByExtensions(assets, ['.app.tar.gz']) ??
-      findByExtensions(assets, ['.tar.gz']);
+      assets.find((a) => {
+        const n = a.name.toLowerCase();
+        return n.endsWith('.zip') && (n.includes('macos') || n.includes('darwin'));
+      });
   } else if (platform === 'linux') {
     picked =
       assets.find((a) => releaseLinuxTarGzPattern.test(a.name)) ??
@@ -52,7 +54,7 @@ export function pickPreferredInstallAsset(
       findByExtensions(assets, ['.rpm']);
   }
   if (!picked) {
-    for (const ext of ['.zip', '.dmg', '.tar.gz', '.appimage', '.deb']) {
+    for (const ext of ['.zip', '.tar.gz', '.appimage', '.deb']) {
       picked = findByExtensions(assets, [ext]);
       if (picked) break;
     }
