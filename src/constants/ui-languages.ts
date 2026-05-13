@@ -6,7 +6,7 @@ export const UI_LANGUAGE_SYSTEM = 'system' as const;
 
 /**
  * 应用支持的界面语种（唯一配置源）。
- * 新增语种：在此追加一项、增加对应 `locales/*.json`、并在 `plugins/vuetify.ts` 注册 Vuetify 文案（若需）。
+ * 新增语种：在此追加一项、增加对应源码 `src/locales/*.json`（打包进前端）、并在 `plugins/vuetify.ts` 注册 Vuetify 文案（若需）。
  */
 export const UI_I18N_LOCALES = [
   {

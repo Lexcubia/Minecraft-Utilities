@@ -110,7 +110,6 @@ type PersistedSettings = {
 };
 
 function load(): Partial<PersistedSettings> {
-  if (isTauriRuntime()) return {};
   if (typeof localStorage === 'undefined') return {};
   try {
     const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
@@ -119,32 +118,6 @@ function load(): Partial<PersistedSettings> {
   } catch {
     return {};
   }
-}
-
-let diskPersistTimer: ReturnType<typeof setTimeout> | undefined;
-
-function scheduleDiskPersist(state: PersistedSettings) {
-  clearTimeout(diskPersistTimer);
-  diskPersistTimer = setTimeout(() => {
-    diskPersistTimer = undefined;
-    void (async () => {
-      const { invoke } = await import('@tauri-apps/api/core');
-      try {
-        await invoke('user_data_write_settings', { json: JSON.stringify(state) });
-      } catch {
-        /* ignore disk errors */
-      }
-    })();
-  }, 120);
-}
-
-function save(state: PersistedSettings): void {
-  if (isTauriRuntime()) {
-    scheduleDiskPersist(state);
-    return;
-  }
-  if (typeof localStorage === 'undefined') return;
-  localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(state));
 }
 
 let broadcastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -161,12 +134,19 @@ function scheduleBroadcastPersisted(json: string) {
   }, 80);
 }
 
+function save(state: PersistedSettings): void {
+  if (typeof localStorage === 'undefined') return;
+  const json = JSON.stringify(state);
+  localStorage.setItem(SETTINGS_STORAGE_KEY, json);
+  scheduleBroadcastPersisted(json);
+}
+
 export const useSettingsStore = defineStore('settings', () => {
   const colorScheme = ref<ColorScheme>('system');
   const confirmBeforeClose = ref(true);
   const closeBehavior = ref<CloseBehavior>('quit');
   const defaultDryRun = ref(true);
-  /** 仅内存；CurseForge Key 不写入磁盘 configs/settings.json */
+  /** 仅内存；CurseForge Key 不写入持久化 */
   const curseForgeApiKey = ref('');
   const autoCheckUpdates = ref(true);
   const updateChannel = ref<UpdateChannel>('stable');
@@ -256,8 +236,10 @@ export const useSettingsStore = defineStore('settings', () => {
       } finally {
         applyingSnapshot = false;
       }
-      if (typeof localStorage !== 'undefined' && !isTauriRuntime()) {
-        localStorage.setItem(SETTINGS_STORAGE_KEY, json);
+      if (typeof localStorage !== 'undefined') {
+        const persisted = JSON.stringify(collectPersistedPayload());
+        localStorage.setItem(SETTINGS_STORAGE_KEY, persisted);
+        scheduleBroadcastPersisted(persisted);
       }
     } catch {
       /* 忽略损坏的 payload */
@@ -310,9 +292,7 @@ export const useSettingsStore = defineStore('settings', () => {
     ],
     () => {
       if (applyingSnapshot) return;
-      const payload = collectPersistedPayload();
-      save(payload);
-      scheduleBroadcastPersisted(JSON.stringify(payload));
+      save(collectPersistedPayload());
     },
     { deep: true },
   );

@@ -71,7 +71,7 @@ fs.writeFileSync(
     `${mainBinaryName} ${version} (Windows ${cpu} portable zip)`,
     '',
     '解压后双击运行 .exe 即可，无需安装程序。',
-    '持久化数据默认写在「与 .exe 同目录」下的 configs、logs、locales、assets；主配置为 configs/settings.json。',
+    '持久化：与可执行文件同目录下写入 logs（含 app.log 留档）；界面设置仅保存在应用本地存储（localStorage）。',
     '需本机已安装 Microsoft Edge WebView2 Runtime（多数 Windows 10/11 已自带）。',
     '',
     '若杀毒软件误报，请将本目录加入信任或向厂商误报。',

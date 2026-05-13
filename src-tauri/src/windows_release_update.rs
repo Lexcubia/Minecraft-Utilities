@@ -2,13 +2,17 @@
 //! 其他桌面系统：`check_windows_release_update` 返回 `supported: false`，不发起网络请求。
 
 use serde::Serialize;
+#[cfg(target_os = "windows")]
 use serde_json::Value;
+#[cfg(target_os = "windows")]
 use std::process::Stdio;
 
 const OWNER: &str = "Lexcubia";
 const REPO: &str = "Minecraft-Utilities";
+#[cfg(target_os = "windows")]
 const DIST_BASE: &str = "minecraft-utilities";
 
+#[cfg(target_os = "windows")]
 fn github_user_agent() -> String {
     format!(
         concat!(
@@ -24,6 +28,7 @@ fn releases_page_url() -> String {
     format!("https://github.com/{OWNER}/{REPO}/releases")
 }
 
+#[cfg(target_os = "windows")]
 fn win_dist_cpu_suffix() -> Result<&'static str, String> {
     match std::env::consts::ARCH {
         "x86_64" => Ok("x86_64"),
@@ -34,6 +39,7 @@ fn win_dist_cpu_suffix() -> Result<&'static str, String> {
     }
 }
 
+#[cfg(target_os = "windows")]
 fn expected_portable_zip_name(tag_body: &str) -> Result<String, String> {
     let cpu = win_dist_cpu_suffix()?;
     Ok(format!("{DIST_BASE}-win-{cpu}-v{tag_body}.zip"))

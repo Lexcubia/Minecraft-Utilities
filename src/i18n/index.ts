@@ -4,7 +4,6 @@ import {
   normalizePersistedUiLanguage,
   resolveI18nLocaleCode,
   resolveVuetifyLocaleKey,
-  UI_I18N_LOCALES,
   type UiLanguage,
 } from '@/constants/ui-languages';
 import { createI18n } from 'vue-i18n';
@@ -38,21 +37,3 @@ export const i18n = createI18n({
   fallbackLocale: 'en',
   messages: buildI18nMessages(),
 });
-
-/** Tauri：将用户数据目录下 `locales/<id>.json` 深度合并到内置文案（可覆盖键值）。 */
-export async function mergeDiskLocalesIntoI18n(): Promise<void> {
-  if (typeof window === 'undefined' || !('__TAURI_INTERNALS__' in window)) return;
-  const { invoke } = await import('@tauri-apps/api/core');
-  for (const l of UI_I18N_LOCALES) {
-    const raw = await invoke<string | null>('user_data_read_locale', { id: l.id });
-    if (!raw?.trim()) continue;
-    try {
-      const extra = JSON.parse(raw) as unknown;
-      if (extra !== null && typeof extra === 'object' && !Array.isArray(extra)) {
-        i18n.global.mergeLocaleMessage(l.id, extra as Record<string, unknown>);
-      }
-    } catch {
-      /* invalid locale JSON */
-    }
-  }
-}

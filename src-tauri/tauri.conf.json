@@ -34,14 +34,6 @@
     "active": true,
     "targets": "all",
     "createUpdaterArtifacts": false,
-    "resources": {
-      "../src/locales/en.json": "locales/en.json",
-      "../src/locales/zh-CN.json": "locales/zh-CN.json",
-      "../src/user-data/assets/README.txt": "assets/README.txt",
-      "../src/log/README.txt": "logs/README.txt",
-      "../src/config/README.txt": "configs/README.txt",
-      "../src/config/settings.json": "configs/settings.json"
-    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
