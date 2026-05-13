@@ -6,6 +6,10 @@ mod fs_list;
 mod python_cli;
 #[cfg(desktop)]
 mod tray_desktop;
+#[cfg(desktop)]
+mod user_data;
+#[cfg(desktop)]
+mod windows_release_update;
 
 /// 与前端 `REPO_URL`（`src/constants/app-meta.ts`）保持一致。
 const GITHUB_OWNER: &str = "Lexcubia";
@@ -118,7 +122,6 @@ pub fn run() {
     #[cfg(desktop)]
     {
         builder = builder
-            .plugin(tauri_plugin_updater::Builder::new().build())
             .invoke_handler(tauri::generate_handler![
                 greet,
                 fetch_github_releases,
@@ -127,6 +130,14 @@ pub fn run() {
                 list_subdirs,
                 list_server_world_dirs,
                 path_is_file,
+                user_data::user_data_init_defaults,
+                user_data::user_data_get_paths,
+                user_data::user_data_read_settings,
+                user_data::user_data_write_settings,
+                user_data::user_data_read_locale,
+                user_data::user_data_append_log_line,
+                windows_release_update::check_windows_release_update,
+                windows_release_update::run_windows_release_update_setup,
                 tray_desktop::exit_app,
                 tray_desktop::sync_tray_menu_labels,
             ])

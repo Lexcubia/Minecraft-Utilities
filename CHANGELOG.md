@@ -6,6 +6,17 @@
 
 ## Unreleased
 
+## [0.3.1] - 2026-05-14
+
+<!-- release:publish -->
+
+### Changes
+
+- **Windows 桌面更新**：移除 Tauri `updater` 插件；应用从 GitHub **`releases/latest`** 对比版本并下载 **`Minecraft-Utilities_*_x64-setup.exe`**（NSIS），静默启动安装程序。macOS / Linux 仍从 Release 手动下载。
+- **CI**：`desktop-release` 不再要求 `TAURI_SIGNING_PRIVATE_KEY`，也不再合并上传 **`latest.json`** / **`.sig`**（旧 Tauri updater 流程）。
+- **桌面应用数据目录**：持久化优先在**应用目录**（**可执行文件所在目录**）下维护 **`configs/settings.json`**、**`locales/`**、**`assets/`**、**`logs/`**；`configs/settings.json` 为界面设置的主配置；不可写时回退 **`app_local_data_dir()`** 并保持相同目录名。若旧数据仅在 AppData，首次在可写应用目录启动时会**合并复制**缺失项；曾用目录名 **`config`** / **`log`** 的会自动重命名为 **`configs`** / **`logs`**。种子仍由 **`bundle.resources`**（`src/locales`、`src/log`、`src/config`、`src/user-data/assets`）提供。
+- **会话日志落盘**：写入当前数据根下的 **`logs/app.log`**（UTF-8 单行；过大时轮转为 `app.log.prev`）；设置页「运行日志」提示完整路径。
+
 ## [0.3.0] - 2026-05-13
 
 <!-- release:publish -->

@@ -12,10 +12,12 @@ import {
 import { isTauriRuntime } from '@/utils/isTauriRuntime';
 import { appSnackbar } from '@/utils/appSnackbar';
 import { emit } from '@tauri-apps/api/event';
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useUserDataPaths } from '@/composables/useUserDataPaths';
 
 const { t, locale } = useI18n();
+const { paths, loadUserDataPaths } = useUserDataPaths();
 const logStore = useAppLogStore();
 
 const moduleFilter = ref<AppLogModule[]>([]);
@@ -118,6 +120,10 @@ function toggleModule(m: AppLogModule) {
 function clearModuleFilter() {
   moduleFilter.value = [];
 }
+
+onMounted(() => {
+  if (isTauriRuntime()) void loadUserDataPaths();
+});
 </script>
 
 <template>
@@ -126,6 +132,16 @@ function clearModuleFilter() {
       <template #title>{{ t('settings.logs.cardTitle') }}</template>
       <div class="d-flex flex-column gap-4">
         <p class="text-body-2 text-medium-emphasis mb-0">{{ t('settings.logs.hint') }}</p>
+        <v-alert
+          v-if="isTauriRuntime() && paths?.appLogPath"
+          type="info"
+          variant="tonal"
+          density="compact"
+          rounded="md"
+          class="text-body-2 text-pre-wrap"
+        >
+          {{ t('settings.logs.hintDisk', { path: paths.appLogPath }) }}
+        </v-alert>
 
         <div class="d-flex flex-wrap align-center gap-2">
           <span class="text-caption text-medium-emphasis me-1">{{ t('settings.logs.filterModule') }}</span>

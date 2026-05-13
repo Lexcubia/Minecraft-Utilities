@@ -110,6 +110,7 @@ type PersistedSettings = {
 };
 
 function load(): Partial<PersistedSettings> {
+  if (isTauriRuntime()) return {};
   if (typeof localStorage === 'undefined') return {};
   try {
     const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
@@ -120,7 +121,28 @@ function load(): Partial<PersistedSettings> {
   }
 }
 
+let diskPersistTimer: ReturnType<typeof setTimeout> | undefined;
+
+function scheduleDiskPersist(state: PersistedSettings) {
+  clearTimeout(diskPersistTimer);
+  diskPersistTimer = setTimeout(() => {
+    diskPersistTimer = undefined;
+    void (async () => {
+      const { invoke } = await import('@tauri-apps/api/core');
+      try {
+        await invoke('user_data_write_settings', { json: JSON.stringify(state) });
+      } catch {
+        /* ignore disk errors */
+      }
+    })();
+  }, 120);
+}
+
 function save(state: PersistedSettings): void {
+  if (isTauriRuntime()) {
+    scheduleDiskPersist(state);
+    return;
+  }
   if (typeof localStorage === 'undefined') return;
   localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(state));
 }
@@ -144,7 +166,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const confirmBeforeClose = ref(true);
   const closeBehavior = ref<CloseBehavior>('quit');
   const defaultDryRun = ref(true);
-  /** 仅内存；正式版由 Tauri / 引擎写入应用数据目录，不写入 localStorage */
+  /** 仅内存；CurseForge Key 不写入磁盘 configs/settings.json */
   const curseForgeApiKey = ref('');
   const autoCheckUpdates = ref(true);
   const updateChannel = ref<UpdateChannel>('stable');
@@ -234,7 +256,7 @@ export const useSettingsStore = defineStore('settings', () => {
       } finally {
         applyingSnapshot = false;
       }
-      if (typeof localStorage !== 'undefined') {
+      if (typeof localStorage !== 'undefined' && !isTauriRuntime()) {
         localStorage.setItem(SETTINGS_STORAGE_KEY, json);
       }
     } catch {

@@ -1,0 +1,29 @@
+import { isTauriRuntime } from '@/utils/isTauriRuntime';
+import { shallowRef } from 'vue';
+
+export type UserDataPaths = {
+  /** 持久化根目录：默认可执行文件所在目录（其下 `configs/settings.json` 等）；不可写时为本机 `app_local_data_dir()` */
+  dataRoot: string;
+  localesDir: string;
+  assetsDir: string;
+  configDir: string;
+  logDir: string;
+  appLogPath: string;
+  settingsPath: string;
+};
+
+const paths = shallowRef<UserDataPaths | null>(null);
+
+/** 拉取一次持久化根路径（应用目录优先）。非 Tauri 返回 null。 */
+export async function loadUserDataPaths(): Promise<UserDataPaths | null> {
+  if (!isTauriRuntime()) return null;
+  if (paths.value) return paths.value;
+  const { invoke } = await import('@tauri-apps/api/core');
+  const raw = await invoke<string>('user_data_get_paths');
+  paths.value = JSON.parse(raw) as UserDataPaths;
+  return paths.value;
+}
+
+export function useUserDataPaths() {
+  return { paths, loadUserDataPaths };
+}
