@@ -99,7 +99,7 @@ if (fragments.length === 0) {
   console.error(`No latest.fragment.*.json found under --root (${path.resolve(root)}).`);
   console.error(
     'Each desktop-release matrix job should copy bundle `latest.json` to `latest.fragment.<runner-os>.json` in the upload artifact. ' +
-      'That requires Actions secret TAURI_SIGNING_PRIVATE_KEY and `bundle.createUpdaterArtifacts: true` in tauri.conf.json.',
+      'That requires Actions secret TAURI_SIGNING_PRIVATE_KEY and updater artifacts (Tauri-generated `latest.json`, or v1Compatible fallback from `scripts/synthesize-updater-latest-fragment.mjs`).',
   );
   console.error(`Scanned ${all.length} file(s) under --root.`);
   if (all.length === 0) {

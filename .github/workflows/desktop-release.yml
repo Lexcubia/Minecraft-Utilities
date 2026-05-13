@@ -81,11 +81,14 @@ jobs:
         include:
           - os: ubuntu-latest
             bundles: deb,appimage
+            updater_target: linux
           - os: windows-latest
             bundles: nsis,msi
+            updater_target: windows
           - os: macos-latest
             # DMG 仅用于分发；应用内更新元数据与 .app.tar.gz 在 bundle/macos/，须同时打 app 包（见 Tauri updater 文档）。
             bundles: dmg,app
+            updater_target: darwin
 
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
@@ -141,6 +144,10 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: pnpm exec tauri build --ci --bundles ${{ matrix.bundles }}
 
+      # v1Compatible 产物常为 .nsis.zip/.msi.zip + .sig，未必生成 latest.json；与 pubkey 无关。
+      - name: Ensure updater latest.json in bundle (v1Compatible fallback)
+        run: node scripts/synthesize-updater-latest-fragment.mjs --bundle src-tauri/target/release/bundle --target ${{ matrix.updater_target }}
+
       - name: Assert updater latest.json exists in bundle
         shell: bash
         run: |
@@ -152,7 +159,7 @@ jobs:
             found=1
           done < <(find src-tauri/target/release/bundle -name latest.json -type f -print0 2>/dev/null || true)
           if [ "$found" -eq 0 ]; then
-            echo '::error::构建完成后在 src-tauri/target/release/bundle 下未找到 latest.json（应用内更新元数据）。请确认 TAURI_SIGNING_PRIVATE_KEY 与 pubkey 成对；macOS 需同时构建 app；若 tauri.conf 为 createUpdaterArtifacts true，Tauri 2.11 在仅 Windows/Linux 包时可能不写 latest.json，可改用 "v1Compatible"（见本次仓库配置）。'
+            echo '::error::构建完成后在 src-tauri/target/release/bundle 下未找到 latest.json（应用内更新元数据）。请确认 TAURI_SIGNING_PRIVATE_KEY 与 pubkey 成对；macOS 需同时构建 app。若使用 createUpdaterArtifacts "v1Compatible"，Tauri 可能只生成 zip/tar.gz 与 .sig，已由 scripts/synthesize-updater-latest-fragment.mjs 在 CI 中补写 latest.json。'
             echo 'Bundle tree (max depth 5):'
             find src-tauri/target/release/bundle -type f -maxdepth 5 -print 2>/dev/null || true
             exit 1
