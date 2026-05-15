@@ -185,10 +185,8 @@
       "refresh": "Refresh",
       "empty": "No matching releases; try another channel or refresh later.",
       "releaseNotesHeading": "Release notes",
-      "badgeCurrent": "Current",
+      "badgeCurrent": "Current version",
       "badgeNewer": "Upgrade",
-      "badgeOlder": "Downgrade",
-      "badgeUnknown": "Unknown compare",
       "prerelease": "Pre-release"
     },
     "logs": {
