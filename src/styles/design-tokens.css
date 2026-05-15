@@ -11,13 +11,13 @@
   --app-radius-lg: 7px;
   --app-radius-xl: 9px;
 
-  /* 毛玻璃：壳层 */
-  --app-glass-blur: blur(22px) saturate(1.3);
-  --app-glass-surface: color-mix(in srgb, rgb(var(--v-theme-surface)) 52%, transparent);
+  /* 毛玻璃：壳层（略克制，贴近 Linear 清晰叠层） */
+  --app-glass-blur: blur(20px) saturate(1.15);
+  --app-glass-surface: color-mix(in srgb, rgb(var(--v-theme-surface)) 48%, transparent);
 
   /* 卡片 / 主区：略强毛玻璃 */
-  --app-glass-card-blur: blur(18px) saturate(1.25);
-  --app-glass-card-bg: color-mix(in srgb, rgb(var(--v-theme-surface)) 58%, transparent);
+  --app-glass-card-blur: blur(16px) saturate(1.12);
+  --app-glass-card-bg: color-mix(in srgb, rgb(var(--v-theme-surface)) 54%, transparent);
   /* 主区遮罩偏淡，避免盖住 v-app 根上的背景渐变 / 自定义底图 */
   --app-glass-main-tint: color-mix(in srgb, rgb(var(--v-theme-surface)) 22%, transparent);
 
@@ -49,6 +49,14 @@
   --app-primary-06: color-mix(in srgb, rgb(var(--v-theme-primary)) 6%, transparent);
 
   /* 页面水平内边距 */
-  --app-page-pad-x: 1rem;
-  --app-page-pad-y: 1.5rem;
+  --app-page-pad-x: 0.875rem;
+  --app-page-pad-y: 1.25rem;
+
+  /* Linear-inspired 密度（导航/列表/分区标题） */
+  --app-nav-item-min-height: 30px;
+  --app-list-row-min-height: 36px;
+  --app-nav-active-accent-width: 2px;
+  --app-type-section-title-size: 0.8125rem;
+  --app-type-section-title-weight: 600;
+  --app-type-section-title-tracking: -0.01em;
 }

@@ -39,7 +39,7 @@ onUnmounted(() => detachTitleBarPointerDrag?.());
     :ref="setBarDragHostRef"
     class="shell-glass-app-bar app-settings-bar-drag-root"
     color="surface"
-    density="comfortable"
+    density="compact"
     flat
     elevation="0"
   >

@@ -10,46 +10,55 @@ export default createVuetify({
       ripple: false,
     },
     VBtn: {
-      rounded: 'lg',
+      rounded: 'md',
     },
     VSheet: {
-      rounded: 'lg',
+      rounded: 'md',
     },
     VCard: {
-      rounded: 'xl',
+      rounded: 'lg',
+    },
+    VList: {
+      density: 'compact',
+    },
+    VListItem: {
+      rounded: 'md',
     },
     VTextField: {
       variant: 'outlined',
-      density: 'comfortable',
+      density: 'compact',
       hideDetails: 'auto',
     },
     VTextarea: {
       variant: 'outlined',
-      density: 'comfortable',
+      density: 'compact',
       hideDetails: 'auto',
     },
     VSelect: {
       variant: 'outlined',
-      density: 'comfortable',
+      density: 'compact',
       hideDetails: 'auto',
     },
     VAutocomplete: {
       variant: 'outlined',
-      density: 'comfortable',
+      density: 'compact',
       hideDetails: 'auto',
     },
     VCombobox: {
       variant: 'outlined',
-      density: 'comfortable',
+      density: 'compact',
       hideDetails: 'auto',
     },
     VCheckbox: {
-      density: 'comfortable',
+      density: 'compact',
       hideDetails: true,
     },
     VSwitch: {
-      density: 'comfortable',
+      density: 'compact',
       hideDetails: true,
+    },
+    VAlert: {
+      density: 'compact',
     },
   },
   theme: {

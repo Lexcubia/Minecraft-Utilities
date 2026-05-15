@@ -8,6 +8,7 @@ import '@/styles/app-shell-scroll.css';
 import '@/styles/app-context-menu-surface.css';
 import '@/styles/shell-glass.css';
 import '@/styles/accent-gradient.css';
+import '@/styles/linear-density.css';
 import { i18n } from '@/i18n';
 import { mergeDiskAppSettingsJson } from '@/config/mergeDiskAppSettings';
 import { resolveSettingsBootstrapJson } from '@/config/resolveSettingsBootstrapJson';
