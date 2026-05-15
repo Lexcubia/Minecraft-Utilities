@@ -9,6 +9,8 @@ mod tray_desktop;
 #[cfg(desktop)]
 mod user_data;
 #[cfg(desktop)]
+mod github_release_http;
+#[cfg(desktop)]
 mod windows_release_update;
 
 // 桌面 Rust：若某 `#[cfg]` 分支调用 trait 方法，对应 `use Trait` 须与该分支一致或模块级无条件引入。
@@ -103,23 +105,15 @@ fn world_uuid_migrate_batch(
     result
 }
 
-/// 拉取仓库的 GitHub Releases JSON（公开 API，无需 token）。
+/// 拉取仓库的 GitHub Releases JSON（公开 API，无需 token）。`options_json` 可选，含 `updateProxy`。
 #[tauri::command]
-fn fetch_github_releases() -> Result<String, String> {
+fn fetch_github_releases(options_json: Option<String>) -> Result<String, String> {
+    let opts = github_release_http::UpdateNetworkOptions::parse_json(options_json.as_deref());
+    let client = github_release_http::build_github_client(opts.proxy_url(), "github-releases")?;
     let url = format!(
         "https://api.github.com/repos/{}/{}/releases?per_page=40",
         GITHUB_OWNER, GITHUB_REPO
     );
-    let client = reqwest::blocking::Client::builder()
-        .user_agent(concat!(
-            env!("CARGO_PKG_NAME"),
-            "/",
-            env!("CARGO_PKG_VERSION"),
-            " (github-releases)"
-        ))
-        .build()
-        .map_err(|e| e.to_string())?;
-
     let response = client.get(&url).send().map_err(|e| e.to_string())?;
     let status = response.status();
     if !status.is_success() {

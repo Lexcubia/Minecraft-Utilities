@@ -95,6 +95,8 @@ type PersistedSettings = {
   closeBehavior: CloseBehavior;
   defaultDryRun: boolean;
   updateChannel: UpdateChannel;
+  /** GitHub / 应用内更新 HTTP(S) 代理，如 `http://127.0.0.1:7890` */
+  updateProxy: string;
   uiLanguage: UiLanguage;
   themeColorPreset: ThemeColorPresetId;
   customThemeColors: ThemeColorSchemePair;
@@ -180,6 +182,7 @@ export const useSettingsStore = defineStore('settings', () => {
   /** 仅内存；CurseForge Key 不写入持久化 */
   const curseForgeApiKey = ref('');
   const updateChannel = ref<UpdateChannel>('stable');
+  const updateProxy = ref('');
   const uiLanguage = ref<UiLanguage>('system');
   const themeColorPreset = ref<ThemeColorPresetId>(DEFAULT_THEME_COLOR_PRESET_ID);
   const customThemeColors = ref<ThemeColorSchemePair>(normalizeCustomThemeColors(undefined));
@@ -199,6 +202,7 @@ export const useSettingsStore = defineStore('settings', () => {
     closeBehavior.value = initialCloseBehavior(snap);
     defaultDryRun.value = snap.defaultDryRun ?? true;
     updateChannel.value = snap.updateChannel ?? 'stable';
+    updateProxy.value = typeof snap.updateProxy === 'string' ? snap.updateProxy : '';
     uiLanguage.value = normalizePersistedUiLanguage(snap.uiLanguage);
     themeColorPreset.value =
       snap.themeColorPreset && isThemeColorPresetId(snap.themeColorPreset)
@@ -240,6 +244,7 @@ export const useSettingsStore = defineStore('settings', () => {
       closeBehavior: closeBehavior.value,
       defaultDryRun: defaultDryRun.value,
       updateChannel: updateChannel.value,
+      updateProxy: updateProxy.value,
       uiLanguage: uiLanguage.value,
       themeColorPreset: themeColorPreset.value,
       customThemeColors: customThemeColors.value,
@@ -306,6 +311,7 @@ export const useSettingsStore = defineStore('settings', () => {
       closeBehavior,
       defaultDryRun,
       updateChannel,
+      updateProxy,
       uiLanguage,
       themeColorPreset,
       customThemeColors,
@@ -330,6 +336,7 @@ export const useSettingsStore = defineStore('settings', () => {
     defaultDryRun,
     curseForgeApiKey,
     updateChannel,
+    updateProxy,
     uiLanguage,
     themeColorPreset,
     customThemeColors,

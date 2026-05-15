@@ -9,7 +9,8 @@
     "on": "On",
     "off": "Off",
     "close": "Close",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "save": "Save"
   },
   "snackbar": {
     "queueRegionAria": "App messages",
@@ -187,7 +188,14 @@
       "releaseNotesHeading": "Release notes",
       "badgeCurrent": "Current version",
       "badgeNewer": "Upgrade",
-      "prerelease": "Pre-release"
+      "prerelease": "Pre-release",
+      "proxyButton": "Proxy",
+      "proxyDialogTitle": "Update proxy",
+      "proxyDialogHint": "Use an HTTP/HTTPS proxy when GitHub is unreachable (e.g. http://127.0.0.1:7890). Leave empty for direct connection.",
+      "proxyLabel": "Proxy URL",
+      "proxyPlaceholder": "http://127.0.0.1:7890",
+      "proxyClear": "Clear proxy",
+      "proxyActive": "Proxy: {url}"
     },
     "logs": {
       "cardTitle": "Session logs",
