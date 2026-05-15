@@ -7,7 +7,8 @@ import type { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import router from '@/router';
 
 const MENU_LOGICAL_W = 220;
-const MENU_LOGICAL_H = 158;
+/** 与 `TrayMenuView` 内容高度一致，避免窗体底部留白露出 WebView 底色 */
+const MENU_LOGICAL_H = 152;
 const GAP_PHYS = 8;
 
 function trayAnchorPhysical(p: TrayFlyoutOpenPayload): { x: number; y: number } {
@@ -95,6 +96,7 @@ export async function openTrayMenuWindow(p: TrayFlyoutOpenPayload): Promise<void
     height: MENU_LOGICAL_H,
     decorations: false,
     transparent: true,
+    backgroundColor: '#00000000',
     resizable: false,
     alwaysOnTop: true,
     skipTaskbar: true,

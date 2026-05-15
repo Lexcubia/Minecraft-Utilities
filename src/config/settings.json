@@ -1,7 +1,7 @@
 {
   "colorScheme": "system",
   "confirmBeforeClose": true,
-  "closeBehavior": "quit",
+  "closeBehavior": "tray",
   "defaultDryRun": true,
   "updateChannel": "stable",
   "uiLanguage": "system",

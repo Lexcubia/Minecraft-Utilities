@@ -57,7 +57,7 @@ function initialCloseBehavior(snap: Partial<PersistedSettings>): CloseBehavior {
   if (isCloseBehavior(snap.closeBehavior)) return snap.closeBehavior;
   const legacy = snap as { minimizeToTray?: boolean };
   if (legacy.minimizeToTray === true) return 'tray';
-  return 'quit';
+  return 'tray';
 }
 
 function isHex6(s: unknown): s is string {
@@ -175,7 +175,7 @@ function save(state: PersistedSettings): void {
 export const useSettingsStore = defineStore('settings', () => {
   const colorScheme = ref<ColorScheme>('system');
   const confirmBeforeClose = ref(true);
-  const closeBehavior = ref<CloseBehavior>('quit');
+  const closeBehavior = ref<CloseBehavior>('tray');
   const defaultDryRun = ref(true);
   /** 仅内存；CurseForge Key 不写入持久化 */
   const curseForgeApiKey = ref('');
