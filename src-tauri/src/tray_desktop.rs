@@ -10,7 +10,6 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     AppHandle, Manager, Runtime,
 };
-#[cfg(not(target_os = "linux"))]
 use tauri::Emitter;
 
 #[cfg(not(target_os = "linux"))]

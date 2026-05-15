@@ -143,8 +143,29 @@ jobs:
           node-version: '22'
           cache: pnpm
 
+      # macOS runner 预装 Homebrew rust 时，`cargo` 可能指向损坏的 rustup-init（runner-images#14097）
+      - name: Remove broken Homebrew rust (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          brew unlink rust 2>/dev/null || true
+          brew uninstall --ignore-dependencies rust 2>/dev/null || true
+
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Prefer rustup cargo on PATH (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: Verify Rust toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v cargo
+          cargo --version
+          rustc --version
 
       - uses: Swatinem/rust-cache@v2
         with:
