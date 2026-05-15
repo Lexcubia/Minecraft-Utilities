@@ -10,8 +10,9 @@ use std::io::{Read, Write};
 use std::process::Stdio;
 #[cfg(target_os = "windows")]
 use std::time::Duration;
+use tauri::AppHandle;
 #[cfg(target_os = "windows")]
-use tauri::{AppHandle, Emitter};
+use tauri::Emitter;
 
 const OWNER: &str = "Lexcubia";
 const REPO: &str = "Minecraft-Utilities";
