@@ -1,18 +1,28 @@
-//! Windows：从 GitHub `releases/latest` 查找与本机构建架构一致的免安装 zip，下载后解压到临时目录并打开资源管理器。
+//! Windows：从 GitHub `releases/latest` 查找与本机构建架构一致的免安装 zip，下载后解压并替换当前安装目录，再重启。
 //! 其他桌面系统：`check_windows_release_update` 返回 `supported: false`，不发起网络请求。
 
 use serde::Serialize;
 #[cfg(target_os = "windows")]
 use serde_json::Value;
 #[cfg(target_os = "windows")]
+use std::io::{Read, Write};
+#[cfg(target_os = "windows")]
 use std::process::Stdio;
 #[cfg(target_os = "windows")]
 use std::time::Duration;
+#[cfg(target_os = "windows")]
+use tauri::{AppHandle, Emitter};
 
 const OWNER: &str = "Lexcubia";
 const REPO: &str = "Minecraft-Utilities";
 #[cfg(target_os = "windows")]
 const DIST_BASE: &str = "minecraft-utilities";
+
+/// 前端监听：`listen('windows-release-update-progress', …)`
+pub const PROGRESS_EVENT: &str = "windows-release-update-progress";
+
+#[cfg(target_os = "windows")]
+const UPDATE_SUCCESS_MARKER: &str = ".mu-update-success.json";
 
 #[cfg(target_os = "windows")]
 fn github_user_agent() -> String {
@@ -68,6 +78,16 @@ pub struct WindowsReleaseCheck {
     pub setup_download_url: Option<String>,
     pub setup_file_name: Option<String>,
     pub releases_page_url: String,
+}
+
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+struct UpdateProgressPayload {
+    phase: &'static str,
+    downloaded: u64,
+    total: Option<u64>,
+    /// 0–100，保留两位小数；无 `Content-Length` 时为 `None`
+    percent: Option<f64>,
 }
 
 #[tauri::command]
@@ -220,22 +240,189 @@ fn check_windows_release_update_inner() -> Result<String, String> {
 }
 
 #[tauri::command]
-pub fn run_windows_release_update_setup() -> Result<(), String> {
+pub fn run_windows_release_update_setup(app: AppHandle) -> Result<(), String> {
     #[cfg(not(target_os = "windows"))]
     {
+        let _ = app;
         Err("Automatic update is only supported on Windows.".into())
     }
     #[cfg(target_os = "windows")]
-    run_windows_release_update_setup_inner()
+    run_windows_release_update_setup_inner(app)
+}
+
+/// 若上次更新后已重启，读取并清除成功标记，返回新版本号。
+#[tauri::command]
+pub fn take_post_update_success_notice(app: AppHandle) -> Result<Option<String>, String> {
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = app;
+        Ok(None)
+    }
+    #[cfg(target_os = "windows")]
+    take_post_update_success_notice_inner(app)
 }
 
 #[cfg(target_os = "windows")]
-fn ps_single_quoted_path(p: &std::path::Path) -> String {
-    p.to_string_lossy().replace('\'', "''")
+fn take_post_update_success_notice_inner(app: AppHandle) -> Result<Option<String>, String> {
+    let root = crate::user_data::app_data_root(&app)?;
+    let path = root.join(UPDATE_SUCCESS_MARKER);
+    if !path.is_file() {
+        return Ok(None);
+    }
+    let raw = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+    let _ = std::fs::remove_file(&path);
+    let v: Value = serde_json::from_str(&raw).map_err(|e| e.to_string())?;
+    Ok(v.get("version")
+        .and_then(|x| x.as_str())
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty()))
 }
 
 #[cfg(target_os = "windows")]
-fn run_windows_release_update_setup_inner() -> Result<(), String> {
+fn ps_single_quoted(s: &str) -> String {
+    s.replace('\'', "''")
+}
+
+#[cfg(target_os = "windows")]
+fn round_percent(downloaded: u64, total: u64) -> f64 {
+    if total == 0 {
+        return 0.0;
+    }
+    let p = (downloaded as f64 / total as f64) * 100.0;
+    (p * 100.0).round() / 100.0
+}
+
+#[cfg(target_os = "windows")]
+fn emit_progress(
+    app: &AppHandle,
+    phase: &'static str,
+    downloaded: u64,
+    total: Option<u64>,
+) {
+    let percent = total
+        .filter(|t| *t > 0)
+        .map(|t| round_percent(downloaded, t));
+    let payload = UpdateProgressPayload {
+        phase,
+        downloaded,
+        total,
+        percent,
+    };
+    let _ = app.emit(PROGRESS_EVENT, payload);
+}
+
+#[cfg(target_os = "windows")]
+fn download_zip_with_progress(
+    app: &AppHandle,
+    client: &reqwest::blocking::Client,
+    url: &str,
+    dest: &std::path::Path,
+) -> Result<(), String> {
+    let mut response = client
+        .get(url)
+        .send()
+        .map_err(|e| format!("Release zip download failed: {e}"))?;
+    if !response.status().is_success() {
+        return Err(format!("Zip download HTTP {}", response.status()));
+    }
+    let total = response.content_length();
+    emit_progress(app, "downloading", 0, total);
+
+    let mut file = std::fs::File::create(dest).map_err(|e| e.to_string())?;
+    let mut downloaded: u64 = 0;
+    let mut buf = [0u8; 64 * 1024];
+    loop {
+        let n = response.read(&mut buf).map_err(|e| e.to_string())?;
+        if n == 0 {
+            break;
+        }
+        file.write_all(&buf[..n]).map_err(|e| e.to_string())?;
+        downloaded += n as u64;
+        emit_progress(app, "downloading", downloaded, total);
+    }
+    if let Some(t) = total {
+        if downloaded < t {
+            return Err(format!(
+                "Zip download incomplete ({downloaded} of {t} bytes)."
+            ));
+        }
+        emit_progress(app, "downloading", t, Some(t));
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn write_update_success_marker(app: &AppHandle, version: &str) -> Result<(), String> {
+    let root = crate::user_data::app_data_root(app)?;
+    let path = root.join(UPDATE_SUCCESS_MARKER);
+    let payload = serde_json::json!({ "version": version });
+    std::fs::write(&path, payload.to_string()).map_err(|e| e.to_string())
+}
+
+#[cfg(target_os = "windows")]
+fn install_dir_from_exe() -> Result<std::path::PathBuf, String> {
+    let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+    exe.parent()
+        .map(|p| p.to_path_buf())
+        .ok_or_else(|| "Cannot resolve install directory from current executable.".to_string())
+}
+
+#[cfg(target_os = "windows")]
+fn spawn_apply_update_script(
+    pid: u32,
+    extract_root: &std::path::Path,
+    install_dir: &std::path::Path,
+    zip_path: &std::path::Path,
+) -> Result<(), String> {
+    let exe_name = format!("{DIST_BASE}.exe");
+    let script_path = std::env::temp_dir().join("minecraft-utilities-apply-update.ps1");
+    let ps = format!(
+        r#"$ErrorActionPreference='Stop'
+$pidToWait = {pid}
+$src = '{src}'
+$dest = '{dest}'
+$exeName = '{exe_name}'
+$zipPath = '{zip}'
+$deadline = (Get-Date).AddSeconds(120)
+while ((Get-Process -Id $pidToWait -ErrorAction SilentlyContinue) -and ((Get-Date) -lt $deadline)) {{
+  Start-Sleep -Milliseconds 200
+}}
+Get-ChildItem -LiteralPath $src -Force | ForEach-Object {{
+  Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $dest $_.Name) -Force
+}}
+Start-Process -FilePath (Join-Path $dest $exeName)
+Remove-Item -LiteralPath $zip -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath $src -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath $PSCommandPath -Force -ErrorAction SilentlyContinue
+"#,
+        pid = pid,
+        src = ps_single_quoted(&extract_root.to_string_lossy()),
+        dest = ps_single_quoted(&install_dir.to_string_lossy()),
+        exe_name = ps_single_quoted(&exe_name),
+        zip = ps_single_quoted(&zip_path.to_string_lossy()),
+    );
+    std::fs::write(&script_path, ps).map_err(|e| e.to_string())?;
+    std::process::Command::new("powershell.exe")
+        .args([
+            "-NoProfile",
+            "-NonInteractive",
+            "-WindowStyle",
+            "Hidden",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            &script_path.to_string_lossy(),
+        ])
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn run_windows_release_update_setup_inner(app: AppHandle) -> Result<(), String> {
     let raw = check_windows_release_update_inner()?;
     let j: WindowsReleaseCheck = serde_json::from_str(&raw).map_err(|e| e.to_string())?;
     if !j.supported {
@@ -250,19 +437,17 @@ fn run_windows_release_update_setup_inner() -> Result<(), String> {
     let url = j
         .setup_download_url
         .ok_or_else(|| "Release has no portable zip download URL.".to_string())?;
+    let version = j
+        .latest_version
+        .clone()
+        .unwrap_or_else(|| env!("CARGO_PKG_VERSION").to_string());
 
     let client = github_http_client()?;
-    let response = client
-        .get(&url)
-        .send()
-        .map_err(|e| format!("Release zip download failed: {e}"))?;
-    if !response.status().is_success() {
-        return Err(format!("Zip download HTTP {}", response.status()));
-    }
-    let bytes = response.bytes().map_err(|e| e.to_string())?;
-
     let temp_zip = std::env::temp_dir().join("minecraft-utilities-update.zip");
-    std::fs::write(&temp_zip, &bytes).map_err(|e| e.to_string())?;
+    let _ = std::fs::remove_file(&temp_zip);
+    download_zip_with_progress(&app, &client, &url, &temp_zip)?;
+
+    emit_progress(&app, "extracting", 0, None);
 
     let extract_root = std::env::temp_dir().join("minecraft-utilities-update");
     let _ = std::fs::remove_dir_all(&extract_root);
@@ -270,8 +455,8 @@ fn run_windows_release_update_setup_inner() -> Result<(), String> {
 
     let ps = format!(
         "$ErrorActionPreference='Stop'; Expand-Archive -LiteralPath '{}' -DestinationPath '{}' -Force",
-        ps_single_quoted_path(&temp_zip),
-        ps_single_quoted_path(&extract_root)
+        ps_single_quoted(&temp_zip.to_string_lossy()),
+        ps_single_quoted(&extract_root.to_string_lossy())
     );
     let st = std::process::Command::new("powershell.exe")
         .args(["-NoProfile", "-NonInteractive", "-Command", &ps])
@@ -287,10 +472,12 @@ fn run_windows_release_update_setup_inner() -> Result<(), String> {
         return Err("Failed to extract update zip (Expand-Archive).".into());
     }
 
-    std::process::Command::new("explorer.exe")
-        .arg(&extract_root)
-        .spawn()
-        .map_err(|e| e.to_string())?;
+    emit_progress(&app, "applying", 0, None);
+
+    let install_dir = install_dir_from_exe()?;
+    write_update_success_marker(&app, &version)?;
+    let pid = std::process::id();
+    spawn_apply_update_script(pid, &extract_root, &install_dir, &temp_zip)?;
 
     Ok(())
 }

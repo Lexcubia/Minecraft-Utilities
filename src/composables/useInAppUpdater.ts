@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
+import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { isTauriRuntime } from '@/utils/isTauriRuntime';
 
 export type InAppUpdateCheckResult =
@@ -11,6 +12,18 @@ export type InAppUpdateCheckResult =
   | { kind: 'unsupported' }
   | { kind: 'unsupportedPlatform'; releasesPageUrl: string }
   | { kind: 'error'; message: string };
+
+export type WindowsReleaseUpdatePhase = 'downloading' | 'extracting' | 'applying';
+
+export type WindowsReleaseUpdateProgress = {
+  phase: WindowsReleaseUpdatePhase;
+  downloaded: number;
+  total: number | null;
+  /** 0–100，两位小数；无 Content-Length 时为 null */
+  percent: number | null;
+};
+
+export const WINDOWS_RELEASE_UPDATE_PROGRESS_EVENT = 'windows-release-update-progress';
 
 type WindowsReleaseCheckJson = {
   supported: boolean;
@@ -42,7 +55,16 @@ export async function checkInAppUpdate(): Promise<InAppUpdateCheckResult> {
   }
 }
 
-/** Windows：下载 Latest Release 中与当前架构一致的免安装 zip，解压到临时目录并打开资源管理器；其他系统不支持。 */
+/** 监听 Windows 应用内更新进度；返回取消监听的函数。 */
+export async function listenWindowsReleaseUpdateProgress(
+  onProgress: (progress: WindowsReleaseUpdateProgress) => void,
+): Promise<UnlistenFn> {
+  return listen<WindowsReleaseUpdateProgress>(WINDOWS_RELEASE_UPDATE_PROGRESS_EVENT, (ev) => {
+    onProgress(ev.payload);
+  });
+}
+
+/** Windows：下载、替换安装目录并重启；其他系统不支持。 */
 export async function downloadAndInstallAppUpdate(): Promise<
   { ok: true } | { ok: false; message: string }
 > {
@@ -55,5 +77,17 @@ export async function downloadAndInstallAppUpdate(): Promise<
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return { ok: false, message: msg };
+  }
+}
+
+/** 若上次更新后已重启，返回新版本号（仅读取一次）。 */
+export async function takePostUpdateSuccessNotice(): Promise<string | null> {
+  if (!isTauriRuntime()) return null;
+  try {
+    const v = await invoke<string | null>('take_post_update_success_notice');
+    const trimmed = (v ?? '').trim();
+    return trimmed || null;
+  } catch {
+    return null;
   }
 }

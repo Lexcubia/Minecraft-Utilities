@@ -16,6 +16,7 @@ commands.allow = [
   "user_data_append_log_line",
   "check_windows_release_update",
   "run_windows_release_update_setup",
+  "take_post_update_success_notice",
   "exit_app",
   "sync_tray_menu_labels",
   "focus_main_window",
