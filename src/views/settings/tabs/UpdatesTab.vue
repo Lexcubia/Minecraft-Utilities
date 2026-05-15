@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { APP_VERSION, REPO_URL } from '@/constants/app-meta';
 import AppGlassSectionCard from '@/components/ui/AppGlassSectionCard.vue';
-import { checkInAppUpdate, downloadAndInstallAppUpdate } from '@/composables/useInAppUpdater';
+import {
+  checkInAppUpdate,
+  downloadAndInstallAppUpdate,
+  listenWindowsReleaseUpdateProgress,
+  type WindowsReleaseUpdateProgress,
+} from '@/composables/useInAppUpdater';
+import { invoke } from '@tauri-apps/api/core';
+import { isTauriRuntime } from '@/utils/isTauriRuntime';
 import { useGithubReleases } from '@/composables/useGithubReleases';
 import type { UpdateChannel } from '@/stores/settings';
 import { useSettingsStore } from '@/stores/settings';
@@ -45,6 +52,35 @@ const downloadingUpdate = ref(false);
 const updateConfirmOpen = ref(false);
 const updatePendingVersion = ref('');
 const updatePendingTag = ref('');
+const updateProgressPhase = ref<WindowsReleaseUpdateProgress['phase'] | null>(null);
+const updateProgressPercent = ref<number | null>(null);
+const updateProgressLabel = ref('');
+
+function resetUpdateProgress() {
+  updateProgressPhase.value = null;
+  updateProgressPercent.value = null;
+  updateProgressLabel.value = '';
+}
+
+function applyUpdateProgress(p: WindowsReleaseUpdateProgress) {
+  updateProgressPhase.value = p.phase;
+  if (p.phase === 'downloading' && p.percent != null) {
+    updateProgressPercent.value = p.percent;
+    updateProgressLabel.value = t('settings.updates.inAppDownloadPercent', {
+      percent: p.percent.toFixed(2),
+    });
+    return;
+  }
+  if (p.phase === 'extracting') {
+    updateProgressPercent.value = null;
+    updateProgressLabel.value = t('settings.updates.inAppExtracting');
+    return;
+  }
+  if (p.phase === 'applying') {
+    updateProgressPercent.value = 100;
+    updateProgressLabel.value = t('settings.updates.inAppApplying');
+  }
+}
 
 const updateConfirmNotesHtml = computed(() => {
   const tag = updatePendingTag.value.trim();
@@ -160,7 +196,10 @@ function cancelPendingUpdate() {
 async function confirmDownloadAndInstallUpdate() {
   updateConfirmOpen.value = false;
   downloadingUpdate.value = true;
+  resetUpdateProgress();
+  let unlistenProgress: (() => void) | undefined;
   try {
+    unlistenProgress = await listenWindowsReleaseUpdateProgress(applyUpdateProgress);
     const r = await downloadAndInstallAppUpdate();
     if (!r.ok) {
       const msg = r.message === 'NO_UPDATE' ? t('settings.updates.inAppNoUpdate') : r.message;
@@ -172,14 +211,13 @@ async function confirmDownloadAndInstallUpdate() {
       });
       return;
     }
-    appSnackbar.show({
-      text: t('settings.updates.inAppDone'),
-      timeout: 5200,
-      rounded: 'md',
-      color: 'success',
-    });
+    if (isTauriRuntime()) {
+      await invoke('exit_app');
+    }
   } finally {
+    unlistenProgress?.();
     downloadingUpdate.value = false;
+    resetUpdateProgress();
     updatePendingVersion.value = '';
     updatePendingTag.value = '';
   }
@@ -230,13 +268,18 @@ onMounted(() => {
           >
             {{ t('settings.updates.inAppCheckButton') }}
           </v-btn>
-          <v-progress-linear
-            v-if="downloadingUpdate"
-            class="mt-2 rounded"
-            height="6"
-            color="primary"
-            indeterminate
-          />
+          <template v-if="downloadingUpdate">
+            <v-progress-linear
+              class="mt-2 rounded"
+              height="6"
+              color="primary"
+              :indeterminate="updateProgressPercent == null"
+              :model-value="updateProgressPercent ?? 0"
+            />
+            <div v-if="updateProgressLabel" class="text-caption text-medium-emphasis mt-1">
+              {{ updateProgressLabel }}
+            </div>
+          </template>
         </div>
       </div>
     </AppGlassSectionCard>

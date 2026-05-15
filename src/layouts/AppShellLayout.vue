@@ -17,6 +17,7 @@ import { shellWindowControlKey, type ShellWindowControl } from '@/shell/shell-wi
 import { useSettingsStore, flushAppSettingsToDisk } from '@/stores/settings';
 import { useVisitedPagesStore } from '@/stores/visited-pages';
 import { appLog } from '@/utils/appLog';
+import { takePostUpdateSuccessNotice } from '@/composables/useInAppUpdater';
 import { isTauriRuntime } from '@/utils/isTauriRuntime';
 import { openSettingsWindow } from '@/utils/openSettingsWindow';
 import { openTrayMenuWindow } from '@/utils/openTrayMenuWindow';
@@ -98,6 +99,8 @@ watch(settingsDialogOpen, (open) => {
 
 const exitConfirmOpen = ref(false);
 const exitConfirmDontRemind = ref(false);
+const updateSuccessOpen = ref(false);
+const updateSuccessVersion = ref('');
 let exitConfirmResolve: ((value: { confirmed: boolean; dontRemind: boolean }) => void) | null = null;
 
 function showExitConfirmDialog(): Promise<{ confirmed: boolean; dontRemind: boolean }> {
@@ -235,6 +238,13 @@ onMounted(async () => {
     });
   }
   await syncTrayMenuLabels();
+  if (isMainShellWindow) {
+    const version = await takePostUpdateSuccessNotice();
+    if (version) {
+      updateSuccessVersion.value = version;
+      updateSuccessOpen.value = true;
+    }
+  }
 });
 
 watch(
@@ -417,6 +427,24 @@ function goBack() {
           @click="finishExitConfirm(true)"
         >
           {{ t('window.exitConfirmOk') }}
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog v-model="updateSuccessOpen" max-width="440" persistent>
+    <v-card rounded="xl">
+      <v-card-title class="text-h6 font-weight-semibold d-flex align-center gap-2">
+        <v-icon icon="mdi-check-circle" color="success" size="28" />
+        {{ t('settings.updates.inAppSuccessTitle') }}
+      </v-card-title>
+      <v-card-text class="text-body-2">
+        {{ t('settings.updates.inAppSuccessMessage', { version: updateSuccessVersion }) }}
+      </v-card-text>
+      <v-card-actions class="px-4 pb-4">
+        <v-spacer />
+        <v-btn color="primary" variant="flat" @click="updateSuccessOpen = false">
+          {{ t('common.close') }}
         </v-btn>
       </v-card-actions>
     </v-card>
