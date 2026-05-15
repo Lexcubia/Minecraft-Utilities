@@ -16,7 +16,11 @@
 - **托盘**：右键菜单透明铺满、与展开箭头间距优化；右键不再唤起主窗口；默认关闭行为为最小化到系统托盘。
 - **更新页**：版本标记仅显示「当前版本」「可升级」，样式与布局优化。
 - **测试版渠道**：本版本为预发布（beta）；在设置 → 更新中选择「测试版」可查看并获取含预发布的 Release。
-- **CI**：`check` / `test` 仅在合并进 `main` 后运行；移除耗时的 `cargo clippy` 门禁（Rust 编译由发版工作流覆盖）。
+- **CI**：`check` / `test` 仅在 PR 合并进 `main` 前运行；PR 门禁增加 `cargo check`（`src-tauri`）。
+
+### Bug fixes
+
+- **发版构建**：修复 Linux 托盘 `Emitter` trait 导致的编译失败；修复 macOS CI 上 Homebrew `rust` 劫持 `cargo` 导致 DMG 构建失败。
 
 ## [0.1.1] - 2026-05-14
 
