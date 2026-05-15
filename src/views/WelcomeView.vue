@@ -73,34 +73,34 @@ function runQuick(item: MainQuickItem) {
 
 <template>
   <div class="app-page">
-    <AppGlassCard tag="div" class="pa-6 mb-6">
-      <div class="d-flex flex-wrap align-center gap-4 mb-2">
-        <v-avatar size="80" rounded="0" variant="flat" class="app-welcome-logo flex-shrink-0">
-          <img :src="APP_LOGO_URL" alt="" width="80" height="80" class="app-pixel-logo" />
+    <AppGlassCard tag="div" class="pa-5 mb-5">
+      <div class="d-flex flex-wrap align-center gap-3 mb-1">
+        <v-avatar size="64" rounded="0" variant="flat" class="app-welcome-logo flex-shrink-0">
+          <img :src="APP_LOGO_URL" alt="" width="64" height="64" class="app-pixel-logo" />
         </v-avatar>
         <div class="min-w-0">
-          <div class="text-h4 font-weight-bold">{{ APP_TITLE }}</div>
-          <p class="text-body-2 text-medium-emphasis mt-2 mb-0">{{ t('welcome.heroTagline') }}</p>
+          <div class="text-h5 font-weight-bold">{{ APP_TITLE }}</div>
+          <p class="text-body-2 text-medium-emphasis mt-1 mb-0">{{ t('welcome.heroTagline') }}</p>
         </div>
       </div>
-      <p class="text-body-1 mt-4 mb-0">{{ t('welcome.introBody') }}</p>
-      <v-chip class="mt-4" color="primary" size="small" variant="tonal">
+      <p class="text-body-2 mt-3 mb-0">{{ t('welcome.introBody') }}</p>
+      <v-chip class="mt-3" color="primary" size="x-small" variant="tonal" rounded="pill">
         {{ t('welcome.versionLabel', { version: APP_VERSION }) }}
       </v-chip>
     </AppGlassCard>
 
-    <h2 class="text-h6 font-weight-bold mb-3">{{ t('welcome.quickTitle') }}</h2>
+    <h2 class="app-section-title mb-2">{{ t('welcome.quickTitle') }}</h2>
 
     <AppGlassCard tag="div" class="quick-list overflow-hidden">
       <button
         v-for="item in mainQuick"
         :key="item.id"
         type="button"
-        class="quick-row app-focus-ring-inset d-flex align-center ga-3 px-4 py-3 text-start w-100"
+        class="quick-row app-linear-list-row app-focus-ring-inset d-flex align-center ga-3 px-4 text-start w-100"
         @click="runQuick(item)"
       >
-        <v-icon :icon="item.icon" color="primary" size="22" class="flex-shrink-0" />
-        <span class="text-body-1 font-weight-medium">{{ t(item.titleKey) }}</span>
+        <v-icon :icon="item.icon" color="primary" size="20" class="flex-shrink-0" />
+        <span>{{ t(item.titleKey) }}</span>
       </button>
     </AppGlassCard>
   </div>
@@ -108,8 +108,8 @@ function runQuick(item: MainQuickItem) {
 
 <style scoped>
 .app-welcome-logo img {
-  width: 80px;
-  height: 80px;
+  width: 64px;
+  height: 64px;
   object-fit: contain;
 }
 

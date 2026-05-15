@@ -231,7 +231,7 @@ onMounted(() => {
 <template>
   <div class="d-flex flex-column gap-4">
     <AppGlassSectionCard>
-      <div class="d-flex flex-column gap-5">
+      <div class="d-flex flex-column gap-4">
         <div>
           <div class="text-body-1 font-weight-medium mb-2">{{ t('settings.updates.channelLabel') }}</div>
           <div class="flex flex-wrap gap-2">
@@ -252,13 +252,13 @@ onMounted(() => {
 
         <div>
           <div class="d-flex align-center gap-2 mb-3">
-            <v-icon icon="mdi-download-circle-outline" color="primary" size="22" />
-            <span class="text-body-1 font-weight-medium">{{ t('settings.updates.inAppTitle') }}</span>
+            <v-icon icon="mdi-download-circle-outline" color="primary" size="20" />
+            <span class="text-body-2 font-weight-medium">{{ t('settings.updates.inAppTitle') }}</span>
           </div>
           <v-btn
             color="primary"
             variant="flat"
-            size="large"
+            size="default"
             rounded="md"
             class="mb-2"
             :loading="checkingUpdate"
@@ -271,7 +271,7 @@ onMounted(() => {
           <template v-if="downloadingUpdate">
             <v-progress-linear
               class="mt-2 rounded"
-              height="6"
+              height="4"
               color="primary"
               :indeterminate="updateProgressPercent == null"
               :model-value="updateProgressPercent ?? 0"
@@ -286,9 +286,9 @@ onMounted(() => {
 
     <AppGlassSectionCard body-padding="none">
       <template #head>
-        <div class="d-flex flex-wrap align-start gap-3 pa-4 pb-2">
+        <div class="d-flex flex-wrap align-start gap-2 pa-3 pb-1">
           <div class="grow min-width-0">
-            <div class="text-h6 font-weight-semibold">
+            <div class="app-section-title">
               {{ t('settings.updates.releasesTitle') }}
             </div>
           </div>
@@ -342,13 +342,13 @@ onMounted(() => {
               class="release-panel"
               elevation="0"
             >
-              <v-expansion-panel-title class="release-panel-title px-4 py-3">
+              <v-expansion-panel-title class="release-panel-title app-linear-list-row px-4 py-2">
                 <div class="release-panel-title__main">
-                  <v-avatar color="primary" size="40" variant="tonal" rounded="md" class="shrink-0">
-                    <v-icon icon="mdi-tag-outline" size="20" />
-                  </v-avatar>
+                  <div class="release-row-icon shrink-0" aria-hidden="true">
+                    <v-icon icon="mdi-tag-outline" size="18" color="primary" />
+                  </div>
                   <div class="release-panel-title__text min-width-0">
-                    <div class="font-weight-semibold text-body-1 text-truncate">
+                    <div class="font-weight-medium text-body-2 text-truncate">
                       {{ rel.tag_name }}
                     </div>
                     <div class="text-caption text-medium-emphasis">
@@ -466,10 +466,20 @@ onMounted(() => {
   margin-inline-start: 6px;
 }
 
+.release-row-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--app-radius-sm);
+  background: var(--app-primary-06);
+}
+
 .release-panel-title__main {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex: 1 1 auto;
   min-width: 0;
 }

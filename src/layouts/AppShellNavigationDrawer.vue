@@ -57,7 +57,7 @@ const drawerBrandLine = computed(() => t('app.navBrandShort'));
       <div class="drawer-inner-scroll flex-grow-1 min-h-0 overflow-y-auto">
         <div
           v-if="!drawerUsesRail"
-          class="drawer-brand pa-3 d-flex align-center gap-3"
+          class="drawer-brand pa-2 px-3 d-flex align-center gap-2"
         >
           <div class="app-drawer-brand-mark flex-shrink-0" aria-hidden="true">
             <img :src="APP_LOGO_URL" alt="" width="36" height="36" class="app-pixel-logo" />
@@ -76,18 +76,18 @@ const drawerBrandLine = computed(() => t('app.navBrandShort'));
           </div>
         </div>
 
-        <v-list density="comfortable" nav class="drawer-nav-list">
+        <v-list density="compact" nav class="drawer-nav-list">
           <v-list-item
             :to="{ name: 'welcome' }"
             exact
             :title="t('nav.home')"
             prepend-icon="mdi-home-outline"
-            rounded="lg"
+            rounded="md"
           />
 
           <v-list-subheader
             v-if="!drawerUsesRail"
-            class="text-uppercase text-caption font-weight-medium"
+            class="text-uppercase text-caption font-weight-medium drawer-nav-subheader"
           >
             {{ t('nav.toolsSection') }}
           </v-list-subheader>
@@ -96,12 +96,12 @@ const drawerBrandLine = computed(() => t('app.navBrandShort'));
             :to="{ name: 'uuid-migrate' }"
             :title="t('tools.uuidMigrate.navTitle')"
             prepend-icon="mdi-swap-horizontal"
-            rounded="lg"
+            rounded="md"
           />
 
           <v-list-subheader
             v-if="!drawerUsesRail"
-            class="text-uppercase text-caption font-weight-medium"
+            class="text-uppercase text-caption font-weight-medium drawer-nav-subheader"
           >
             {{ t('nav.settings') }}
           </v-list-subheader>
@@ -112,7 +112,7 @@ const drawerBrandLine = computed(() => t('app.navBrandShort'));
             :to="{ name: settingsRouteName(item.id) }"
             :title="t(item.labelKey)"
             :prepend-icon="SETTINGS_SECTION_ICONS[item.id]"
-            rounded="lg"
+            rounded="md"
           />
         </v-list>
       </div>
@@ -231,8 +231,8 @@ const drawerBrandLine = computed(() => t('app.navBrandShort'));
 }
 
 .app-drawer-brand-mark {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -246,8 +246,8 @@ const drawerBrandLine = computed(() => t('app.navBrandShort'));
 
 .app-drawer-brand-mark img {
   display: block;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
 }
 

@@ -105,7 +105,7 @@ onUnmounted(() => detachTitleBarPointerDrag?.());
     :ref="setAppBarDragHostRef"
     class="shell-glass-app-bar app-shell-app-bar-drag-root"
     color="surface"
-    density="comfortable"
+    density="compact"
     flat
     @dblclick="onAppBarDblclick"
   >

@@ -1,6 +1,6 @@
 [package]
 name = "minecraft-utilities"
-version = "0.1.3-beta"
+version = "0.1.4-beta"
 description = "Minecraft Utilities (Tauri desktop)"
 authors = ["Lexcubia"]
 edition = "2021"

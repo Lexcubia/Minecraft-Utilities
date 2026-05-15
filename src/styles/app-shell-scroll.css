@@ -80,7 +80,7 @@ body {
 /* 主内容外壳：不自身滚动（否则滚动条会与 fixed 顶栏重叠被盖住） */
 .v-main.app-shell-main {
   /* 悬浮访问标签行高度：与 .app-shell-main-scroll--with-floating-tabs 的 padding-top、标签 min-height 共用 */
-  --app-shell-visited-tabs-band-height: 48px;
+  --app-shell-visited-tabs-band-height: 40px;
   position: relative;
   flex: 1 1 auto !important;
   min-height: 0 !important;
