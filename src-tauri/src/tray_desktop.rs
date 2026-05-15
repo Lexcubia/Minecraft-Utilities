@@ -8,8 +8,10 @@ use serde::Deserialize;
 use tauri::{
     image::Image,
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Emitter, Manager, Runtime,
+    AppHandle, Manager, Runtime,
 };
+#[cfg(not(target_os = "linux"))]
+use tauri::Emitter;
 
 #[cfg(not(target_os = "linux"))]
 use tauri::{Position, Size};
@@ -139,22 +141,18 @@ fn create_tray_non_linux<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
                 match button {
                     MouseButton::Left => show_main_window(app),
                     MouseButton::Right => {
+                        let (icon_x, icon_y, icon_width, icon_height) =
+                            tray_icon_bounds_physical(rect);
+                        let payload = TrayFlyoutOpenPayload {
+                            cursor_x: position.x,
+                            cursor_y: position.y,
+                            icon_x,
+                            icon_y,
+                            icon_width,
+                            icon_height,
+                        };
                         if let Some(w) = app.get_webview_window("main") {
-                            let _ = w.show();
-                            let _ = w.set_focus();
-                            let (icon_x, icon_y, icon_width, icon_height) =
-                                tray_icon_bounds_physical(rect);
-                            let _ = w.emit(
-                                "tray-flyout-open",
-                                TrayFlyoutOpenPayload {
-                                    cursor_x: position.x,
-                                    cursor_y: position.y,
-                                    icon_x,
-                                    icon_y,
-                                    icon_width,
-                                    icon_height,
-                                },
-                            );
+                            let _ = w.emit("tray-flyout-open", payload);
                         }
                     }
                     _ => {}

@@ -77,7 +77,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="tray-menu-app d-flex align-center justify-center pa-1">
+  <div class="tray-menu-app">
     <AppGlassCard tag="div" class="tray-menu-card overflow-hidden">
       <div class="tray-menu-header px-3 py-1 app-border-block-end">
         <span class="text-caption font-weight-semibold text-medium-emphasis">
@@ -112,14 +112,19 @@ onUnmounted(() => {
 <style scoped>
 .tray-menu-app {
   box-sizing: border-box;
-  min-height: 100%;
-  min-width: 100%;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
   background: transparent;
+  overflow: hidden;
 }
 
 .tray-menu-card {
   width: 100%;
+  height: 100%;
   max-width: 100%;
+  border-radius: var(--app-radius-md);
   box-shadow:
     0 18px 48px rgba(0, 0, 0, 0.22),
     0 0 0 1px var(--app-on-surface-10) inset;
@@ -160,15 +165,35 @@ onUnmounted(() => {
 </style>
 
 <style>
-/* 独立 Webview：整窗透明，便于圆角毛玻璃贴托盘 */
+/* 独立 Webview：整窗透明，避免底部留白露出 WebView 底色 */
 html.tray-menu-html,
 body.tray-menu-body {
   margin: 0;
+  width: 100%;
+  height: 100%;
   background: transparent !important;
   overflow: hidden;
 }
 
 #app.tray-menu-mount {
+  width: 100%;
+  height: 100%;
   background: transparent !important;
+  overflow: hidden;
+}
+
+#app.tray-menu-mount .v-application,
+#app.tray-menu-mount .v-application__wrap {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  background: transparent !important;
+  overflow: hidden;
+}
+
+#app.tray-menu-mount .app-glass-card {
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.22),
+    0 0 0 1px var(--app-on-surface-10) inset;
 }
 </style>
