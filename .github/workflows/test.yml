@@ -1,7 +1,7 @@
 name: test
 
 on:
-  push:
+  pull_request:
     branches: [main, master]
     paths:
       - '.github/workflows/test.yml'
@@ -19,7 +19,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-pr-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 
 permissions:
