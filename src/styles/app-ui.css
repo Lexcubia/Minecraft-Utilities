@@ -29,6 +29,14 @@
   outline-offset: -2px;
 }
 
+/** 分区/列表页主标题（Linear 式紧凑字重，见 `linear-density.css`） */
+.app-section-title {
+  font-size: var(--app-type-section-title-size);
+  font-weight: var(--app-type-section-title-weight);
+  letter-spacing: var(--app-type-section-title-tracking);
+  line-height: 1.35;
+}
+
 /** 品牌像素 logo（app-logo.svg）：缩放时保持硬边，避免模糊插值 */
 img.app-pixel-logo {
   image-rendering: pixelated;

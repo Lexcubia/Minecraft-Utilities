@@ -5,9 +5,9 @@
 .app-glass-card {
   position: relative;
   border-radius: var(--app-radius-md);
-  border: 1px solid var(--app-on-surface-12);
+  border: 1px solid var(--app-on-surface-10);
   background: var(--app-glass-card-bg);
-  box-shadow: 0 1px 0 var(--app-on-surface-06);
+  box-shadow: 0 1px 0 var(--app-on-surface-05);
   overflow: hidden;
 }
 

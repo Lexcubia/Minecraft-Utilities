@@ -193,6 +193,7 @@ onUnmounted(() => {
   <v-app
     :class="{
       'app-accent-gradient': accentGradientActive && !isTrayMenuWebview,
+      'app-linear-ui': !isTrayMenuWebview,
       'app-tray-menu-root': isTrayMenuWebview,
     }"
     :style="isTrayMenuWebview ? { background: 'transparent' } : appBackgroundStyle"

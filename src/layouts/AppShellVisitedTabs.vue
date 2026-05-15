@@ -337,7 +337,7 @@ async function menuCloseRight() {
 }
 
 .app-shell-visited-tabs {
-  min-height: var(--app-shell-visited-tabs-band-height, 48px);
+  min-height: var(--app-shell-visited-tabs-band-height, 40px);
   width: 100%;
   min-width: 0;
 }
