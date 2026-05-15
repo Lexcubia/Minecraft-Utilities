@@ -1,35 +1,23 @@
 <script setup lang="ts">
 import { APP_VERSION, REPO_URL } from '@/constants/app-meta';
 import AppGlassSectionCard from '@/components/ui/AppGlassSectionCard.vue';
-import {
-  checkInAppUpdate,
-  downloadAndInstallAppUpdate,
-  listenWindowsReleaseUpdateProgress,
-  type WindowsReleaseUpdateProgress,
-} from '@/composables/useInAppUpdater';
-import { invoke } from '@tauri-apps/api/core';
-import { isTauriRuntime } from '@/utils/isTauriRuntime';
+import { useInAppUpdateStore } from '@/stores/in-app-update';
 import { useGithubReleases } from '@/composables/useGithubReleases';
 import type { UpdateChannel } from '@/stores/settings';
 import { useSettingsStore } from '@/stores/settings';
 import type { GitHubRelease } from '@/types/github-release';
 import { openExternal } from '@/utils/openExternal';
-import { appSnackbar } from '@/utils/appSnackbar';
 import { findChangelogBodyForTag, parseKeepAChangelogPublished } from '@/utils/parseChangelog';
 import { renderMarkdownToSafeHtml } from '@/utils/renderMarkdown';
-import { compareTagToAppVersion } from '@/utils/semverTagCompare';
+import { compareTagToAppVersion, normalizeSemverString } from '@/utils/semverTagCompare';
 import changelogSource from '../../../../CHANGELOG.md?raw';
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t, locale } = useI18n();
 const settings = useSettingsStore();
+const inApp = useInAppUpdateStore();
 const { filteredReleases, loading, error, load } = useGithubReleases();
-
-const updateNetwork = computed(() => ({
-  updateChannel: settings.updateChannel,
-  updateProxy: settings.updateProxy,
-}));
 
 const proxyDialogOpen = ref(false);
 const proxyDraft = ref('');
@@ -43,6 +31,11 @@ function saveProxyDialog() {
   settings.updateProxy = proxyDraft.value.trim();
   proxyDialogOpen.value = false;
   void load();
+}
+
+function setAutoCheckFromToggle(v: string | string[] | null | undefined) {
+  const raw = Array.isArray(v) ? v[0] : v;
+  settings.autoCheckAppUpdates = raw === 'on';
 }
 
 function clearProxyAndSave() {
@@ -71,49 +64,6 @@ const releaseNotesHtmlMap = computed((): Record<number, string> => {
   return m;
 });
 
-const checkingUpdate = ref(false);
-const downloadingUpdate = ref(false);
-const updateConfirmOpen = ref(false);
-const updatePendingVersion = ref('');
-const updatePendingTag = ref('');
-const updateProgressPhase = ref<WindowsReleaseUpdateProgress['phase'] | null>(null);
-const updateProgressPercent = ref<number | null>(null);
-const updateProgressLabel = ref('');
-
-function resetUpdateProgress() {
-  updateProgressPhase.value = null;
-  updateProgressPercent.value = null;
-  updateProgressLabel.value = '';
-}
-
-function applyUpdateProgress(p: WindowsReleaseUpdateProgress) {
-  updateProgressPhase.value = p.phase;
-  if (p.phase === 'downloading' && p.percent != null) {
-    updateProgressPercent.value = p.percent;
-    updateProgressLabel.value = t('settings.updates.inAppDownloadPercent', {
-      percent: p.percent.toFixed(2),
-    });
-    return;
-  }
-  if (p.phase === 'extracting') {
-    updateProgressPercent.value = null;
-    updateProgressLabel.value = t('settings.updates.inAppExtracting');
-    return;
-  }
-  if (p.phase === 'applying') {
-    updateProgressPercent.value = 100;
-    updateProgressLabel.value = t('settings.updates.inAppApplying');
-  }
-}
-
-const updateConfirmNotesHtml = computed(() => {
-  const tag = updatePendingTag.value.trim();
-  if (!tag) return '';
-  const body = findChangelogBodyForTag(changelogPublished.value, tag);
-  if (!body?.trim()) return '';
-  return renderMarkdownToSafeHtml(body);
-});
-
 function formatPublishedAt(iso: string | null): string {
   if (!iso) return '—';
   try {
@@ -124,32 +74,31 @@ function formatPublishedAt(iso: string | null): string {
   }
 }
 
-type ReleaseVersionBadge = {
-  text: string;
-  color: string;
-  variant: 'flat' | 'tonal';
-  tone: 'current' | 'newer';
-  icon?: string;
-};
+type ReleaseVersionBadge =
+  | {
+      kind: 'current';
+      text: string;
+      color: string;
+      variant: 'flat' | 'tonal';
+      icon?: string;
+    }
+  | { kind: 'upgrade'; text: string };
 
-function versionBadge(release: GitHubRelease): ReleaseVersionBadge | null {
+function versionBadge(release: GitHubRelease, listIndex: number): ReleaseVersionBadge | null {
   const rel = compareTagToAppVersion(release.tag_name, APP_VERSION);
   if (rel === 'equal') {
     return {
+      kind: 'current',
       text: t('settings.updates.badgeCurrent'),
       color: 'success',
       variant: 'tonal',
-      tone: 'current',
       icon: 'mdi-check-circle',
     };
   }
-  if (rel === 'newer') {
+  if (rel === 'newer' && listIndex === 0) {
     return {
+      kind: 'upgrade',
       text: t('settings.updates.badgeNewer'),
-      color: 'primary',
-      variant: 'tonal',
-      tone: 'newer',
-      icon: 'mdi-arrow-up-circle-outline',
     };
   }
   return null;
@@ -157,94 +106,28 @@ function versionBadge(release: GitHubRelease): ReleaseVersionBadge | null {
 
 const releaseVersionBadgeMap = computed((): Record<number, ReleaseVersionBadge | null> => {
   const m: Record<number, ReleaseVersionBadge | null> = {};
-  for (const rel of filteredReleases.value) {
-    m[rel.id] = versionBadge(rel);
-  }
+  filteredReleases.value.forEach((rel, idx) => {
+    m[rel.id] = versionBadge(rel, idx);
+  });
   return m;
 });
 
+function currentReleaseBadge(rel: GitHubRelease): Extract<ReleaseVersionBadge, { kind: 'current' }> | null {
+  const b = releaseVersionBadgeMap.value[rel.id];
+  return b?.kind === 'current' ? b : null;
+}
+
+function onReleaseUpgradeClick(rel: GitHubRelease, listIndex: number) {
+  if (listIndex !== 0) return;
+  if (compareTagToAppVersion(rel.tag_name, APP_VERSION) !== 'newer') return;
+  if (inApp.downloadingUpdate) return;
+  const tag = rel.tag_name.trim();
+  const version = normalizeSemverString(tag) || tag.replace(/^v/i, '');
+  inApp.openUpdateConfirm(version, tag);
+}
+
 function openChangelogOnGithub() {
   void openExternal(`${REPO_URL}/blob/main/CHANGELOG.md`);
-}
-
-async function checkForUpdatesOnly() {
-  checkingUpdate.value = true;
-  try {
-    const pre = await checkInAppUpdate(updateNetwork.value);
-    if (pre.kind === 'none') {
-      appSnackbar.show({ text: t('settings.updates.inAppNoUpdate'), timeout: 5200, rounded: 'md' });
-      return;
-    }
-    if (pre.kind === 'unsupportedPlatform') {
-      appSnackbar.show({
-        text: t('settings.updates.inAppUnsupportedPlatform'),
-        timeout: 7200,
-        rounded: 'md',
-        color: 'surface-variant',
-        actions: [
-          {
-            label: t('settings.updates.openReleasesPage'),
-            run: () => {
-              void openExternal(pre.releasesPageUrl);
-            },
-          },
-        ],
-      });
-      return;
-    }
-    if (pre.kind === 'error' || pre.kind === 'unsupported') {
-      const msg =
-        pre.kind === 'error' ? pre.message : t('settings.updates.inAppUnsupported');
-      appSnackbar.show({
-        text: t('settings.updates.inAppError', { msg }),
-        timeout: 5200,
-        rounded: 'md',
-        color: 'error',
-      });
-      return;
-    }
-    updatePendingVersion.value = pre.version;
-    updatePendingTag.value = pre.tagName;
-    updateConfirmOpen.value = true;
-  } finally {
-    checkingUpdate.value = false;
-  }
-}
-
-function cancelPendingUpdate() {
-  updateConfirmOpen.value = false;
-  updatePendingVersion.value = '';
-  updatePendingTag.value = '';
-}
-
-async function confirmDownloadAndInstallUpdate() {
-  updateConfirmOpen.value = false;
-  downloadingUpdate.value = true;
-  resetUpdateProgress();
-  let unlistenProgress: (() => void) | undefined;
-  try {
-    unlistenProgress = await listenWindowsReleaseUpdateProgress(applyUpdateProgress);
-    const r = await downloadAndInstallAppUpdate(updateNetwork.value);
-    if (!r.ok) {
-      const msg = r.message === 'NO_UPDATE' ? t('settings.updates.inAppNoUpdate') : r.message;
-      appSnackbar.show({
-        text: t('settings.updates.inAppError', { msg }),
-        timeout: 5200,
-        rounded: 'md',
-        color: 'error',
-      });
-      return;
-    }
-    if (isTauriRuntime()) {
-      await invoke('exit_app');
-    }
-  } finally {
-    unlistenProgress?.();
-    downloadingUpdate.value = false;
-    resetUpdateProgress();
-    updatePendingVersion.value = '';
-    updatePendingTag.value = '';
-  }
 }
 
 onMounted(() => {
@@ -293,31 +176,36 @@ onMounted(() => {
           <p v-if="settings.updateProxy" class="text-caption text-medium-emphasis mb-2">
             {{ t('settings.updates.proxyActive', { url: settings.updateProxy }) }}
           </p>
+          <div class="text-body-2 font-weight-medium mb-2">{{ t('settings.updates.autoCheckLabel') }}</div>
+          <v-btn-toggle
+            :model-value="settings.autoCheckAppUpdates ? 'on' : 'off'"
+            mandatory
+            divided
+            density="compact"
+            color="primary"
+            variant="outlined"
+            class="mb-2 app-btn-toggle-segmented"
+            @update:model-value="setAutoCheckFromToggle"
+          >
+            <v-btn value="on" variant="tonal" min-width="72">{{ t('common.on') }}</v-btn>
+            <v-btn value="off" variant="tonal" min-width="72">{{ t('common.off') }}</v-btn>
+          </v-btn-toggle>
+          <p class="text-caption text-medium-emphasis mb-3">
+            {{ t('settings.updates.autoCheckHint') }}
+          </p>
           <v-btn
             color="primary"
             variant="flat"
             size="default"
             rounded="md"
             class="mb-2"
-            :loading="checkingUpdate"
-            :disabled="downloadingUpdate"
+            :loading="inApp.checkingUpdate"
+            :disabled="inApp.downloadingUpdate"
             prepend-icon="mdi-cloud-download-outline"
-            @click="checkForUpdatesOnly"
+            @click="inApp.checkForUpdatesManual()"
           >
             {{ t('settings.updates.inAppCheckButton') }}
           </v-btn>
-          <template v-if="downloadingUpdate">
-            <v-progress-linear
-              class="mt-2 rounded"
-              height="4"
-              color="primary"
-              :indeterminate="updateProgressPercent == null"
-              :model-value="updateProgressPercent ?? 0"
-            />
-            <div v-if="updateProgressLabel" class="text-caption text-medium-emphasis mt-1">
-              {{ updateProgressLabel }}
-            </div>
-          </template>
         </div>
       </div>
     </AppGlassSectionCard>
@@ -375,7 +263,7 @@ onMounted(() => {
         >
           <v-expansion-panels variant="accordion" multiple flat class="release-panels">
             <v-expansion-panel
-              v-for="rel in filteredReleases"
+              v-for="(rel, relIdx) in filteredReleases"
               :key="rel.id"
               class="release-panel"
               elevation="0"
@@ -395,20 +283,31 @@ onMounted(() => {
                     </div>
                   </div>
                 </div>
-                <v-chip
-                  v-if="releaseVersionBadgeMap[rel.id]"
+                <v-btn
+                  v-if="releaseVersionBadgeMap[rel.id]?.kind === 'upgrade'"
+                  type="button"
                   size="x-small"
                   rounded="pill"
-                  :color="releaseVersionBadgeMap[rel.id]!.color"
-                  :variant="releaseVersionBadgeMap[rel.id]!.variant"
-                  :prepend-icon="releaseVersionBadgeMap[rel.id]!.icon"
-                  :class="[
-                    'release-version-badge shrink-0',
-                    `release-version-badge--${releaseVersionBadgeMap[rel.id]!.tone}`,
-                  ]"
-                  @click.stop
+                  color="primary"
+                  variant="tonal"
+                  class="release-version-upgrade shrink-0"
+                  prepend-icon="mdi-arrow-up-circle-outline"
+                  :disabled="inApp.downloadingUpdate"
+                  @click.stop="onReleaseUpgradeClick(rel, relIdx)"
                 >
                   {{ releaseVersionBadgeMap[rel.id]!.text }}
+                </v-btn>
+                <v-chip
+                  v-else-if="currentReleaseBadge(rel)"
+                  size="x-small"
+                  rounded="pill"
+                  :color="currentReleaseBadge(rel)!.color"
+                  :variant="currentReleaseBadge(rel)!.variant"
+                  :prepend-icon="currentReleaseBadge(rel)!.icon"
+                  class="release-version-badge shrink-0 release-version-badge--current"
+                  @click.stop
+                >
+                  {{ currentReleaseBadge(rel)!.text }}
                 </v-chip>
               </v-expansion-panel-title>
               <v-expansion-panel-text class="release-panel-text pa-0">
@@ -431,41 +330,6 @@ onMounted(() => {
         </v-sheet>
       </div>
     </AppGlassSectionCard>
-
-    <v-dialog v-model="updateConfirmOpen" max-width="520" scrollable>
-      <v-card rounded="lg">
-        <v-card-title class="text-h6 font-weight-semibold pe-8">
-          {{ t('settings.updates.inAppConfirmTitle') }}
-        </v-card-title>
-        <v-card-text>
-          <p class="text-body-2 mb-3">
-            {{ t('settings.updates.inAppConfirmIntro', { version: updatePendingVersion }) }}
-          </p>
-          <div
-            v-if="updateConfirmNotesHtml"
-            class="update-confirm-notes markdown-body text-body-2 rounded-md pa-3"
-            v-html="updateConfirmNotesHtml"
-          />
-          <p v-else class="text-caption text-medium-emphasis mb-0">
-            {{ t('settings.about.changelogEmpty') }}
-          </p>
-        </v-card-text>
-        <v-card-actions class="px-4 pb-4">
-          <v-spacer />
-          <v-btn variant="text" :disabled="downloadingUpdate" @click="cancelPendingUpdate">
-            {{ t('common.cancel') }}
-          </v-btn>
-          <v-btn
-            color="primary"
-            variant="flat"
-            :loading="downloadingUpdate"
-            @click="confirmDownloadAndInstallUpdate"
-          >
-            {{ t('settings.updates.inAppConfirmOk') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
 
     <v-dialog v-model="proxyDialogOpen" max-width="480" persistent>
       <v-card rounded="lg">
@@ -581,8 +445,25 @@ onMounted(() => {
   border: 1px solid color-mix(in srgb, rgb(var(--v-theme-success)) 38%, transparent);
 }
 
-.release-version-badge--newer {
-  border: 1px solid color-mix(in srgb, rgb(var(--v-theme-primary)) 32%, transparent);
+.release-version-upgrade {
+  flex: 0 0 auto;
+  align-self: center;
+  margin-inline-end: 4px;
+  font-size: 0.6875rem !important;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding-inline: 9px !important;
+  min-height: 22px !important;
+  border: 1px solid color-mix(in srgb, rgb(var(--v-theme-primary)) 32%, transparent) !important;
+}
+
+.release-version-upgrade :deep(.v-btn__prepend) {
+  margin-inline-end: 4px;
+}
+
+.release-version-upgrade :deep(.v-icon) {
+  font-size: 0.875rem !important;
+  opacity: 0.95;
 }
 
 .release-panel-text {
@@ -687,20 +568,5 @@ onMounted(() => {
 .release-notes-md :deep(th) {
   background: rgba(var(--v-theme-on-surface), 0.06);
   font-weight: 600;
-}
-
-.update-confirm-notes {
-  max-height: 240px;
-  overflow-y: auto;
-  background: rgba(var(--v-theme-on-surface), 0.04);
-}
-
-.update-confirm-notes :deep(a) {
-  color: rgb(var(--v-theme-primary));
-  text-decoration: none;
-}
-
-.update-confirm-notes :deep(a:hover) {
-  text-decoration: underline;
 }
 </style>

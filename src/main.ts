@@ -3,6 +3,7 @@ import '@/styles/tailwind.css';
 import vuetify from '@/plugins/vuetify';
 import '@/styles/design-tokens.css';
 import '@/styles/app-ui.css';
+import '@/styles/app-btn-toggle.css';
 import '@/styles/app-glass-card.css';
 import '@/styles/app-shell-scroll.css';
 import '@/styles/app-context-menu-surface.css';

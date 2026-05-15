@@ -36,6 +36,16 @@ export type WindowsReleaseUpdateProgress = {
 
 export const WINDOWS_RELEASE_UPDATE_PROGRESS_EVENT = 'windows-release-update-progress';
 
+export const WINDOWS_RELEASE_UPDATE_FINISHED_EVENT = 'windows-release-update-finished';
+
+export type WindowsReleaseUpdateFinishedPayload = {
+  ok: boolean;
+  message?: string | null;
+};
+
+/** 与 Rust `windows_release_update::CANCELLED_MESSAGE` 一致 */
+export const WINDOWS_RELEASE_UPDATE_CANCELLED_MESSAGE = 'CANCELLED';
+
 type WindowsReleaseCheckJson = {
   supported: boolean;
   error?: string;
@@ -79,21 +89,58 @@ export async function listenWindowsReleaseUpdateProgress(
   });
 }
 
-/** Windows：下载、替换安装目录并重启；其他系统不支持。 */
+/** Windows：在后台线程下载并安装；`invoke` 立即返回，通过 {@link WINDOWS_RELEASE_UPDATE_FINISHED_EVENT} 通知结果。 */
 export async function downloadAndInstallAppUpdate(
   network: InAppUpdateNetworkOptions,
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   if (!isTauriRuntime()) {
     return { ok: false, message: 'Not in Tauri desktop runtime.' };
   }
+
+  let unlisten: UnlistenFn | undefined;
   try {
-    await invoke('run_windows_release_update_setup', {
-      optionsJson: optionsArg(network),
+    return await new Promise<{ ok: true } | { ok: false; message: string }>((resolve) => {
+      void (async () => {
+        try {
+          unlisten = await listen<WindowsReleaseUpdateFinishedPayload>(
+            WINDOWS_RELEASE_UPDATE_FINISHED_EVENT,
+            (ev) => {
+              unlisten?.();
+              unlisten = undefined;
+              const p = ev.payload;
+              const msg = (p.message ?? '').trim();
+              if (p.ok) {
+                resolve({ ok: true });
+              } else {
+                resolve({ ok: false, message: msg || 'Unknown error' });
+              }
+            },
+          );
+          await invoke('start_windows_release_update_setup', {
+            optionsJson: optionsArg(network),
+          });
+        } catch (e) {
+          unlisten?.();
+          unlisten = undefined;
+          resolve({
+            ok: false,
+            message: e instanceof Error ? e.message : String(e),
+          });
+        }
+      })();
     });
-    return { ok: true };
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return { ok: false, message: msg };
+  } finally {
+    unlisten?.();
+  }
+}
+
+/** 请求中止进行中的应用内更新（下载循环内会检测取消标志）。无任务时可能失败，可忽略。 */
+export async function cancelWindowsReleaseUpdateSetup(): Promise<void> {
+  if (!isTauriRuntime()) return;
+  try {
+    await invoke('cancel_windows_release_update_setup');
+  } catch {
+    /* ignore */
   }
 }
 

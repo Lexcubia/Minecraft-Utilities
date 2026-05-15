@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppSnackbarQueue from '@/components/shell/AppSnackbarQueue.vue';
+import InAppUpdateConfirmDialog from '@/components/shell/InAppUpdateConfirmDialog.vue';
 import { resolveI18nLocale, resolveVuetifyLocale } from '@/i18n';
 import {
   buildAppRootBackgroundStyle,
@@ -25,6 +26,7 @@ import { applyVuetifyThemeColors } from '@/utils/applyVuetifyThemeColors';
 import { appLog } from '@/utils/appLog';
 import { isTauriRuntime } from '@/utils/isTauriRuntime';
 import { useAppLogStore, type AppLogEntry } from '@/stores/app-log';
+import { useInAppUpdateStore } from '@/stores/in-app-update';
 import { emit, listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { computed, onMounted, onUnmounted, watch } from 'vue';
@@ -160,6 +162,10 @@ onMounted(async () => {
       unlistenAppLogSyncRequest = await listen(APP_LOG_SYNC_REQUEST_EVENT, () => {
         void emit(APP_LOG_SNAPSHOT_EVENT, { entries: [...logStore.entries] });
       });
+      const inAppUpdate = useInAppUpdateStore();
+      window.setTimeout(() => {
+        void inAppUpdate.runStartupUpdateCheck();
+      }, 1200);
     }
 
     if (WebviewWindow.getCurrent().label === 'settings') {
@@ -199,6 +205,7 @@ onUnmounted(() => {
     :style="isTrayMenuWebview ? { background: 'transparent' } : appBackgroundStyle"
   >
     <router-view />
+    <InAppUpdateConfirmDialog v-if="isTauriRuntime() && !isTrayMenuWebview" />
     <AppSnackbarQueue />
   </v-app>
 </template>

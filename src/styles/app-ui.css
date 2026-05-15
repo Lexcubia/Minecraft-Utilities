@@ -43,3 +43,5 @@ img.app-pixel-logo {
   image-rendering: crisp-edges;
   -ms-interpolation-mode: nearest-neighbor;
 }
+
+/* 分段按钮组衔接几何见 `app-btn-toggle.css`；Linear 密度见 `linear-density.css`（`app-btn-toggle-segmented`） */

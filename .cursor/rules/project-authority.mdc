@@ -1,0 +1,41 @@
+---
+description: 单一权威规则入口（规范正文不在 rules 重复）
+alwaysApply: true
+---
+
+# Project Authority
+
+本仓库所有“强约束”统一维护在本规则文件；`AGENTS.md` 与 `docs/**` 作为背景说明与实现细节参考。
+
+## 全局约束（强制）
+
+- 业务核心逻辑优先放在 `python/modpack_updater/`；前端不复制解析/差异/下载规则。
+- 变更应聚焦当前任务，避免顺手修改无关文件。
+- 用户可见文案变更必须同步 `src/locales/zh-CN.json` 与 `src/locales/en.json`。
+- 版本号单一来源为根 `package.json` 的 `version`；其他端通过同步脚本对齐。
+- 构建产物目录统一在仓库根 `build/`，不得把临时产物路径写死到源码。
+- 提交前检查（按改动类型）：
+  - 前端：`pnpm exec vue-tsc --noEmit` + 相关文件 ESLint
+  - Rust/Tauri：`pnpm check:tauri` 或 `cargo check`
+  - Python：`ruff check python tests`、`ruff format --check python tests`、`pytest`
+  - 文档：markdownlint
+
+## UI 约束（强制）
+
+- UI 语义优先使用 `src/styles/design-tokens.css`，避免业务文件散落魔法色值。
+- 与主壳视觉密度相关的字号/行高/按钮高度/字距，统一对齐 `src/styles/linear-density.css`。
+- 跨页面复用的外观写入 `src/styles/*.css` 并在 `src/main.ts` 统一引入；不要在多个 `.vue` 重复同一套 `:deep()`。
+- `app-btn-toggle.css` 只负责分段几何；密度、字重、字号统一在 `linear-density.css`。
+
+## Tauri 命令一致性（强制）
+
+- 新增 `#[tauri::command]` 时，同步更新 `src-tauri/src/lib.rs` 的 `invoke_handler` 与权限声明。
+- 前后端命令名/事件名/关键错误常量必须一致，避免“后端改名前端未同步”。
+
+## 发布与安全（强制）
+
+- 禁止直接向 `main/master` 推送；通过 PR 合并。
+- 发生版本提升时，发布 PR 的 `CHANGELOG.md` 需包含对应版本段落与发布标记（`<!-- release:publish -->`），保持与 CI 门禁一致。
+- 不得提交密钥、Token、API Key、私钥等敏感信息到仓库。
+- 涉及用户数据目录写入时，需保证 dry-run 与备份策略可说明、可执行。
+- 涉及 `.minecraft/versions/` 路径的实现必须以实测或文档可核对为准，避免硬编码猜测路径。

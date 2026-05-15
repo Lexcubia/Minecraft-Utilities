@@ -4,15 +4,17 @@
 
 若你 **Fork** 本仓库并单独托管，请将 README 中的 `Lexcubia/Minecraft-Utilities` 替换为你的 **用户名或组织名 / 仓库名**，以便 Issue 与贡献者图指向你的仓库。
 
+> 本文是「仓库配置与发布操作手册」。流程性/限制性规则以 `.cursor/rules/project-authority.mdc` 为准。
+
 ## 分支与 `main` 保护
 
-**请勿直接向 `main` 推送**（应在 GitHub 仓库 **Settings → Branches → Branch protection rules** 中为 `main` 勾选「禁止直接推送」，仅允许经 Pull Request 合并）。日常开发在 **`develop`** 进行；**`check` / `test` / `commitlint` / `changelog-publish-marker` 仅在 PR → `main` 时运行**（合并前门禁）。合并进 **`main` 后**仅触发 **`desktop-release`** 发版（见下），**不在 `main` push 时重复跑 lint/test**。
+建议在 GitHub 仓库 **Settings → Branches → Branch protection rules** 中为 `main` 开启保护（通过 PR 合并、限制直接推送）。当前 CI 设计为：**`check` / `test` / `commitlint` / `changelog-publish-marker` 主要在 PR → `main` 时运行**；合并进 `main` 后由 **`desktop-release`** 执行发版流程。
 
 建议在 `main` 分支保护中勾选 **Require status checks to pass**：`check` / `test`（及需要的 job 名称）、`commitlint`、`changelog-publish-marker`（或对应 workflow 名称），确保合并前已通过。
 
 ## 版本号（单一来源）
 
-- **真相源**：根目录 **`package.json` 的 `version`**。前端 `APP_VERSION` 已从此处读取，无需再改别处展示号。
+- 版本号来源与约束见 `.cursor/rules/project-authority.mdc`。本节仅说明常用同步命令。
 - **自动同步**：执行 **`pnpm version patch`**、**`pnpm version minor`** 或 **`pnpm version major`** 时，npm/pnpm 会更新 `package.json` 并触发 **`scripts.version`** → 运行 **`scripts/sync-version.mjs`**，将同一版本写入 **`src-tauri/Cargo.toml`**、**`src-tauri/tauri.conf.json`**、**`pyproject.toml`**、**`python/modpack_updater/__init__.py`**，并尝试在 **`src-tauri`** 下执行 **`cargo build -q`** 以刷新 **`Cargo.lock`**。
 - **无 Rust 环境**：可设 **`SKIP_CARGO_SYNC=1`** 再执行 `pnpm version …`，之后在本机或 CI 有 Rust 时再 `cargo build` 一次即可。
 - **仅手动改过 `package.json` 版本时**：运行 **`pnpm sync:version`** 同步其余文件。
@@ -27,7 +29,7 @@
 2. 在该 **`## [x.y.z]`** 小节正文中加入一行 **`<!-- release:publish -->`**（HTML 注释，渲染不可见），表示**合并到 `main` 后**若远程尚不存在 **`vx.y.z`** 标签，则自动执行多平台打包并创建 GitHub Release。
 3. PR 通过审查并合并到 **`main`** 后，Actions 会检测：无 `vx.y.z` 标签 + 对应小节含上述标记 → 执行 `tauri build` 并 `gh release create`。**若已存在该标签**，则跳过（避免重复发版）。
 
-合并前 CI 会校验：若 **`package.json` 版本相对目标分支有提升**，则 **`CHANGELOG.md` 中对应 `## [新版本]`** 小节必须包含 **`<!-- release:publish -->`**（见 `.github/workflows/changelog-publish-marker.yml`）。
+合并前 CI 会自动校验版本提升与发布标记是否匹配（见 `.github/workflows/changelog-publish-marker.yml`）。
 
 安装包文件名不含空格：由 `tauri.conf.json` 的 **`productName`**（如 `Minecraft-Utilities`）与 **`mainBinaryName`** 控制；窗口标题仍可为带空格的 **Minecraft Utilities**。
 

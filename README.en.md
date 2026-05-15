@@ -41,7 +41,7 @@ More detail 👉 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - **Current track**: with common launchers and **`.minecraft/versions/`** isolation, align mods and manifests using official **zip / mrpack**; **dry-run by default**; **back up before you apply**.
 - **Formats**: **CurseForge** and **Modrinth** official pack inputs.
 
-Roadmap & depth 👉 [PRODUCT](docs/PRODUCT.md) · [ROADMAP](docs/ROADMAP.md)
+Roadmap & depth 👉 [Feature overview](README.en.md#-features) · [ROADMAP](docs/ROADMAP.md)
 
 ## 🛠️ For developers
 

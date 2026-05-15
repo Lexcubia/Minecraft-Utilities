@@ -13,7 +13,7 @@
 
 - [x] 第一期范围：主输入为 Curse zip / Modrinth mrpack；目标版本由第二份 zip/mrpack 提供；无清单 `mods/` 仅作高级/排障；自动拉取最新 Release 为待定
 - [x] 后端选型结论写入计划（默认 Python 核心，可改为 Rust/Go）
-- [x] **目录前提（文档）**：第一期仅支持 **`.minecraft/versions/` 版本隔离**布局；**未隔离**（根目录单版本共用）暂不纳入，见 [PRODUCT.md](PRODUCT.md)
+- [x] **目录前提（文档）**：第一期仅支持 **`.minecraft/versions/` 版本隔离**布局；**未隔离**（根目录单版本共用）暂不纳入，见仓库根 [README「功能一览」](../README.md#-功能一览)
 - [ ] **stack-init**：初始化已确认后端的工程骨架与 `scan` / `plan` / `apply` 占位
 - [ ] **input-archive-zip-mrpack**：读取 zip / `.mrpack`，解压或安全解析内嵌清单并接入后续流程
 - [ ] **versions-layout-docs-qa**：对照常见启动器实测**实例根目录**、**`.minecraft/versions/`** 下各版本目录命名与 `saves`/`config` 等相对路径，更新用户文档与向导文案

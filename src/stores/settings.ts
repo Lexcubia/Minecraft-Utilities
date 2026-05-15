@@ -97,6 +97,8 @@ type PersistedSettings = {
   updateChannel: UpdateChannel;
   /** GitHub / 应用内更新 HTTP(S) 代理，如 `http://127.0.0.1:7890` */
   updateProxy: string;
+  /** 启动后主窗口静默检查应用更新，有新版本时推送到消息中心 */
+  autoCheckAppUpdates: boolean;
   uiLanguage: UiLanguage;
   themeColorPreset: ThemeColorPresetId;
   customThemeColors: ThemeColorSchemePair;
@@ -183,6 +185,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const curseForgeApiKey = ref('');
   const updateChannel = ref<UpdateChannel>('stable');
   const updateProxy = ref('');
+  const autoCheckAppUpdates = ref(true);
   const uiLanguage = ref<UiLanguage>('system');
   const themeColorPreset = ref<ThemeColorPresetId>(DEFAULT_THEME_COLOR_PRESET_ID);
   const customThemeColors = ref<ThemeColorSchemePair>(normalizeCustomThemeColors(undefined));
@@ -203,6 +206,7 @@ export const useSettingsStore = defineStore('settings', () => {
     defaultDryRun.value = snap.defaultDryRun ?? true;
     updateChannel.value = snap.updateChannel ?? 'stable';
     updateProxy.value = typeof snap.updateProxy === 'string' ? snap.updateProxy : '';
+    autoCheckAppUpdates.value = snap.autoCheckAppUpdates !== false;
     uiLanguage.value = normalizePersistedUiLanguage(snap.uiLanguage);
     themeColorPreset.value =
       snap.themeColorPreset && isThemeColorPresetId(snap.themeColorPreset)
@@ -245,6 +249,7 @@ export const useSettingsStore = defineStore('settings', () => {
       defaultDryRun: defaultDryRun.value,
       updateChannel: updateChannel.value,
       updateProxy: updateProxy.value,
+      autoCheckAppUpdates: autoCheckAppUpdates.value,
       uiLanguage: uiLanguage.value,
       themeColorPreset: themeColorPreset.value,
       customThemeColors: customThemeColors.value,
@@ -312,6 +317,7 @@ export const useSettingsStore = defineStore('settings', () => {
       defaultDryRun,
       updateChannel,
       updateProxy,
+      autoCheckAppUpdates,
       uiLanguage,
       themeColorPreset,
       customThemeColors,
@@ -337,6 +343,7 @@ export const useSettingsStore = defineStore('settings', () => {
     curseForgeApiKey,
     updateChannel,
     updateProxy,
+    autoCheckAppUpdates,
     uiLanguage,
     themeColorPreset,
     customThemeColors,

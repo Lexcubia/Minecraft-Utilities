@@ -54,6 +54,8 @@
 
   /* Linear-inspired 密度（导航/列表/分区标题） */
   --app-nav-item-min-height: 30px;
+  /** 与 `linear-density` 中 compact / small 按钮、分段组等共用一档 */
+  --app-control-compact-height: 28px;
   --app-list-row-min-height: 36px;
   --app-nav-active-accent-width: 2px;
   --app-type-section-title-size: 0.8125rem;

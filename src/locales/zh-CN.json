@@ -18,6 +18,20 @@
     "queueFoldExpand": "还有 {n} 条排队，点击展开",
     "queueFoldCollapse": "收起队列"
   },
+  "notifications": {
+    "inboxAria": "消息通知",
+    "inboxTitle": "消息通知",
+    "inboxEmpty": "暂无通知",
+    "clearAll": "清空",
+    "progressCaptionSep": " · ",
+    "speedMibPerSec": "{v} MiB/s",
+    "speedKibPerSec": "{v} KiB/s",
+    "speedBPerSec": "{v} B/s",
+    "startupUpdateAvailableTitle": "发现新版本 {version}",
+    "startupUpdateAvailableBody": "可在「设置 → 更新」中下载并安装。",
+    "actionOpenUpdates": "打开更新设置",
+    "dismissAria": "关闭此通知"
+  },
   "window": {
     "exitConfirmTitle": "退出 Minecraft Utilities",
     "exitConfirmMessage": "确定退出？未保存内容将丢失。",
@@ -175,8 +189,12 @@
       "inAppNoUpdate": "当前已是最新版本。",
       "inAppError": "更新失败：{msg}",
       "inAppDownloadPercent": "正在下载 {percent}%",
+      "inAppDownloadStarting": "开始下载更新包…",
+      "inAppDownloadingIndeterminate": "正在下载（未获知总大小）…",
       "inAppExtracting": "正在解压更新包…",
       "inAppApplying": "正在替换程序并重启…",
+      "inAppProgressTitle": "应用更新进度",
+      "inAppErrorTitle": "应用更新失败",
       "inAppSuccessTitle": "更新成功",
       "inAppSuccessMessage": "已升级到 {version}。",
       "inAppUnsupported": "升级仅在桌面端可用。",
@@ -195,7 +213,9 @@
       "proxyLabel": "代理地址",
       "proxyPlaceholder": "http://127.0.0.1:7890",
       "proxyClear": "清除代理",
-      "proxyActive": "当前代理：{url}"
+      "proxyActive": "当前代理：{url}",
+      "autoCheckLabel": "启动时自动检查更新",
+      "autoCheckHint": "主窗口就绪后在后台检查；发现新版本会出现在顶栏消息中。"
     },
     "logs": {
       "cardTitle": "运行日志",

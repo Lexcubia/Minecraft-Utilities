@@ -43,7 +43,7 @@ Powered by [Tauri 2](https://tauri.app/) · [Vue 3](https://vuejs.org/) · [Pyth
 - **当前主线**：在常见启动器、**.minecraft/versions/** 版本隔离前提下，用作者发布的 **zip / mrpack** 对齐实例中的模组与清单；**先预览（dry-run）再应用**；**操作前请自行备份**。
 - **格式**：兼容 **CurseForge** 与 **Modrinth** 官方包格式。
 
-细节与路线图 👉 [产品设计](docs/PRODUCT.md) · [路线图](docs/ROADMAP.md)
+细节与路线图 👉 [README 功能一览](README.md#-功能一览) · [路线图](docs/ROADMAP.md)
 
 ## 🛠️ 开发者指南
 

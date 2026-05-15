@@ -44,6 +44,11 @@ type UuidMode = 'client' | 'server';
 const mode = ref<UuidMode>('client');
 const clientIsolated = ref(true);
 
+function setClientIsolatedFromToggle(v: string | string[] | null | undefined) {
+  const raw = Array.isArray(v) ? v[0] : v;
+  clientIsolated.value = raw === 'on';
+}
+
 const clientRoot = ref('');
 const serverRoot = ref('');
 
@@ -436,8 +441,8 @@ async function runMigrate(dryRun: boolean) {
           mandatory
           divided
           color="primary"
-          density="comfortable"
-          class="uuid-mode-toggle mb-5"
+          density="compact"
+          class="uuid-mode-toggle app-btn-toggle-segmented mb-5"
         >
           <v-btn value="client" variant="tonal" prepend-icon="mdi-monitor">
             {{ t('tools.uuidMigrate.modeClient') }}
@@ -461,14 +466,21 @@ async function runMigrate(dryRun: boolean) {
             >
               {{ t('tools.uuidMigrate.pickMinecraft') }}
             </v-btn>
-            <div class="uuid-client-isolated-toggle flex-grow-1 flex-sm-grow-0 d-flex align-center">
-              <v-switch
-                v-model="clientIsolated"
-                color="primary"
+            <div class="uuid-client-isolated-toggle flex-grow-1 flex-sm-grow-0 d-flex flex-column gap-1">
+              <div class="text-caption text-medium-emphasis">{{ t('tools.uuidMigrate.clientIsolated') }}</div>
+              <v-btn-toggle
+                :model-value="clientIsolated ? 'on' : 'off'"
+                mandatory
+                divided
                 density="compact"
-                hide-details
-                :label="t('tools.uuidMigrate.clientIsolated')"
-              />
+                color="primary"
+                variant="outlined"
+                class="uuid-client-isolated-toggle__btns app-btn-toggle-segmented"
+                @update:model-value="setClientIsolatedFromToggle"
+              >
+                <v-btn value="on" variant="tonal" min-width="64">{{ t('common.on') }}</v-btn>
+                <v-btn value="off" variant="tonal" min-width="64">{{ t('common.off') }}</v-btn>
+              </v-btn-toggle>
             </div>
           </div>
           <v-sheet
@@ -740,23 +752,6 @@ async function runMigrate(dryRun: boolean) {
 
 .uuid-mode-toggle :deep(.v-btn) {
   flex: 1 1 0;
-  text-transform: none;
-  letter-spacing: normal;
-}
-
-/* 分段切换：仅外侧圆角，衔接处直角（避免两钮中间出现「双圆角」） */
-.uuid-mode-toggle :deep(.v-btn:first-child),
-.uuid-mode-toggle :deep(.v-btn:first-child .v-btn__overlay),
-.uuid-mode-toggle :deep(.v-btn:first-child .v-btn__underlay) {
-  border-top-right-radius: 0 !important;
-  border-bottom-right-radius: 0 !important;
-}
-
-.uuid-mode-toggle :deep(.v-btn:last-child),
-.uuid-mode-toggle :deep(.v-btn:last-child .v-btn__overlay),
-.uuid-mode-toggle :deep(.v-btn:last-child .v-btn__underlay) {
-  border-top-left-radius: 0 !important;
-  border-bottom-left-radius: 0 !important;
 }
 
 .uuid-primary-btn {
@@ -767,14 +762,8 @@ async function runMigrate(dryRun: boolean) {
   min-width: 0;
 }
 
-.uuid-client-isolated-toggle :deep(.v-switch) {
-  flex: 0 1 auto;
-}
-
-.uuid-client-isolated-toggle :deep(.v-label) {
-  font-size: 0.8125rem;
-  line-height: 1.35;
-  opacity: 0.92;
+.uuid-client-isolated-toggle__btns {
+  align-self: flex-start;
 }
 
 .uuid-path-box {

@@ -20,6 +20,31 @@ const DIST_BASE: &str = "minecraft-utilities";
 #[cfg(target_os = "windows")]
 pub const PROGRESS_EVENT: &str = "windows-release-update-progress";
 
+/// 后台更新线程结束时发出；勿用长耗时 `invoke` 包住整段下载（会卡死 WebView）。
+#[cfg(target_os = "windows")]
+pub const FINISHED_EVENT: &str = "windows-release-update-finished";
+
+#[cfg(target_os = "windows")]
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct WindowsReleaseUpdateFinished {
+    pub ok: bool,
+    pub message: Option<String>,
+}
+
+#[cfg(target_os = "windows")]
+use std::sync::atomic::{AtomicBool, Ordering};
+
+#[cfg(target_os = "windows")]
+static WINDOWS_RELEASE_UPDATE_IN_FLIGHT: AtomicBool = AtomicBool::new(false);
+
+#[cfg(target_os = "windows")]
+static WINDOWS_RELEASE_UPDATE_CANCEL_REQUESTED: AtomicBool = AtomicBool::new(false);
+
+/// 与前端约定的取消错误文案（`invoke` / `finished` payload）
+#[cfg(target_os = "windows")]
+pub const CANCELLED_MESSAGE: &str = "CANCELLED";
+
 #[cfg(target_os = "windows")]
 const UPDATE_SUCCESS_MARKER: &str = ".mu-update-success.json";
 
@@ -219,7 +244,7 @@ fn check_windows_release_update_inner(opts: &UpdateNetworkOptions) -> Result<Str
 }
 
 #[tauri::command]
-pub fn run_windows_release_update_setup(
+pub fn start_windows_release_update_setup(
     app: AppHandle,
     options_json: Option<String>,
 ) -> Result<(), String> {
@@ -230,8 +255,50 @@ pub fn run_windows_release_update_setup(
     }
     #[cfg(target_os = "windows")]
     {
+        if WINDOWS_RELEASE_UPDATE_IN_FLIGHT.swap(true, Ordering::SeqCst) {
+            return Err("An update is already in progress.".into());
+        }
+        WINDOWS_RELEASE_UPDATE_CANCEL_REQUESTED.store(false, Ordering::SeqCst);
         let opts = UpdateNetworkOptions::parse_json(options_json.as_deref());
-        run_windows_release_update_setup_inner(app, &opts)
+        let app2 = app.clone();
+        std::thread::spawn(move || {
+            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                run_windows_release_update_setup_inner(app2.clone(), &opts)
+            }));
+            let payload = match result {
+                Ok(Ok(())) => WindowsReleaseUpdateFinished {
+                    ok: true,
+                    message: None,
+                },
+                Ok(Err(e)) => WindowsReleaseUpdateFinished {
+                    ok: false,
+                    message: Some(e),
+                },
+                Err(_) => WindowsReleaseUpdateFinished {
+                    ok: false,
+                    message: Some("The updater stopped unexpectedly.".into()),
+                },
+            };
+            let _ = app2.emit(FINISHED_EVENT, payload);
+            WINDOWS_RELEASE_UPDATE_IN_FLIGHT.store(false, Ordering::SeqCst);
+        });
+        Ok(())
+    }
+}
+
+#[tauri::command]
+pub fn cancel_windows_release_update_setup() -> Result<(), String> {
+    #[cfg(not(target_os = "windows"))]
+    {
+        Err("Automatic update is only supported on Windows.".into())
+    }
+    #[cfg(target_os = "windows")]
+    {
+        if !WINDOWS_RELEASE_UPDATE_IN_FLIGHT.load(Ordering::SeqCst) {
+            return Err("No update in progress.".into());
+        }
+        WINDOWS_RELEASE_UPDATE_CANCEL_REQUESTED.store(true, Ordering::SeqCst);
+        Ok(())
     }
 }
 
@@ -311,14 +378,46 @@ fn download_zip_with_progress(
     let mut file = std::fs::File::create(dest).map_err(|e| e.to_string())?;
     let mut downloaded: u64 = 0;
     let mut buf = [0u8; 64 * 1024];
+    // Avoid emitting on every 64KiB chunk: floods the WebView IPC channel and freezes the UI.
+    // With Content-Length: throttle to whole-percent steps (~101 emits max). Without: fixed byte interval.
+    let mut last_emitted_percent_floor: Option<u64> = Some(0);
+    const EMIT_INTERVAL_BYTES_NO_TOTAL: u64 = 512 * 1024;
+    let mut last_emit_downloaded: u64 = 0;
+
     loop {
+        if WINDOWS_RELEASE_UPDATE_CANCEL_REQUESTED.load(Ordering::SeqCst) {
+            let _ = std::fs::remove_file(dest);
+            return Err(CANCELLED_MESSAGE.into());
+        }
         let n = response.read(&mut buf).map_err(|e| e.to_string())?;
         if n == 0 {
             break;
         }
         file.write_all(&buf[..n]).map_err(|e| e.to_string())?;
         downloaded += n as u64;
-        emit_progress(app, "downloading", downloaded, total);
+
+        let should_emit = match total {
+            Some(t) if t > 0 => {
+                let pct_floor = (downloaded.saturating_mul(100) / t).min(100);
+                if last_emitted_percent_floor != Some(pct_floor) {
+                    last_emitted_percent_floor = Some(pct_floor);
+                    true
+                } else {
+                    false
+                }
+            }
+            None => downloaded.saturating_sub(last_emit_downloaded) >= EMIT_INTERVAL_BYTES_NO_TOTAL,
+            Some(_) => false,
+        };
+
+        if should_emit {
+            last_emit_downloaded = downloaded;
+            emit_progress(app, "downloading", downloaded, total);
+        }
+    }
+    if WINDOWS_RELEASE_UPDATE_CANCEL_REQUESTED.load(Ordering::SeqCst) {
+        let _ = std::fs::remove_file(dest);
+        return Err(CANCELLED_MESSAGE.into());
     }
     if let Some(t) = total {
         if downloaded < t {
@@ -327,6 +426,8 @@ fn download_zip_with_progress(
             ));
         }
         emit_progress(app, "downloading", t, Some(t));
+    } else {
+        emit_progress(app, "downloading", downloaded, None);
     }
     Ok(())
 }
@@ -426,8 +527,17 @@ fn run_windows_release_update_setup_inner(app: AppHandle, opts: &UpdateNetworkOp
     let temp_zip = std::env::temp_dir().join("minecraft-utilities-update.zip");
     let _ = std::fs::remove_file(&temp_zip);
     download_zip_with_progress(&app, &client, &url, &temp_zip)?;
+    if WINDOWS_RELEASE_UPDATE_CANCEL_REQUESTED.load(Ordering::SeqCst) {
+        let _ = std::fs::remove_file(&temp_zip);
+        return Err(CANCELLED_MESSAGE.into());
+    }
 
     emit_progress(&app, "extracting", 0, None);
+
+    if WINDOWS_RELEASE_UPDATE_CANCEL_REQUESTED.load(Ordering::SeqCst) {
+        let _ = std::fs::remove_file(&temp_zip);
+        return Err(CANCELLED_MESSAGE.into());
+    }
 
     let extract_root = std::env::temp_dir().join("minecraft-utilities-update");
     let _ = std::fs::remove_dir_all(&extract_root);

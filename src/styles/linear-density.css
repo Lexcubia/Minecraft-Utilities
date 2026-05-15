@@ -111,7 +111,30 @@
 }
 
 .app-linear-ui .v-btn--size-small {
-  --v-btn-height: 28px;
+  --v-btn-height: var(--app-control-compact-height, 28px);
+}
+
+/**
+ * 分段按钮组（`app-btn-toggle-segmented`）：字距与视觉权重与常规按钮一致，
+ * 并与 default 按钮保持同高；衔接处几何见 `app-btn-toggle.css`。
+ */
+.app-linear-ui .app-btn-toggle-segmented.v-btn-toggle {
+  --v-btn-height: 32px;
+}
+
+.app-linear-ui .app-btn-toggle-segmented.v-btn-toggle .v-btn {
+  text-transform: none !important;
+  letter-spacing: -0.01em;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  --v-btn-height: 32px;
+  min-height: 32px !important;
+  padding-inline: 10px !important;
+}
+
+.app-linear-ui .app-btn-toggle-segmented.v-btn-toggle .v-btn .v-icon {
+  font-size: 1.125rem !important;
+  opacity: 0.9;
 }
 
 /* 列表行 / 手风琴：Linear 式全宽分割 */

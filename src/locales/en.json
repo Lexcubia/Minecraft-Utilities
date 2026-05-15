@@ -18,6 +18,20 @@
     "queueFoldExpand": "{n} more queued — tap to expand",
     "queueFoldCollapse": "Collapse queue"
   },
+  "notifications": {
+    "inboxAria": "Notifications",
+    "inboxTitle": "Notifications",
+    "inboxEmpty": "No notifications",
+    "clearAll": "Clear all",
+    "progressCaptionSep": " · ",
+    "speedMibPerSec": "{v} MiB/s",
+    "speedKibPerSec": "{v} KiB/s",
+    "speedBPerSec": "{v} B/s",
+    "startupUpdateAvailableTitle": "Update available: {version}",
+    "startupUpdateAvailableBody": "Download and install from Settings → Updates.",
+    "actionOpenUpdates": "Open update settings",
+    "dismissAria": "Dismiss this notification"
+  },
   "window": {
     "exitConfirmTitle": "Exit Minecraft Utilities",
     "exitConfirmMessage": "Quit? Unsaved changes will be lost.",
@@ -175,8 +189,12 @@
       "inAppNoUpdate": "You are on the latest version.",
       "inAppError": "Update failed: {msg}",
       "inAppDownloadPercent": "Downloading {percent}%",
+      "inAppDownloadStarting": "Starting download…",
+      "inAppDownloadingIndeterminate": "Downloading (total size unknown)…",
       "inAppExtracting": "Extracting update…",
       "inAppApplying": "Replacing files and restarting…",
+      "inAppProgressTitle": "App update progress",
+      "inAppErrorTitle": "App update failed",
       "inAppSuccessTitle": "Update complete",
       "inAppSuccessMessage": "Updated to {version}.",
       "inAppUnsupported": "In-app updates are only available in the desktop app.",
@@ -195,7 +213,9 @@
       "proxyLabel": "Proxy URL",
       "proxyPlaceholder": "http://127.0.0.1:7890",
       "proxyClear": "Clear proxy",
-      "proxyActive": "Proxy: {url}"
+      "proxyActive": "Proxy: {url}",
+      "autoCheckLabel": "Check for updates on startup",
+      "autoCheckHint": "Runs in the background after the main window loads; new versions appear in the top bar inbox."
     },
     "logs": {
       "cardTitle": "Session logs",

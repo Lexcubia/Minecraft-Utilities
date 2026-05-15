@@ -26,6 +26,11 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 const settings = useSettingsStore();
 
+function setVisitedTabBarFromToggle(v: string | string[] | null | undefined) {
+  const raw = Array.isArray(v) ? v[0] : v;
+  settings.showVisitedTabBar = raw === 'on';
+}
+
 const backgroundFileInput = useTemplateRef<HTMLInputElement>('backgroundFileInput');
 
 const hasCustomBackground = computed(
@@ -468,14 +473,22 @@ const backgroundChoices = computed(() =>
           <div class="text-subtitle-2 font-weight-medium mb-2">
             {{ t('settings.appearance.layoutVisitedTabsTitle') }}
           </div>
-          <v-switch
-            v-model="settings.showVisitedTabBar"
-            color="primary"
+          <v-btn-toggle
+            :model-value="settings.showVisitedTabBar ? 'on' : 'off'"
+            mandatory
+            divided
             density="compact"
-            hide-details
-            inset
-            :label="t('settings.appearance.layoutVisitedTabsSwitch')"
-          />
+            color="primary"
+            variant="outlined"
+            class="app-btn-toggle-segmented"
+            @update:model-value="setVisitedTabBarFromToggle"
+          >
+            <v-btn value="on" variant="tonal" min-width="72">{{ t('common.on') }}</v-btn>
+            <v-btn value="off" variant="tonal" min-width="72">{{ t('common.off') }}</v-btn>
+          </v-btn-toggle>
+          <p class="text-caption text-medium-emphasis mt-1">
+            {{ t('settings.appearance.layoutVisitedTabsSwitch') }}
+          </p>
         </div>
       </div>
     </AppGlassSectionCard>

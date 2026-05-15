@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppInboxControl from '@/components/shell/AppInboxControl.vue';
 import AppShellTrayActions from '@/layouts/AppShellTrayActions.vue';
 import AppWindowTitlebarControls from '@/components/shell/AppWindowTitlebarControls.vue';
 import { APP_TITLE } from '@/constants/app-meta';
@@ -204,11 +205,15 @@ onUnmounted(() => detachTitleBarPointerDrag?.());
               />
             </div>
             <div class="app-bar-append-cluster d-flex align-center">
+              <AppInboxControl />
               <AppWindowTitlebarControls embedded />
             </div>
           </div>
         </template>
-        <AppWindowTitlebarControls v-else class="app-bar-window-chrome-desktop" />
+        <div v-else class="app-bar-inbox-and-chrome d-flex align-center flex-shrink-0">
+          <AppInboxControl />
+          <AppWindowTitlebarControls class="app-bar-window-chrome-desktop" />
+        </div>
       </div>
     </template>
 
@@ -306,6 +311,10 @@ onUnmounted(() => detachTitleBarPointerDrag?.());
 /* 窄屏：托盘与窗口三键分两簇，中间留白，不共用一个灰底 */
 .app-bar-append--split {
   gap: 10px;
+}
+
+.app-bar-inbox-and-chrome {
+  gap: 2px;
 }
 
 /* 桌面顶栏右上角：去掉与左侧按钮的间距，贴齐窗口右缘 */

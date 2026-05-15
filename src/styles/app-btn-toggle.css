@@ -1,0 +1,18 @@
+/**
+ * 分段按钮组：仅处理**相邻按钮衔接处直角**（外侧圆角由 Vuetify 与主题决定）。
+ * **字距、高度、字号**在主导航壳的 `.app-linear-ui` 下由 `linear-density.css` 与令牌统一，勿在本文件重复写密度。
+ * 用法：在 `<v-btn-toggle>` 根上增加 class `app-btn-toggle-segmented`。
+ */
+.app-btn-toggle-segmented.v-btn-toggle .v-btn:not(:last-child),
+.app-btn-toggle-segmented.v-btn-toggle .v-btn:not(:last-child) .v-btn__overlay,
+.app-btn-toggle-segmented.v-btn-toggle .v-btn:not(:last-child) .v-btn__underlay {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.app-btn-toggle-segmented.v-btn-toggle .v-btn:not(:first-child),
+.app-btn-toggle-segmented.v-btn-toggle .v-btn:not(:first-child) .v-btn__overlay,
+.app-btn-toggle-segmented.v-btn-toggle .v-btn:not(:first-child) .v-btn__underlay {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+}

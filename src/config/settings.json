@@ -5,6 +5,7 @@
   "defaultDryRun": true,
   "updateChannel": "stable",
   "updateProxy": "",
+  "autoCheckAppUpdates": true,
   "uiLanguage": "system",
   "themeColorPreset": "forest",
   "customThemeColors": {
