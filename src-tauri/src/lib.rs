@@ -158,6 +158,7 @@ pub fn run() {
                 user_data::user_data_append_log_line,
                 windows_release_update::check_windows_release_update,
                 windows_release_update::run_windows_release_update_setup,
+                windows_release_update::take_post_update_success_notice,
                 tray_desktop::exit_app,
                 tray_desktop::sync_tray_menu_labels,
                 tray_desktop::focus_main_window,
