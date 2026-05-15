@@ -50,11 +50,13 @@ function parseRelease(raw: unknown): GitHubRelease | null {
   };
 }
 
-export async function fetchGithubReleasesList(): Promise<GitHubRelease[]> {
+export async function fetchGithubReleasesList(updateProxy = ''): Promise<GitHubRelease[]> {
   let text: string;
   let via: 'tauri' | 'web' = 'tauri';
+  const proxy = updateProxy.trim();
+  const optionsJson = proxy ? JSON.stringify({ updateProxy: proxy }) : undefined;
   try {
-    text = await invoke<string>('fetch_github_releases');
+    text = await invoke<string>('fetch_github_releases', { optionsJson });
   } catch (e) {
     appLog(
       'network',

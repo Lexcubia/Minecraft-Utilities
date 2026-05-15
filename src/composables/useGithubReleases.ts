@@ -19,7 +19,7 @@ export function useGithubReleases() {
     loading.value = true;
     error.value = null;
     try {
-      releases.value = await fetchGithubReleasesList();
+      releases.value = await fetchGithubReleasesList(settings.updateProxy);
     } catch (e) {
       error.value = e instanceof Error ? e.message : String(e);
       releases.value = [];

@@ -1,6 +1,6 @@
 [package]
 name = "minecraft-utilities"
-version = "0.1.4-beta"
+version = "0.1.5"
 description = "Minecraft Utilities (Tauri desktop)"
 authors = ["Lexcubia"]
 edition = "2021"
@@ -26,5 +26,5 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 semver = "1"
-reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls-native-roots"] }
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls-native-roots", "proxy"] }
 

@@ -1,6 +1,9 @@
-//! Windows：从 GitHub `releases/latest` 查找与本机构建架构一致的免安装 zip，下载后解压并替换当前安装目录，再重启。
+//! Windows：按更新渠道（稳定/测试）从 GitHub Releases 列表解析可升级版本，下载 zip 并替换安装目录后重启。
 //! 其他桌面系统：`check_windows_release_update` 返回 `supported: false`，不发起网络请求。
 
+use crate::github_release_http::{
+    self, fetch_releases_json, pick_newest_release, releases_page_url, UpdateNetworkOptions,
+};
 use serde::Serialize;
 #[cfg(target_os = "windows")]
 use serde_json::Value;
@@ -8,12 +11,8 @@ use serde_json::Value;
 use std::io::{Read, Write};
 #[cfg(target_os = "windows")]
 use std::process::Stdio;
-#[cfg(target_os = "windows")]
-use std::time::Duration;
 use tauri::{AppHandle, Emitter};
 
-const OWNER: &str = "Lexcubia";
-const REPO: &str = "Minecraft-Utilities";
 #[cfg(target_os = "windows")]
 const DIST_BASE: &str = "minecraft-utilities";
 
@@ -23,31 +22,6 @@ pub const PROGRESS_EVENT: &str = "windows-release-update-progress";
 
 #[cfg(target_os = "windows")]
 const UPDATE_SUCCESS_MARKER: &str = ".mu-update-success.json";
-
-#[cfg(target_os = "windows")]
-fn github_user_agent() -> String {
-    concat!(
-        env!("CARGO_PKG_NAME"),
-        "/",
-        env!("CARGO_PKG_VERSION"),
-        " (windows-release-update)"
-    )
-    .to_string()
-}
-
-#[cfg(target_os = "windows")]
-fn github_http_client() -> Result<reqwest::blocking::Client, String> {
-    reqwest::blocking::Client::builder()
-        .user_agent(github_user_agent())
-        .timeout(Duration::from_secs(90))
-        .connect_timeout(Duration::from_secs(25))
-        .build()
-        .map_err(|e| e.to_string())
-}
-
-fn releases_page_url() -> String {
-    format!("https://github.com/{OWNER}/{REPO}/releases")
-}
 
 #[cfg(target_os = "windows")]
 fn win_dist_cpu_suffix() -> Result<&'static str, String> {
@@ -92,9 +66,10 @@ struct UpdateProgressPayload {
 }
 
 #[tauri::command]
-pub fn check_windows_release_update() -> Result<String, String> {
+pub fn check_windows_release_update(options_json: Option<String>) -> Result<String, String> {
     #[cfg(not(target_os = "windows"))]
     {
+        let _ = options_json;
         let r = WindowsReleaseCheck {
             supported: false,
             error: None,
@@ -108,11 +83,14 @@ pub fn check_windows_release_update() -> Result<String, String> {
         serde_json::to_string(&r).map_err(|e| e.to_string())
     }
     #[cfg(target_os = "windows")]
-    check_windows_release_update_inner()
+    {
+        let opts = UpdateNetworkOptions::parse_json(options_json.as_deref());
+        check_windows_release_update_inner(&opts)
+    }
 }
 
 #[cfg(target_os = "windows")]
-fn check_windows_release_update_inner() -> Result<String, String> {
+fn check_windows_release_update_inner(opts: &UpdateNetworkOptions) -> Result<String, String> {
     let win_arch = match win_dist_cpu_suffix() {
         Ok(s) => s,
         Err(msg) => {
@@ -130,28 +108,45 @@ fn check_windows_release_update_inner() -> Result<String, String> {
         }
     };
 
-    let client = github_http_client()?;
-    let api = format!("https://api.github.com/repos/{OWNER}/{REPO}/releases/latest");
-    let response = client
-        .get(&api)
-        .header("Accept", "application/vnd.github+json")
-        .header("X-GitHub-Api-Version", "2022-11-28")
-        .send()
-        .map_err(|e| format!("GitHub API request failed ({api}): {e}"))?;
-    if !response.status().is_success() {
-        let r = WindowsReleaseCheck {
-            supported: true,
-            error: Some(format!("GitHub API HTTP {}", response.status())),
-            has_update: None,
-            latest_version: None,
-            tag_name: None,
-            setup_download_url: None,
-            setup_file_name: None,
-            releases_page_url: releases_page_url(),
-        };
-        return serde_json::to_string(&r).map_err(|e| e.to_string());
-    }
-    let body: Value = response.json().map_err(|e| e.to_string())?;
+    let client = github_release_http::build_github_client(opts.proxy_url(), "windows-release-update")?;
+
+    let current = semver::Version::parse(env!("CARGO_PKG_VERSION"))
+        .map_err(|e| format!("Invalid CARGO_PKG_VERSION: {e}"))?;
+
+    let releases = match fetch_releases_json(&client) {
+        Ok(list) => list,
+        Err(msg) => {
+            let r = WindowsReleaseCheck {
+                supported: true,
+                error: Some(msg),
+                has_update: None,
+                latest_version: None,
+                tag_name: None,
+                setup_download_url: None,
+                setup_file_name: None,
+                releases_page_url: releases_page_url(),
+            };
+            return serde_json::to_string(&r).map_err(|e| e.to_string());
+        }
+    };
+
+    let body = match pick_newest_release(&releases, opts.is_beta_channel(), &current) {
+        Some(rel) => rel,
+        None => {
+            let r = WindowsReleaseCheck {
+                supported: true,
+                error: None,
+                has_update: Some(false),
+                latest_version: Some(current.to_string()),
+                tag_name: None,
+                setup_download_url: None,
+                setup_file_name: None,
+                releases_page_url: releases_page_url(),
+            };
+            return serde_json::to_string(&r).map_err(|e| e.to_string());
+        }
+    };
+
     let tag_name = body
         .get("tag_name")
         .and_then(|v| v.as_str())
@@ -162,25 +157,9 @@ fn check_windows_release_update_inner() -> Result<String, String> {
         .strip_prefix('v')
         .or_else(|| tag_name.strip_prefix('V'))
         .unwrap_or(tag_name.as_str());
-    let latest_ver = match semver::Version::parse(tag_body) {
-        Ok(v) => v,
-        Err(e) => {
-            let r = WindowsReleaseCheck {
-                supported: true,
-                error: Some(format!("Invalid release tag {tag_name:?}: {e}")),
-                has_update: None,
-                latest_version: None,
-                tag_name: Some(tag_name),
-                setup_download_url: None,
-                setup_file_name: None,
-                releases_page_url: releases_page_url(),
-            };
-            return serde_json::to_string(&r).map_err(|e| e.to_string());
-        }
-    };
-
-    let current = semver::Version::parse(env!("CARGO_PKG_VERSION"))
-        .map_err(|e| format!("Invalid CARGO_PKG_VERSION: {e}"))?;
+    let latest_ver = semver::Version::parse(tag_body).map_err(|e| {
+        format!("Invalid release tag {tag_name:?}: {e}")
+    })?;
 
     let assets = body
         .get("assets")
@@ -219,11 +198,10 @@ fn check_windows_release_update_inner() -> Result<String, String> {
         }
     }
 
-    let newer = latest_ver > current;
-    let has_update = newer && zip_url.is_some();
+    let has_update = zip_url.is_some();
     let r = WindowsReleaseCheck {
         supported: true,
-        error: if newer && zip_url.is_none() {
+        error: if zip_url.is_none() {
             Some(format!(
                 "Latest GitHub release has no Windows portable zip matching `{DIST_BASE}-win-{win_arch}-v{{version}}.zip`."
             ))
@@ -241,14 +219,20 @@ fn check_windows_release_update_inner() -> Result<String, String> {
 }
 
 #[tauri::command]
-pub fn run_windows_release_update_setup(app: AppHandle) -> Result<(), String> {
+pub fn run_windows_release_update_setup(
+    app: AppHandle,
+    options_json: Option<String>,
+) -> Result<(), String> {
     #[cfg(not(target_os = "windows"))]
     {
-        let _ = app;
+        let _ = (app, options_json);
         Err("Automatic update is only supported on Windows.".into())
     }
     #[cfg(target_os = "windows")]
-    run_windows_release_update_setup_inner(app)
+    {
+        let opts = UpdateNetworkOptions::parse_json(options_json.as_deref());
+        run_windows_release_update_setup_inner(app, &opts)
+    }
 }
 
 /// 若上次更新后已重启，读取并清除成功标记，返回新版本号。
@@ -418,8 +402,8 @@ Remove-Item -LiteralPath $PSCommandPath -Force -ErrorAction SilentlyContinue
 }
 
 #[cfg(target_os = "windows")]
-fn run_windows_release_update_setup_inner(app: AppHandle) -> Result<(), String> {
-    let raw = check_windows_release_update_inner()?;
+fn run_windows_release_update_setup_inner(app: AppHandle, opts: &UpdateNetworkOptions) -> Result<(), String> {
+    let raw = check_windows_release_update_inner(opts)?;
     let j: WindowsReleaseCheck = serde_json::from_str(&raw).map_err(|e| e.to_string())?;
     if !j.supported {
         return Err("Update check is not supported on this platform.".into());
@@ -438,7 +422,7 @@ fn run_windows_release_update_setup_inner(app: AppHandle) -> Result<(), String> 
         .clone()
         .unwrap_or_else(|| env!("CARGO_PKG_VERSION").to_string());
 
-    let client = github_http_client()?;
+    let client = github_release_http::build_github_client(opts.proxy_url(), "windows-release-update")?;
     let temp_zip = std::env::temp_dir().join("minecraft-utilities-update.zip");
     let _ = std::fs::remove_file(&temp_zip);
     download_zip_with_progress(&app, &client, &url, &temp_zip)?;

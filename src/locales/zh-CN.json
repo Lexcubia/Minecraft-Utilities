@@ -9,7 +9,8 @@
     "on": "开启",
     "off": "关闭",
     "close": "关闭",
-    "cancel": "取消"
+    "cancel": "取消",
+    "save": "保存"
   },
   "snackbar": {
     "queueRegionAria": "应用消息",
@@ -187,7 +188,14 @@
       "releaseNotesHeading": "变更说明",
       "badgeCurrent": "当前版本",
       "badgeNewer": "可升级",
-      "prerelease": "预发布"
+      "prerelease": "预发布",
+      "proxyButton": "网络代理",
+      "proxyDialogTitle": "更新网络代理",
+      "proxyDialogHint": "访问 GitHub 受阻时可填写 HTTP/HTTPS 代理（如 http://127.0.0.1:7890）。留空表示直连。",
+      "proxyLabel": "代理地址",
+      "proxyPlaceholder": "http://127.0.0.1:7890",
+      "proxyClear": "清除代理",
+      "proxyActive": "当前代理：{url}"
     },
     "logs": {
       "cardTitle": "运行日志",

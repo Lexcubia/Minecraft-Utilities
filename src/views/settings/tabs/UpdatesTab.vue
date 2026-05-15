@@ -26,6 +26,30 @@ const { t, locale } = useI18n();
 const settings = useSettingsStore();
 const { filteredReleases, loading, error, load } = useGithubReleases();
 
+const updateNetwork = computed(() => ({
+  updateChannel: settings.updateChannel,
+  updateProxy: settings.updateProxy,
+}));
+
+const proxyDialogOpen = ref(false);
+const proxyDraft = ref('');
+
+function openProxyDialog() {
+  proxyDraft.value = settings.updateProxy;
+  proxyDialogOpen.value = true;
+}
+
+function saveProxyDialog() {
+  settings.updateProxy = proxyDraft.value.trim();
+  proxyDialogOpen.value = false;
+  void load();
+}
+
+function clearProxyAndSave() {
+  proxyDraft.value = '';
+  saveProxyDialog();
+}
+
 const changelogPublished = computed(() => parseKeepAChangelogPublished(changelogSource));
 
 const channelOptions = computed((): { label: string; value: UpdateChannel }[] => [
@@ -146,7 +170,7 @@ function openChangelogOnGithub() {
 async function checkForUpdatesOnly() {
   checkingUpdate.value = true;
   try {
-    const pre = await checkInAppUpdate();
+    const pre = await checkInAppUpdate(updateNetwork.value);
     if (pre.kind === 'none') {
       appSnackbar.show({ text: t('settings.updates.inAppNoUpdate'), timeout: 5200, rounded: 'md' });
       return;
@@ -200,7 +224,7 @@ async function confirmDownloadAndInstallUpdate() {
   let unlistenProgress: (() => void) | undefined;
   try {
     unlistenProgress = await listenWindowsReleaseUpdateProgress(applyUpdateProgress);
-    const r = await downloadAndInstallAppUpdate();
+    const r = await downloadAndInstallAppUpdate(updateNetwork.value);
     if (!r.ok) {
       const msg = r.message === 'NO_UPDATE' ? t('settings.updates.inAppNoUpdate') : r.message;
       appSnackbar.show({
@@ -251,10 +275,24 @@ onMounted(() => {
         <v-divider class="border-opacity-25" />
 
         <div>
-          <div class="d-flex align-center gap-2 mb-3">
-            <v-icon icon="mdi-download-circle-outline" color="primary" size="20" />
-            <span class="text-body-2 font-weight-medium">{{ t('settings.updates.inAppTitle') }}</span>
+          <div class="d-flex flex-wrap align-center justify-space-between gap-2 mb-2">
+            <div class="d-flex align-center gap-2 min-w-0">
+              <v-icon icon="mdi-download-circle-outline" color="primary" size="20" />
+              <span class="text-body-2 font-weight-medium">{{ t('settings.updates.inAppTitle') }}</span>
+            </div>
+            <v-btn
+              variant="text"
+              size="small"
+              color="primary"
+              prepend-icon="mdi-lan-connect"
+              @click="openProxyDialog"
+            >
+              {{ t('settings.updates.proxyButton') }}
+            </v-btn>
           </div>
+          <p v-if="settings.updateProxy" class="text-caption text-medium-emphasis mb-2">
+            {{ t('settings.updates.proxyActive', { url: settings.updateProxy }) }}
+          </p>
           <v-btn
             color="primary"
             variant="flat"
@@ -424,6 +462,41 @@ onMounted(() => {
             @click="confirmDownloadAndInstallUpdate"
           >
             {{ t('settings.updates.inAppConfirmOk') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="proxyDialogOpen" max-width="480" persistent>
+      <v-card rounded="lg">
+        <v-card-title class="text-h6 font-weight-semibold">
+          {{ t('settings.updates.proxyDialogTitle') }}
+        </v-card-title>
+        <v-card-text>
+          <p class="text-body-2 text-medium-emphasis mb-3">
+            {{ t('settings.updates.proxyDialogHint') }}
+          </p>
+          <v-text-field
+            v-model="proxyDraft"
+            :label="t('settings.updates.proxyLabel')"
+            :placeholder="t('settings.updates.proxyPlaceholder')"
+            variant="outlined"
+            density="compact"
+            hide-details="auto"
+            clearable
+            autocomplete="off"
+          />
+        </v-card-text>
+        <v-card-actions class="px-4 pb-4">
+          <v-btn variant="text" @click="proxyDialogOpen = false">
+            {{ t('common.cancel') }}
+          </v-btn>
+          <v-spacer />
+          <v-btn variant="tonal" @click="clearProxyAndSave">
+            {{ t('settings.updates.proxyClear') }}
+          </v-btn>
+          <v-btn color="primary" variant="flat" @click="saveProxyDialog">
+            {{ t('common.save') }}
           </v-btn>
         </v-card-actions>
       </v-card>

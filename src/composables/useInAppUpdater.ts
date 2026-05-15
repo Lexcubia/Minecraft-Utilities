@@ -1,6 +1,17 @@
+import type { UpdateChannel } from '@/stores/settings';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { isTauriRuntime } from '@/utils/isTauriRuntime';
+import { buildUpdateNetworkOptionsJson } from '@/utils/updateNetworkOptions';
+
+export type InAppUpdateNetworkOptions = {
+  updateChannel: UpdateChannel;
+  updateProxy: string;
+};
+
+function optionsArg(opts: InAppUpdateNetworkOptions): string {
+  return buildUpdateNetworkOptionsJson(opts.updateChannel, opts.updateProxy);
+}
 
 export type InAppUpdateCheckResult =
   | { kind: 'none' }
@@ -36,11 +47,15 @@ type WindowsReleaseCheckJson = {
   releasesPageUrl: string;
 };
 
-/** 仅查询是否有新版本（Windows：对比 GitHub Latest Release 与当前应用版本）。 */
-export async function checkInAppUpdate(): Promise<InAppUpdateCheckResult> {
+/** 仅查询是否有新版本（Windows：按渠道对比 GitHub Releases 与当前应用版本）。 */
+export async function checkInAppUpdate(
+  network: InAppUpdateNetworkOptions,
+): Promise<InAppUpdateCheckResult> {
   if (!isTauriRuntime()) return { kind: 'unsupported' };
   try {
-    const raw = await invoke<string>('check_windows_release_update');
+    const raw = await invoke<string>('check_windows_release_update', {
+      optionsJson: optionsArg(network),
+    });
     const j = JSON.parse(raw) as WindowsReleaseCheckJson;
     if (!j.supported) {
       return { kind: 'unsupportedPlatform', releasesPageUrl: j.releasesPageUrl };
@@ -65,14 +80,16 @@ export async function listenWindowsReleaseUpdateProgress(
 }
 
 /** Windows：下载、替换安装目录并重启；其他系统不支持。 */
-export async function downloadAndInstallAppUpdate(): Promise<
-  { ok: true } | { ok: false; message: string }
-> {
+export async function downloadAndInstallAppUpdate(
+  network: InAppUpdateNetworkOptions,
+): Promise<{ ok: true } | { ok: false; message: string }> {
   if (!isTauriRuntime()) {
     return { ok: false, message: 'Not in Tauri desktop runtime.' };
   }
   try {
-    await invoke('run_windows_release_update_setup');
+    await invoke('run_windows_release_update_setup', {
+      optionsJson: optionsArg(network),
+    });
     return { ok: true };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

@@ -4,6 +4,7 @@
   "closeBehavior": "tray",
   "defaultDryRun": true,
   "updateChannel": "stable",
+  "updateProxy": "",
   "uiLanguage": "system",
   "themeColorPreset": "forest",
   "customThemeColors": {

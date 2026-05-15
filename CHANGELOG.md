@@ -6,6 +6,15 @@
 
 ## Unreleased
 
+## [0.1.5] - 2026-05-15
+
+<!-- release:publish -->
+
+### Changes
+
+- **应用内更新**：检查更新与「测试版」渠道一致，可升级到 beta / 预发布版本（不再仅依赖 GitHub Latest 稳定版）。
+- **更新页**：新增 **网络代理** 设置对话框，供 GitHub API 与下载走 HTTP/HTTPS 代理。
+
 ## [0.1.4-beta] - 2026-05-15
 
 <!-- release:publish -->
