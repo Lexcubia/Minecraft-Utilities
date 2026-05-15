@@ -1,8 +1,8 @@
 name: check
 
 on:
-  # 仅在合并进默认分支后跑门禁，避免 develop / 功能分支 push 与 PR 反复触发（尤其 Rust 依赖编译耗时）。
-  push:
+  # 合并进 main 之前的门禁：仅在 PR → main/master 时运行；main 上 push 仅触发 desktop-release。
+  pull_request:
     branches: [main, master]
     paths:
       - '.github/workflows/check.yml'
@@ -21,13 +21,14 @@ on:
       - 'scripts/**'
       - 'python/**'
       - 'pyproject.toml'
+      - 'src-tauri/**'
       - 'tests/**'
       - 'docs/**/*.md'
       - '.markdownlint.json'
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-pr-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 
 permissions:
@@ -67,3 +68,37 @@ jobs:
         run: ruff check python tests
       - name: Ruff format
         run: ruff format --check python tests
+
+  tauri:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libssl-dev \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Verify Rust toolchain
+        run: |
+          set -euo pipefail
+          command -v cargo
+          cargo --version
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            src-tauri -> build/cargo-target
+
+      - name: cargo check (Tauri backend)
+        run: pnpm check:tauri

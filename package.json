@@ -18,6 +18,7 @@
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "verify:js": "pnpm format:check && pnpm lint && pnpm test && pnpm build",
+    "check:tauri": "node scripts/check-tauri-cargo.mjs",
     "tauri": "tauri",
     "desktop:dev": "tauri dev",
     "desktop:build": "tauri build --ci --no-bundle",

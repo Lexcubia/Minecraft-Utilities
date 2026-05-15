@@ -6,7 +6,9 @@
 
 ## 分支与 `main` 保护
 
-**请勿直接向 `main` 推送**（应在 GitHub 仓库 **Settings → Branches → Branch protection rules** 中为 `main` 勾选「禁止直接推送」，仅允许经 Pull Request 合并）。合并进 `main` 后的代码才会触发桌面端发布检测（见下）。
+**请勿直接向 `main` 推送**（应在 GitHub 仓库 **Settings → Branches → Branch protection rules** 中为 `main` 勾选「禁止直接推送」，仅允许经 Pull Request 合并）。日常开发在 **`develop`** 进行；**`check` / `test` / `commitlint` / `changelog-publish-marker` 仅在 PR → `main` 时运行**（合并前门禁）。合并进 **`main` 后**仅触发 **`desktop-release`** 发版（见下），**不在 `main` push 时重复跑 lint/test**。
+
+建议在 `main` 分支保护中勾选 **Require status checks to pass**：`check` / `test`（及需要的 job 名称）、`commitlint`、`changelog-publish-marker`（或对应 workflow 名称），确保合并前已通过。
 
 ## 版本号（单一来源）
 

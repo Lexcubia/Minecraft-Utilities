@@ -11,6 +11,9 @@ mod user_data;
 #[cfg(desktop)]
 mod windows_release_update;
 
+// 桌面 Rust：若某 `#[cfg]` 分支调用 trait 方法，对应 `use Trait` 须与该分支一致或模块级无条件引入。
+// 本地校验：`pnpm check:tauri`（PR → main 时 CI 亦会 `cargo check`）。
+
 /// 与前端 `REPO_URL`（`src/constants/app-meta.ts`）保持一致。
 const GITHUB_OWNER: &str = "Lexcubia";
 const GITHUB_REPO: &str = "Minecraft-Utilities";
