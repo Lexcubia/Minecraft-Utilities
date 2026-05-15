@@ -20,6 +20,7 @@ const REPO: &str = "Minecraft-Utilities";
 const DIST_BASE: &str = "minecraft-utilities";
 
 /// 前端监听：`listen('windows-release-update-progress', …)`
+#[cfg(target_os = "windows")]
 pub const PROGRESS_EVENT: &str = "windows-release-update-progress";
 
 #[cfg(target_os = "windows")]
@@ -81,6 +82,7 @@ pub struct WindowsReleaseCheck {
     pub releases_page_url: String,
 }
 
+#[cfg(target_os = "windows")]
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct UpdateProgressPayload {

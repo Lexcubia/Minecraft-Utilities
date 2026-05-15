@@ -77,7 +77,8 @@ fn data_root(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     }
 }
 
-/// 当前用户数据根目录（便携目录或 `app_local_data_dir`）。
+/// 当前用户数据根目录（便携目录或 `app_local_data_dir`）。仅 Windows 应用内更新使用。
+#[cfg(target_os = "windows")]
 pub fn app_data_root(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     data_root(app)
 }
