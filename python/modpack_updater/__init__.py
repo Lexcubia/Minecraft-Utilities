@@ -1,3 +1,3 @@
 """Minecraft Utilities — Python engine (modpack & manifest tooling)."""
 
-__version__ = "0.1.1"
+__version__ = "0.1.2-beta"
