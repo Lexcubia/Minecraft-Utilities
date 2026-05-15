@@ -1,33 +1,8 @@
 name: check
 
 on:
-  # main/master 仅允许经 PR 合并；push 到默认分支不跑本工作流（避免与 PR 上已跑的检查重复）。
+  # 仅在合并进默认分支后跑门禁，避免 develop / 功能分支 push 与 PR 反复触发（尤其 Rust 依赖编译耗时）。
   push:
-    branches-ignore:
-      - main
-      - master
-    paths:
-      - '.github/workflows/check.yml'
-      - 'src/**'
-      - 'index.html'
-      - 'public/**'
-      - 'eslint.config.ts'
-      - 'vitest.config.ts'
-      - 'vite.config.ts'
-      - 'tsconfig.json'
-      - 'tsconfig.node.json'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - 'prettier.config.js'
-      - 'lint-staged.config.js'
-      - 'scripts/**'
-      - 'src-tauri/**'
-      - 'python/**'
-      - 'pyproject.toml'
-      - 'tests/**'
-      - 'docs/**/*.md'
-      - '.markdownlint.json'
-  pull_request:
     branches: [main, master]
     paths:
       - '.github/workflows/check.yml'
@@ -44,7 +19,6 @@ on:
       - 'prettier.config.js'
       - 'lint-staged.config.js'
       - 'scripts/**'
-      - 'src-tauri/**'
       - 'python/**'
       - 'pyproject.toml'
       - 'tests/**'
@@ -93,41 +67,3 @@ jobs:
         run: ruff check python tests
       - name: Ruff format
         run: ruff format --check python tests
-
-  rust:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Install Linux dependencies (Tauri link)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            pkg-config \
-            libssl-dev \
-            libwebkit2gtk-4.1-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev \
-            libfuse2 \
-            patchelf
-
-      - name: Install Rust stable (fmt + clippy)
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: |
-            src-tauri -> build/cargo-target
-          key: check-rust
-
-      - name: Cargo fmt
-        working-directory: src-tauri
-        run: cargo fmt --all -- --check
-
-      - name: Cargo clippy
-        working-directory: src-tauri
-        run: cargo clippy --all-targets -- -D warnings

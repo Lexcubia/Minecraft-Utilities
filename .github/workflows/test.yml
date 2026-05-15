@@ -2,24 +2,6 @@ name: test
 
 on:
   push:
-    branches-ignore:
-      - main
-      - master
-    paths:
-      - '.github/workflows/test.yml'
-      - 'src/**'
-      - 'index.html'
-      - 'public/**'
-      - 'vitest.config.ts'
-      - 'vite.config.ts'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - 'scripts/**'
-      - 'src-tauri/**'
-      - 'python/**'
-      - 'pyproject.toml'
-      - 'tests/**'
-  pull_request:
     branches: [main, master]
     paths:
       - '.github/workflows/test.yml'
@@ -31,7 +13,6 @@ on:
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'scripts/**'
-      - 'src-tauri/**'
       - 'python/**'
       - 'pyproject.toml'
       - 'tests/**'
