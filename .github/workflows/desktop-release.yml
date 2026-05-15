@@ -143,13 +143,21 @@ jobs:
           node-version: '22'
           cache: pnpm
 
-      # macOS runner 预装 Homebrew rust 时，`cargo` 可能指向损坏的 rustup-init（runner-images#14097）
+      # macOS：Homebrew rust/rustup 的 cargo 可能指向损坏的 rustup-init（runner-images#14097）
       - name: Remove broken Homebrew rust (macOS)
         if: runner.os == 'macOS'
         shell: bash
         run: |
-          brew unlink rust 2>/dev/null || true
-          brew uninstall --ignore-dependencies rust 2>/dev/null || true
+          set -euo pipefail
+          for pkg in rust rustup rustup-init; do
+            brew unlink "$pkg" 2>/dev/null || true
+            brew uninstall --ignore-dependencies "$pkg" 2>/dev/null || true
+          done
+          for shim in /opt/homebrew/bin/cargo /opt/homebrew/bin/rustc /opt/homebrew/bin/rustup /opt/homebrew/bin/rustup-init; do
+            if [ -e "$shim" ]; then
+              rm -f "$shim"
+            fi
+          done
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -157,13 +165,19 @@ jobs:
       - name: Prefer rustup cargo on PATH (macOS)
         if: runner.os == 'macOS'
         shell: bash
-        run: echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+        run: |
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          echo "PATH=$HOME/.cargo/bin:$PATH" >> "$GITHUB_ENV"
 
       - name: Verify Rust toolchain
         shell: bash
         run: |
           set -euo pipefail
-          command -v cargo
+          CARGO_BIN="$(command -v cargo)"
+          echo "cargo=${CARGO_BIN}"
+          case "$CARGO_BIN" in
+            *homebrew*|*rustup-init*) echo "Broken cargo shim on PATH"; exit 1 ;;
+          esac
           cargo --version
           rustc --version
 
@@ -172,6 +186,8 @@ jobs:
           workspaces: |
             src-tauri -> build/cargo-target
           key: ${{ matrix.id }}
+          # 避免缓存/还原 Homebrew 的 cargo  shim（macOS runner-images#14097）
+          cache-bin: ${{ runner.os != 'macOS' }}
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -196,7 +212,16 @@ jobs:
 
       - name: Tauri build (macOS dmg)
         if: matrix.pack == 'mac-dmg'
-        run: pnpm exec tauri build --ci --bundles dmg
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.cargo/bin:$PATH"
+          CARGO_BIN="$(command -v cargo)"
+          echo "cargo=${CARGO_BIN}"
+          case "$CARGO_BIN" in
+            *homebrew*|*rustup-init*) echo "Broken cargo shim on PATH"; exit 1 ;;
+          esac
+          pnpm exec tauri build --ci --bundles dmg
 
       - name: Collect release assets into upload/
         shell: bash
