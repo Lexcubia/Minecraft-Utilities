@@ -275,18 +275,24 @@ jobs:
             exit 1
           fi
           TITLE="Minecraft-Utilities-${TAG}"
+          PRERELEASE_ARGS=()
+          if [[ "${VERSION}" == *-* ]]; then
+            PRERELEASE_ARGS=(--prerelease)
+            echo "Prerelease version ${VERSION}; marking GitHub Release as prerelease."
+          fi
           if gh release view "${TAG}" --repo "${GH_REPO}" >/dev/null 2>&1; then
             echo "Release ${TAG} exists; uploading assets and refreshing notes."
             for f in "${assets[@]}"; do
               gh release upload "${TAG}" "$f" --clobber --repo "${GH_REPO}"
             done
-            gh release edit "${TAG}" --notes-file release_notes.md --title "${TITLE}" --repo "${GH_REPO}"
+            gh release edit "${TAG}" --notes-file release_notes.md --title "${TITLE}" "${PRERELEASE_ARGS[@]}" --repo "${GH_REPO}"
           else
             echo "Creating release ${TAG} at ${SHA}"
             gh release create "${TAG}" "${assets[@]}" \
               --repo "${GH_REPO}" \
               --target "${SHA}" \
               --title "${TITLE}" \
-              --notes-file release_notes.md
+              --notes-file release_notes.md \
+              "${PRERELEASE_ARGS[@]}"
           fi
           echo "Done: ${TAG}"

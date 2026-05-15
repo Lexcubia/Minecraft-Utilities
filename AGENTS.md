@@ -34,6 +34,7 @@
 - **pre-commit**：若当前分支为 **`main` / `master`** 则**直接拒绝提交**（与「禁止直推默认分支」一致）；否则运行 **lint-staged**（见根目录 [`lint-staged.config.js`](lint-staged.config.js)）：对暂存区执行 **`src/**/_.ts`** 与 **`scripts/\*\*/_.mjs`** 的 **ESLint --fix** + **Prettier**，**`src/**/\*.{vue,js}`** 的 ESLint，以及仓库根 **md/json/yaml/js/cjs** 的 Prettier。Python 仍请在提交前自行执行 `ruff`/`pytest` 或依赖 CI。
 - **commit-msg**：先由 **`scripts/strip-cursor-coauthor.mjs`** 去掉 Cursor 注入的 **`Co-authored-by:`** 尾注，再运行 **commitlint**（[`commitlint.config.js`](commitlint.config.js)），继承 **[@commitlint/config-conventional](https://github.com/conventional-changelog/commitlint/tree/master/%40commitlint/config-conventional)**。提交标题示例：`feat(gui): 描述`、`fix: 描述`、`docs: 描述`、`chore: 描述`。
 - **CI**：GitHub Actions 见 [`.github/workflows/`](.github/workflows/)：**`check`**（Prettier + ESLint + Markdownlint + Ruff）、**`test`**（Vitest + Pytest）仅在 **`push` 到 `main`/`master`**（合并进默认分支后）且命中 `paths` 时运行；**不在** `develop`/功能分支 push 或 PR 上跑，避免重复与耗时。**`src-tauri` 的 `cargo fmt`/`clippy` 已从 `check` 移除**；Rust 编译由合并到 **`main`** 后的 **`desktop-release`**（`tauri build`）覆盖。**`commitlint`**、**`changelog-publish-marker`** 仍仅 **PR → `main`/`master`**。**桌面发布**：合并到 **`main`** 后由 **`desktop-release.yml`** 检测 CHANGELOG 发布标记并多平台打包（详见 [docs/zh-cn/REPO_SETUP.md](docs/zh-cn/REPO_SETUP.md)）。`check` / `test` / **`desktop-release`** 支持 **`workflow_dispatch`**。
+- **分支**：日常在 **`develop`** 提交；无特殊需求勿长期保留 `cursor/*` 临时分支，合并后删除远程与本地分支。发版在 **`develop`** 写好版本号与 CHANGELOG 后，经 **PR 合并进 `main`** 触发发布。
 
 ## 必读文档
 
