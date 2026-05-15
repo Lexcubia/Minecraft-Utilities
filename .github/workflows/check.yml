@@ -21,6 +21,7 @@ on:
       - 'scripts/**'
       - 'python/**'
       - 'pyproject.toml'
+      - 'src-tauri/**'
       - 'tests/**'
       - 'docs/**/*.md'
       - '.markdownlint.json'
@@ -67,3 +68,37 @@ jobs:
         run: ruff check python tests
       - name: Ruff format
         run: ruff format --check python tests
+
+  tauri:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libssl-dev \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Verify Rust toolchain
+        run: |
+          set -euo pipefail
+          command -v cargo
+          cargo --version
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            src-tauri -> build/cargo-target
+
+      - name: cargo check (Tauri backend)
+        run: pnpm check:tauri

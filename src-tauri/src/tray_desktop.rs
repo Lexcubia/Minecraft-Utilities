@@ -1,6 +1,8 @@
 //! 系统托盘：桌面端。
 //! - **Linux**：原生右键菜单（无菜单时图标可能异常）；左键尽量还原主窗。
 //! - **Windows / macOS**：左键还原主窗；右键由独立透明小窗 `tray-menu` 展示毛玻璃菜单（`tray-flyout-open`）。
+//!
+//! **约定**：本模块在多个 `#[cfg]` 分支内使用 `emit`，`Emitter` 须在模块级无条件 `use`（勿仅 `cfg(not(linux))`）。
 
 #![cfg(desktop)]
 
