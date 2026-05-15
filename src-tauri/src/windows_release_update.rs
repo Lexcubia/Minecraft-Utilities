@@ -293,12 +293,7 @@ fn round_percent(downloaded: u64, total: u64) -> f64 {
 }
 
 #[cfg(target_os = "windows")]
-fn emit_progress(
-    app: &AppHandle,
-    phase: &'static str,
-    downloaded: u64,
-    total: Option<u64>,
-) {
+fn emit_progress(app: &AppHandle, phase: &'static str, downloaded: u64, total: Option<u64>) {
     let percent = total
         .filter(|t| *t > 0)
         .map(|t| round_percent(downloaded, t));
