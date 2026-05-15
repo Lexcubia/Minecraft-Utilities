@@ -181,10 +181,8 @@
       "refresh": "刷新列表",
       "empty": "无匹配 Release；可换渠道或稍后刷新。",
       "releaseNotesHeading": "变更说明",
-      "badgeCurrent": "当前",
+      "badgeCurrent": "当前版本",
       "badgeNewer": "可升级",
-      "badgeOlder": "可降级",
-      "badgeUnknown": "版本对比未知",
       "prerelease": "预发布"
     },
     "logs": {

@@ -64,12 +64,27 @@ function formatPublishedAt(iso: string | null): string {
   }
 }
 
-function versionBadge(release: GitHubRelease): { text: string; color: string } | null {
+type ReleaseVersionBadge = {
+  text: string;
+  color: string;
+  variant: 'flat' | 'tonal';
+  icon?: string;
+};
+
+function versionBadge(release: GitHubRelease): ReleaseVersionBadge | null {
   const rel = compareTagToAppVersion(release.tag_name, APP_VERSION);
-  if (rel === 'equal') return { text: t('settings.updates.badgeCurrent'), color: 'success' };
-  if (rel === 'newer') return { text: t('settings.updates.badgeNewer'), color: 'primary' };
-  if (rel === 'older') return { text: t('settings.updates.badgeOlder'), color: 'secondary' };
-  return { text: t('settings.updates.badgeUnknown'), color: 'default' };
+  if (rel === 'equal') {
+    return {
+      text: t('settings.updates.badgeCurrent'),
+      color: 'success',
+      variant: 'tonal',
+      icon: 'mdi-check-circle',
+    };
+  }
+  if (rel === 'newer') {
+    return { text: t('settings.updates.badgeNewer'), color: 'primary', variant: 'flat' };
+  }
+  return null;
 }
 
 function openChangelogOnGithub() {
@@ -286,8 +301,9 @@ onMounted(() => {
                     v-if="versionBadge(rel)"
                     size="small"
                     :color="versionBadge(rel)!.color"
-                    variant="flat"
-                    class="text-caption shrink-0"
+                    :variant="versionBadge(rel)!.variant"
+                    :prepend-icon="versionBadge(rel)!.icon"
+                    class="text-caption shrink-0 release-version-badge"
                     label
                     @click.stop
                   >
