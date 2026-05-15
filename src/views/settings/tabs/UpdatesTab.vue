@@ -68,6 +68,7 @@ type ReleaseVersionBadge = {
   text: string;
   color: string;
   variant: 'flat' | 'tonal';
+  tone: 'current' | 'newer';
   icon?: string;
 };
 
@@ -78,14 +79,29 @@ function versionBadge(release: GitHubRelease): ReleaseVersionBadge | null {
       text: t('settings.updates.badgeCurrent'),
       color: 'success',
       variant: 'tonal',
+      tone: 'current',
       icon: 'mdi-check-circle',
     };
   }
   if (rel === 'newer') {
-    return { text: t('settings.updates.badgeNewer'), color: 'primary', variant: 'flat' };
+    return {
+      text: t('settings.updates.badgeNewer'),
+      color: 'primary',
+      variant: 'tonal',
+      tone: 'newer',
+      icon: 'mdi-arrow-up-circle-outline',
+    };
   }
   return null;
 }
+
+const releaseVersionBadgeMap = computed((): Record<number, ReleaseVersionBadge | null> => {
+  const m: Record<number, ReleaseVersionBadge | null> = {};
+  for (const rel of filteredReleases.value) {
+    m[rel.id] = versionBadge(rel);
+  }
+  return m;
+});
 
 function openChangelogOnGithub() {
   void openExternal(`${REPO_URL}/blob/main/CHANGELOG.md`);
@@ -283,12 +299,12 @@ onMounted(() => {
               class="release-panel"
               elevation="0"
             >
-              <v-expansion-panel-title class="release-panel-title px-4 py-4">
-                <div class="d-flex flex-wrap align-center gap-3 grow min-width-0">
-                  <v-avatar color="primary" size="42" variant="tonal" rounded="md" class="shrink-0">
-                    <v-icon icon="mdi-tag-outline" size="22" />
+              <v-expansion-panel-title class="release-panel-title px-4 py-3">
+                <div class="release-panel-title__main">
+                  <v-avatar color="primary" size="40" variant="tonal" rounded="md" class="shrink-0">
+                    <v-icon icon="mdi-tag-outline" size="20" />
                   </v-avatar>
-                  <div class="grow min-width-0">
+                  <div class="release-panel-title__text min-width-0">
                     <div class="font-weight-semibold text-body-1 text-truncate">
                       {{ rel.tag_name }}
                     </div>
@@ -297,19 +313,22 @@ onMounted(() => {
                       <template v-if="rel.prerelease"> · {{ t('settings.updates.prerelease') }}</template>
                     </div>
                   </div>
-                  <v-chip
-                    v-if="versionBadge(rel)"
-                    size="small"
-                    :color="versionBadge(rel)!.color"
-                    :variant="versionBadge(rel)!.variant"
-                    :prepend-icon="versionBadge(rel)!.icon"
-                    class="text-caption shrink-0 release-version-badge"
-                    label
-                    @click.stop
-                  >
-                    {{ versionBadge(rel)!.text }}
-                  </v-chip>
                 </div>
+                <v-chip
+                  v-if="releaseVersionBadgeMap[rel.id]"
+                  size="x-small"
+                  rounded="pill"
+                  :color="releaseVersionBadgeMap[rel.id]!.color"
+                  :variant="releaseVersionBadgeMap[rel.id]!.variant"
+                  :prepend-icon="releaseVersionBadgeMap[rel.id]!.icon"
+                  :class="[
+                    'release-version-badge shrink-0',
+                    `release-version-badge--${releaseVersionBadgeMap[rel.id]!.tone}`,
+                  ]"
+                  @click.stop
+                >
+                  {{ releaseVersionBadgeMap[rel.id]!.text }}
+                </v-chip>
               </v-expansion-panel-title>
               <v-expansion-panel-text class="release-panel-text pa-0">
                 <div class="release-notes-shell pa-4 pa-sm-5">
@@ -391,8 +410,53 @@ onMounted(() => {
   border-bottom: none;
 }
 
+.release-panel-title {
+  gap: 10px;
+}
+
 .release-panel-title :deep(.v-expansion-panel-title__overlay) {
   border-radius: 0;
+}
+
+/* 标题区与右侧展开箭头之间留白，避免版本标记贴住下拉箭头 */
+.release-panel-title :deep(.v-expansion-panel-title__icon) {
+  margin-inline-start: 6px;
+}
+
+.release-panel-title__main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.release-panel-title__text {
+  min-width: 0;
+}
+
+.release-version-badge {
+  flex: 0 0 auto;
+  align-self: center;
+  margin-inline-end: 4px;
+  font-size: 0.6875rem !important;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding-inline: 9px !important;
+  height: 22px !important;
+}
+
+.release-version-badge :deep(.v-chip__prepend .v-icon) {
+  font-size: 0.875rem !important;
+  opacity: 0.95;
+}
+
+.release-version-badge--current {
+  border: 1px solid color-mix(in srgb, rgb(var(--v-theme-success)) 38%, transparent);
+}
+
+.release-version-badge--newer {
+  border: 1px solid color-mix(in srgb, rgb(var(--v-theme-primary)) 32%, transparent);
 }
 
 .release-panel-text {
