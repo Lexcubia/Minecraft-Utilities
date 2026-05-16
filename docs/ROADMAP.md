@@ -51,6 +51,13 @@
 
 ---
 
+## 工具（并行）
+
+- [x] **tool-save-editor-nbt-readonly**：存档编辑器 · 查看（打开文件夹/文件、`.dat` 树、导出 JSON；GUI + CLI）
+- [ ] **tool-save-editor-nbt-write**：存档编辑器 · 编辑写回、dry-run、整文件夹备份（第二期）
+
+---
+
 ## 远期
 
 - [ ] **deferred-auto-target-release**：双站自动解析目标版本（免第二份包）、合规与限流

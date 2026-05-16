@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gzip
 from pathlib import Path
 from typing import NamedTuple
 
@@ -19,12 +20,14 @@ def load_java_dat_nbt(path: Path) -> LoadedJavaDatNbt | None:
     """
     先按 gzip 压缩 NBT 读取；失败再尝试未压缩。
 
-    与历史 `uuid_migrate._process_nbt_file` 行为一致：gzip 阶段若为
-    `OSError`（如文件被占用）则不再尝试裸读。
+    非 gzip 文件会触发 `gzip.BadGzipFile`，仍会继续尝试裸读；
+    其它 `OSError`（如文件被占用）则不再尝试裸读。
     """
     try:
         nbt_file = File.load(str(path), gzipped=True)
         return LoadedJavaDatNbt(nbt_file, True)
+    except gzip.BadGzipFile:
+        pass
     except OSError:
         return None
     except Exception:

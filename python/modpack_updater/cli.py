@@ -7,6 +7,7 @@ from typing import Annotated
 
 import typer
 
+from modpack_updater.nbt_tree import inspect_dat_file_json, list_world_dat_files_json
 from modpack_updater.uuid_migrate import (
     migrate_world_uuid,
     migrate_world_uuid_batch,
@@ -97,6 +98,40 @@ def world_players(
 ) -> None:
     """输出 playerdata 列表；玩家显示名仅从 usercache.json 映射。"""
     typer.echo(list_world_players_json(world, usercache=usercache))
+
+
+@app.command("world-list-dats")
+def world_list_dats(
+    world: Annotated[
+        Path,
+        typer.Argument(
+            ...,
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            help="存档根目录",
+        ),
+    ],
+) -> None:
+    """列出存档内可读的 .dat 文件（跳过 region/poi/entities）。"""
+    typer.echo(list_world_dat_files_json(world))
+
+
+@app.command("nbt-inspect")
+def nbt_inspect(
+    dat: Annotated[
+        Path,
+        typer.Argument(
+            ...,
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            help="Java NBT .dat 文件路径",
+        ),
+    ],
+) -> None:
+    """读取 .dat 并输出完整 NBT 树 JSON（只读）。"""
+    typer.echo(inspect_dat_file_json(dat))
 
 
 @app.command("player-dat-info")

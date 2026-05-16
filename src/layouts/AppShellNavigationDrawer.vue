@@ -93,6 +93,13 @@ const drawerBrandLine = computed(() => t('app.navBrandShort'));
           </v-list-subheader>
 
           <v-list-item
+            :to="{ name: 'save-editor' }"
+            :title="t('tools.saveEditor.navTitle')"
+            prepend-icon="mdi-content-save-edit-outline"
+            rounded="md"
+          />
+
+          <v-list-item
             :to="{ name: 'uuid-migrate' }"
             :title="t('tools.uuidMigrate.navTitle')"
             prepend-icon="mdi-swap-horizontal"

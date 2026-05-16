@@ -55,6 +55,20 @@ minecraft-utilities uuid-migrate "C:\Minecraft\instances\YourInstance\saves\Your
 
 **说明**：当前不扫描 `region` / `poi` / `entities` 下的 `.mca` 区块文件；区块实体中的 UUID 不会自动替换。
 
+### 存档编辑器（当前仅查看）
+
+打开**文件夹**（自动扫描子目录中的 `.dat`）或**单个 `.dat`**，浏览 NBT 树并导出 JSON。**当前为查看模式，不写回**；扫描时跳过 `region` / `poi` / `entities`。过大的 List/数组会在树中截断显示（默认最多 256 项）。
+
+```bash
+# 列出文件夹内 .dat（相对路径）
+minecraft-utilities world-list-dats "C:\path\to\save-folder"
+
+# 查看单个 .dat 的完整 NBT 树 JSON
+minecraft-utilities nbt-inspect "C:\path\to\save-folder\level.dat"
+```
+
+桌面应用：**工具 → 存档编辑器**，或从首页快捷入口进入。
+
 ### 桌面端（仓库根目录）
 
 ```bash

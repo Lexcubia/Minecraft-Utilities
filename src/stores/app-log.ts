@@ -1,7 +1,14 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
-export const APP_LOG_MODULES = ['app', 'filesystem', 'uuid_migrate', 'network', 'tray'] as const;
+export const APP_LOG_MODULES = [
+  'app',
+  'filesystem',
+  'uuid_migrate',
+  'save_editor',
+  'network',
+  'tray',
+] as const;
 
 export type AppLogModule = (typeof APP_LOG_MODULES)[number];
 

@@ -23,6 +23,8 @@ def test_cli_help() -> None:
     assert "uuid-migrate" in out
     assert "world-players" in out
     assert "player-dat-info" in out
+    assert "world-list-dats" in out
+    assert "nbt-inspect" in out
     assert "Minecraft Utilities" in out
 
 

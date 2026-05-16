@@ -6,6 +6,8 @@ commands.allow = [
   "fetch_github_releases",
   "world_uuid_list_players",
   "world_uuid_migrate_batch",
+  "save_editor_list_dats",
+  "save_editor_inspect_dat",
   "list_subdirs",
   "list_server_world_dirs",
   "path_is_file",

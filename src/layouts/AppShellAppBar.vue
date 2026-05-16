@@ -33,6 +33,12 @@ const breadcrumbItems = computed((): AppBarBreadcrumbItem[] => {
       { title: t('tools.uuidMigrate.navTitle') },
     ];
   }
+  if (name === 'save-editor') {
+    return [
+      { title: t('nav.home'), to: { name: 'welcome' } },
+      { title: t('tools.saveEditor.navTitle') },
+    ];
+  }
   const tab = routeNameToSettingsTab(name);
   const items: AppBarBreadcrumbItem[] = [
     { title: t('nav.home'), to: { name: 'welcome' } },

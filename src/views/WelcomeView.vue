@@ -29,7 +29,7 @@ type MainQuickItem =
   | {
       id: string;
       kind: 'route';
-      routeName: 'uuid-migrate';
+      routeName: 'uuid-migrate' | 'save-editor';
       titleKey: string;
       icon: string;
     }
@@ -42,6 +42,13 @@ type MainQuickItem =
     };
 
 const mainQuick = computed<MainQuickItem[]>(() => [
+  {
+    id: 'save-editor',
+    kind: 'route',
+    routeName: 'save-editor',
+    titleKey: 'tools.saveEditor.navTitle',
+    icon: 'mdi-content-save-edit-outline',
+  },
   {
     id: 'uuid-migrate',
     kind: 'route',

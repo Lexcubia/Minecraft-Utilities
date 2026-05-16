@@ -65,6 +65,20 @@ fn path_is_file(path: String) -> bool {
     std::path::PathBuf::from(path).is_file()
 }
 
+/// 列出存档内 `.dat` 文件（跳过 region/poi/entities；调用 Python CLI）。
+#[cfg(desktop)]
+#[tauri::command]
+fn save_editor_list_dats(world_dir: String) -> Result<String, String> {
+    python_cli::run_python_cli(&["world-list-dats", &world_dir])
+}
+
+/// 读取单个 `.dat` 的 NBT 树 JSON（只读；调用 Python CLI）。
+#[cfg(desktop)]
+#[tauri::command]
+fn save_editor_inspect_dat(dat_path: String) -> Result<String, String> {
+    python_cli::run_python_cli(&["nbt-inspect", &dat_path])
+}
+
 /// 按 JSON 映射批量执行 UUID 迁移（调用 Python CLI）。
 #[cfg(desktop)]
 #[tauri::command]
@@ -145,6 +159,8 @@ pub fn run() {
                 fetch_github_releases,
                 world_uuid_list_players,
                 world_uuid_migrate_batch,
+                save_editor_list_dats,
+                save_editor_inspect_dat,
                 list_subdirs,
                 list_server_world_dirs,
                 path_is_file,

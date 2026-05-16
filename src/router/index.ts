@@ -8,6 +8,7 @@ import LogsSettingsView from '@/views/settings/LogsSettingsView.vue';
 import UpdatesSettingsView from '@/views/settings/UpdatesSettingsView.vue';
 import WelcomeView from '@/views/WelcomeView.vue';
 import UuidMigrateView from '@/views/UuidMigrateView.vue';
+import SaveEditorView from '@/views/SaveEditorView.vue';
 import {
   hashToSettingsTab,
   normalizeSettingsTab,
@@ -40,6 +41,11 @@ const router = createRouter({
           path: 'tools/uuid-migrate',
           name: 'uuid-migrate',
           component: UuidMigrateView,
+        },
+        {
+          path: 'tools/save-editor',
+          name: 'save-editor',
+          component: SaveEditorView,
         },
         {
           path: 'settings',

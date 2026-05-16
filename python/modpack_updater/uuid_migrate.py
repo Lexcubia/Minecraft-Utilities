@@ -12,6 +12,7 @@ from pathlib import Path
 from nbtlib import Compound, IntArray, List, String
 
 from modpack_updater.nbt_dat import load_java_dat_nbt
+from modpack_updater.world_dat_paths import SKIP_DIR_NAMES, iter_world_dat_files
 
 # 仅处理明确为文本的配置类扩展名；避免误改二进制。
 _TEXT_SUFFIXES = frozenset(
@@ -29,9 +30,6 @@ _TEXT_SUFFIXES = frozenset(
         ".snbt",
     }
 )
-
-# 体积极大的目录默认跳过（区块实体等；需要时可后续扩展）。
-_SKIP_DIR_NAMES = frozenset({"region", "poi", "entities"})
 
 
 def parse_uuid(s: str) -> uuid.UUID:
@@ -125,7 +123,7 @@ def _replace_in_text(content: str, variants_old: tuple[str, ...], new_canonical_
 
 def _iter_text_files(world: Path) -> Iterable[Path]:
     for root, dirs, files in os.walk(world, topdown=True):
-        dirs[:] = [d for d in dirs if d not in _SKIP_DIR_NAMES]
+        dirs[:] = [d for d in dirs if d not in SKIP_DIR_NAMES]
         root_path = Path(root)
         for name in files:
             p = root_path / name
@@ -244,19 +242,9 @@ def _process_nbt_file(
     return True
 
 
-def _iter_nbt_dat_files(world: Path) -> Iterable[Path]:
-    """遍历存档内 .dat（通常为 gzip+NBT）。"""
-    for root, dirs, files in os.walk(world, topdown=True):
-        dirs[:] = [d for d in dirs if d not in _SKIP_DIR_NAMES]
-        root_path = Path(root)
-        for name in files:
-            if name.endswith(".dat"):
-                yield root_path / name
-
-
 def _replace_nbt_files(world: Path, old: uuid.UUID, new: uuid.UUID, dry_run: bool) -> list[str]:
     actions: list[str] = []
-    for path in _iter_nbt_dat_files(world):
+    for path in iter_world_dat_files(world):
         try:
             if _process_nbt_file(path, old, new, dry_run):
                 actions.append(f"nbt: {path}")

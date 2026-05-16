@@ -49,11 +49,12 @@ function leafCacheName(routeName: string | null | undefined): string | null {
 
 function tabShellCache(
   tab: VisitedPageTab,
-): 'WelcomeView' | 'SettingsLayout' | 'UuidMigrateView' | null {
+): 'WelcomeView' | 'SettingsLayout' | 'UuidMigrateView' | 'SaveEditorView' | null {
   const n = tab.routeName == null ? '' : String(tab.routeName);
   const pathOnly = tab.fullPath.split('?')[0] || '';
   if (n === 'welcome' || pathOnly === '/' || pathOnly === '') return 'WelcomeView';
   if (n === 'uuid-migrate' || pathOnly.startsWith('/tools/uuid-migrate')) return 'UuidMigrateView';
+  if (n === 'save-editor' || pathOnly.startsWith('/tools/save-editor')) return 'SaveEditorView';
   if (n.startsWith('settings-') || pathOnly.startsWith('/settings')) return 'SettingsLayout';
   return null;
 }
@@ -65,6 +66,7 @@ export function visitedTabTitle(
   if (routeName === 'welcome') return t('nav.home');
   if (!routeName) return APP_TITLE;
   if (routeName === 'uuid-migrate') return t('tools.uuidMigrate.navTitle');
+  if (routeName === 'save-editor') return t('tools.saveEditor.navTitle');
   const tab = routeNameToSettingsTab(routeName);
   if (tab) {
     const row = SETTINGS_SECTIONS.find((s) => s.id === tab);
